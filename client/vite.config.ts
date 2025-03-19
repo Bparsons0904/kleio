@@ -1,18 +1,18 @@
-import { defineConfig } from 'vite';
-import solidPlugin from 'vite-plugin-solid';
-import Pages from 'vite-plugin-pages';
+import { defineConfig } from "vite";
+import solidPlugin from "vite-plugin-solid";
+import Pages from "vite-plugin-pages";
 
 export default defineConfig({
   plugins: [
     Pages({
-      dirs: ['src/pages'],
+      dirs: ["src/pages"],
     }),
     solidPlugin(),
   ],
   server: {
-    port: 3000,
+    port: 33000,
   },
   build: {
-    target: 'esnext',
+    target: "esnext",
   },
 });
