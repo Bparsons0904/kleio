@@ -3,13 +3,12 @@ package main
 import (
 	"context"
 	"fmt"
+	"kleio/internal/server"
 	"log"
 	"net/http"
 	"os/signal"
 	"syscall"
 	"time"
-
-	"kleio/internal/server"
 )
 
 func gracefulShutdown(apiServer *http.Server, done chan bool) {
@@ -37,6 +36,7 @@ func gracefulShutdown(apiServer *http.Server, done chan bool) {
 }
 
 func main() {
+	log.Println("Starting server...")
 
 	server := server.NewServer()
 

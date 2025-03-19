@@ -5,7 +5,10 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
+	"log/slog"
 	"os"
+	"path/filepath"
+	"sort"
 	"strconv"
 	"time"
 
@@ -29,7 +32,7 @@ type service struct {
 }
 
 var (
-	dburl      = os.Getenv("BLUEPRINT_DB_URL")
+	dburl      = "sqlite.db"
 	dbInstance *service
 )
 
@@ -39,6 +42,11 @@ func New() Service {
 		return dbInstance
 	}
 
+	if err := Initialize(dburl); err != nil {
+		log.Fatalf("Failed to initialize database: %v", err)
+	}
+
+	slog.Info("Connecting to database...", "dburl", dburl)
 	db, err := sql.Open("sqlite3", dburl)
 	if err != nil {
 		// This will not be a connection error, but a DSN parse error or
@@ -50,6 +58,47 @@ func New() Service {
 		db: db,
 	}
 	return dbInstance
+}
+
+// Initialize ensures the database exists and has the correct schema
+func Initialize(dbPath string) error {
+	// Ensure directory exists
+	dir := filepath.Dir(dbPath)
+	if err := os.MkdirAll(dir, 0755); err != nil {
+		return fmt.Errorf("failed to create database directory: %w", err)
+	}
+
+	// Open database connection
+	db, err := sql.Open("sqlite3", dbPath)
+	if err != nil {
+		return fmt.Errorf("failed to open database: %w", err)
+	}
+	defer db.Close()
+
+	// Read and execute migration files
+	files, err := filepath.Glob("db/migrations/*.sql")
+	if err != nil {
+		return fmt.Errorf("failed to find migration files: %w", err)
+	}
+
+	// Sort files to ensure they're executed in order
+	sort.Strings(files)
+
+	for _, file := range files {
+		migration, err := os.ReadFile(file)
+		if err != nil {
+			return fmt.Errorf("failed to read migration file %s: %w", file, err)
+		}
+
+		_, err = db.Exec(string(migration))
+		if err != nil {
+			return fmt.Errorf("failed to execute migration %s: %w", file, err)
+		}
+
+		fmt.Printf("Applied migration: %s\n", file)
+	}
+
+	return nil
 }
 
 // Health checks the health of the database connection by pinging the database.
