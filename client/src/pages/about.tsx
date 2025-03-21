@@ -1,62 +1,29 @@
-import { createEffect, createSignal } from 'solid-js';
-import { useApi } from '../utils/api';
+import { createResource, Match, Show, Switch } from 'solid-js';
+import { apiClient } from '../utils/api';
+
+export const fetchApi = async (url: string) => {
+  // const response = await fetch(`http://localhost:38080/health`);
+  // console.log(response);
+  // return response.json();
+  const data = await apiClient.get(`/${url}`);
+  return data;
+};
 
 export default function About() {
-  const api = useApi<Record<string, string>>();
-
-  // State to store the health data
-  const [healthData, setHealthData] = createSignal<Record<string, string> | null>(null);
-
-  // Function to fetch health data
-  const checkHealth = async () => {
-    try {
-      const response = await api.get('/health');
-      setHealthData(response.data);
-    } catch (error) {
-      console.error('Health check failed:', error);
-      // You could set some error state here if needed
-    }
-  };
-
-  // Call the health endpoint when the component mounts
-  createEffect(() => {
-    checkHealth();
-  });
+  const [data] = createResource('health', fetchApi);
 
   return (
-    <div>
-      <h2>System Health</h2>
-      {api.isLoading() && <p>Loading health information...</p>}
-      {api.error() && <p class="error">Error: {api.error()?.message}</p>}
-
-      {healthData() && (
-        <div class="health-stats">
-          <p>
-            Status:{' '}
-            <span class={healthData()?.status === 'up' ? 'status-up' : 'status-down'}>
-              {healthData()?.status}
-            </span>
-          </p>
-
-          {healthData()?.message && <p>Message: {healthData()?.message}</p>}
-
-          {/* Display other health metrics if they exist */}
-          {healthData()?.open_connections && (
-            <div class="metrics">
-              <h3>Database Metrics</h3>
-              <p>Open Connections: {healthData()?.open_connections}</p>
-              <p>In Use: {healthData()?.in_use}</p>
-              <p>Idle: {healthData()?.idle}</p>
-              <p>Wait Count: {healthData()?.wait_count}</p>
-              <p>Wait Duration: {healthData()?.wait_duration}</p>
-            </div>
-          )}
-        </div>
-      )}
-
-      <button onClick={checkHealth} disabled={api.isLoading()}>
-        Refresh Health Status
-      </button>
+    <div class="about">
+      <Show when={data.loading}>Loading...</Show>
+      <Show when={data.error}>Error: {data.error.message}</Show>
+      <Show when={data()}>{JSON.stringify(data(), null, 2)}</Show>
+      <Switch>
+        <Match when={data()}>
+          <div>
+            <h2>System Health</h2>
+          </div>
+        </Match>
+      </Switch>
     </div>
   );
 }
