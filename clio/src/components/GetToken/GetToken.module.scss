@@ -1,0 +1,138 @@
+// GetToken.module.scss
+
+.container {
+  max-width: 700px;
+  margin: 0 auto;
+  padding: 2rem;
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.title {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #333;
+  margin-bottom: 1.5rem;
+}
+
+.infoSection {
+  margin-bottom: 2rem;
+}
+
+.sectionTitle {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #444;
+  margin-bottom: 0.75rem;
+}
+
+.text {
+  color: #555;
+  margin-bottom: 1rem;
+  line-height: 1.5;
+}
+
+.instructionList {
+  list-style-type: decimal;
+  padding-left: 1.5rem;
+  margin-bottom: 1rem;
+
+  li {
+    margin-bottom: 0.5rem;
+    color: #555;
+  }
+}
+
+.link {
+  color: #3273dc;
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
+    color: darken(#3273dc, 10%);
+  }
+}
+
+.form {
+  margin-top: 1.5rem;
+}
+
+.formGroup {
+  margin-bottom: 1rem;
+}
+
+.label {
+  display: block;
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+  color: #444;
+}
+
+.input {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 1rem;
+
+  &:focus {
+    outline: none;
+    border-color: #3273dc;
+    box-shadow: 0 0 0 2px rgba(50, 115, 220, 0.25);
+  }
+}
+
+.errorMessage {
+  margin-bottom: 1rem;
+  padding: 0.75rem;
+  background-color: #fff5f5;
+  color: #c53030;
+  border-radius: 4px;
+  border-left: 4px solid #c53030;
+}
+
+.successMessage {
+  margin-bottom: 1rem;
+  padding: 0.75rem;
+  background-color: #f0fff4;
+  color: #2f855a;
+  border-radius: 4px;
+  border-left: 4px solid #2f855a;
+}
+
+.button {
+  padding: 0.75rem 1.5rem;
+  background-color: #3273dc;
+  color: white;
+  font-weight: 500;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 1rem;
+  transition:
+    background-color 0.2s,
+    opacity 0.2s;
+
+  &:hover:not(:disabled) {
+    background-color: darken(#3273dc, 5%);
+  }
+
+  &:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(50, 115, 220, 0.25);
+  }
+
+  &:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+  }
+}
+
+.footer {
+  margin-top: 2rem;
+  padding-top: 1rem;
+  border-top: 1px solid #eee;
+  color: #777;
+  font-size: 0.875rem;
+}
