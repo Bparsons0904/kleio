@@ -25,6 +25,7 @@ type Service interface {
 	// Close terminates the database connection.
 	// It returns an error if the connection cannot be closed.
 	Close() error
+	GetDB() *sql.DB
 }
 
 type service struct {
@@ -62,6 +63,7 @@ func New() Service {
 
 // Initialize ensures the database exists and has the correct schema
 func Initialize(dbPath string) error {
+	slog.Info("Initializing database...", "dbPath", dbPath)
 	// Ensure directory exists
 	dir := filepath.Dir(dbPath)
 	if err := os.MkdirAll(dir, 0755); err != nil {
@@ -76,7 +78,7 @@ func Initialize(dbPath string) error {
 	defer db.Close()
 
 	// Read and execute migration files
-	files, err := filepath.Glob("db/migrations/*.sql")
+	files, err := filepath.Glob("internal/database/migrations/*.sql")
 	if err != nil {
 		return fmt.Errorf("failed to find migration files: %w", err)
 	}
@@ -86,6 +88,7 @@ func Initialize(dbPath string) error {
 
 	for _, file := range files {
 		migration, err := os.ReadFile(file)
+		slog.Info("Applying migration...", "file", file)
 		if err != nil {
 			return fmt.Errorf("failed to read migration file %s: %w", file, err)
 		}
@@ -159,4 +162,8 @@ func (s *service) Health() map[string]string {
 func (s *service) Close() error {
 	log.Printf("Disconnected from database: %s", dburl)
 	return s.db.Close()
+}
+
+func (s *service) GetDB() *sql.DB {
+	return s.db
 }
