@@ -34,7 +34,7 @@ func NewServer() *http.Server {
 		WriteTimeout: 30 * time.Second,
 	}
 
-	slog.Info("Server started", "server", server)
+	slog.Info("Server started")
 
 	return server
 }

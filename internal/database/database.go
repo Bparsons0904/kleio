@@ -27,6 +27,7 @@ type Service interface {
 	Close() error
 	GetDB() *sql.DB
 	GetToken() (string, error)
+	GetUser() (User, error)
 }
 
 type service struct {

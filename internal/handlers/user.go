@@ -28,7 +28,7 @@ func GetUserIdentity(token string) (string, error) {
 	}
 
 	// Set required User-Agent header
-	req.Header.Set("User-Agent", "KleioApp/1.0 +https://github.com/yourusername/kleio")
+	req.Header.Set("User-Agent", "KleioApp/1.0 +https://github.com/bparsons0904/kleio")
 
 	// Create HTTP client with timeout
 	client := &http.Client{

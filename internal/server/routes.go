@@ -3,7 +3,7 @@ package server
 import (
 	"database/sql"
 	"encoding/json"
-	handlers "kleio/internal/handles"
+	"kleio/internal/handlers"
 	"log"
 	"log/slog"
 	"net/http"
@@ -13,14 +13,20 @@ func (s *Server) RegisterRoutes() http.Handler {
 	mux := http.NewServeMux()
 
 	// Register routes
-	mux.HandleFunc("/", s.HelloWorldHandler)
+	// mux.HandleFunc("/", s.HelloWorldHandler)
 
 	mux.HandleFunc("/health", s.healthHandler)
 	mux.HandleFunc("/auth", s.GetAuth)
 	mux.HandleFunc("/discogs/token", s.SaveToken)
+	mux.HandleFunc("/discogs/collection", s.updateCollection)
 
 	// Wrap the mux with CORS middleware
 	return s.corsMiddleware(mux)
+}
+
+func (s *Server) updateCollection(w http.ResponseWriter, r *http.Request) {
+	log.Println("Updating collection...")
+	handlers.UpdateCollection(s.db)
 }
 
 func (s *Server) corsMiddleware(next http.Handler) http.Handler {
@@ -28,13 +34,11 @@ func (s *Server) corsMiddleware(next http.Handler) http.Handler {
 		// Set CORS headers
 		w.Header().
 			Set("Access-Control-Allow-Origin", "*")
-			// Replace "*" with specific origins if needed
 		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS, PATCH")
 		w.Header().
 			Set("Access-Control-Allow-Headers", "Accept, Authorization, Content-Type, X-CSRF-Token")
 		w.Header().
 			Set("Access-Control-Allow-Credentials", "false")
-			// Set to "true" if credentials are required
 
 		// Handle preflight OPTIONS requests
 		if r.Method == http.MethodOptions {
@@ -54,31 +58,21 @@ func (s *Server) SaveToken(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Parse the request body
-	var requestBody struct {
-		Token string `json:"token"`
-	}
-
-	decoder := json.NewDecoder(r.Body)
-	if err := decoder.Decode(&requestBody); err != nil {
-		http.Error(w, "Invalid request body", http.StatusBadRequest)
-		slog.Error("Failed to decode request body", "error", err)
+	token, err := getToken(r)
+	if err != nil {
+		http.Error(w, "Failed to get token", http.StatusInternalServerError)
+		slog.Error("Failed to get token", "error", err)
 		return
 	}
 
-	if requestBody.Token == "" {
-		http.Error(w, "Token is required", http.StatusBadRequest)
-		return
-	}
-
-	username, err := handlers.GetUserIdentity(requestBody.Token)
+	username, err := handlers.GetUserIdentity(token)
 	if err != nil {
 		http.Error(w, "Failed to get user identity", http.StatusInternalServerError)
 		slog.Error("Failed to get user identity", "error", err)
 		return
 	}
 
-	slog.Info("Saving token...", "token", requestBody.Token)
+	slog.Info("Saving token...", "token", token)
 
 	// Get database connection
 	db := s.db.GetDB()
@@ -102,7 +96,7 @@ func (s *Server) SaveToken(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Execute the query
-	_, err = db.Exec(sqlQuery, requestBody.Token, username)
+	_, err = db.Exec(sqlQuery, token, username)
 	if err != nil {
 		http.Error(w, "Failed to save token", http.StatusInternalServerError)
 		slog.Error("Failed to save token", "error", err)
@@ -132,7 +126,7 @@ func (s *Server) GetAuth(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	go handlers.QueryUserCollection(token)
+	go handlers.UpdateCollection(s.db)
 
 	resp := map[string]string{"token": token}
 	jsonResp, err := json.Marshal(resp)

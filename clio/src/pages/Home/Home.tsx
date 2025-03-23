@@ -1,7 +1,31 @@
 import { Component } from "solid-js";
 import styles from "./Home.module.scss";
+import { postApi } from "../../utils/api";
 
 const Home: Component = () => {
+  const updateCollection = async () => {
+    try {
+      // Use your existing API client to save the token
+      const response = await postApi("discogs/collection", {});
+
+      if (response.status !== 200) {
+        throw new Error("Failed to save token");
+      }
+
+      return true;
+    } catch (error) {
+      console.error("Error saving token:", error);
+      return false;
+    }
+  };
+
+  // Handle form submission
+  const handleLogPlay = async (e: Event) => {
+    e.preventDefault();
+
+    await updateCollection();
+  };
+
   return (
     <div class={styles.container}>
       <h1 class={styles.title}>Welcome to Kleio</h1>
@@ -16,7 +40,9 @@ const Home: Component = () => {
             <p>Record when you play a record from your collection.</p>
           </div>
           <div class={styles.cardFooter}>
-            <button class={styles.button}>Log Now</button>
+            <button class={styles.button} on:click={handleLogPlay}>
+              Log Now
+            </button>
           </div>
         </div>
 
