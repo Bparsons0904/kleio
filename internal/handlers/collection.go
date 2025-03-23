@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"database/sql"
 	"kleio/internal/database"
 	"log/slog"
 	"time"
@@ -43,11 +42,5 @@ func UpdateCollection(service database.Service) {
 	}
 
 	// Query each folder
-	// Save collection to DB
-}
-
-func updateCollectionByFolder(user database.User, db *sql.DB, folder Folder) {
-	// Query collection by folder
-
 	// Save collection to DB
 }
