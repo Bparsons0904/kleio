@@ -10,7 +10,7 @@ import { fetchApi } from "./utils/api";
 import Home from "./pages/Home/Home";
 
 const App: Component = () => {
-  const [auth] = createResource("health", fetchApi);
+  const [auth] = createResource("auth", fetchApi);
 
   return (
     <>

@@ -3,6 +3,7 @@ package server
 import (
 	"database/sql"
 	"encoding/json"
+	handlers "kleio/internal/handles"
 	"log"
 	"log/slog"
 	"net/http"
@@ -14,7 +15,7 @@ func (s *Server) RegisterRoutes() http.Handler {
 	// Register routes
 	mux.HandleFunc("/", s.HelloWorldHandler)
 
-	mux.HandleFunc("/health", s.GetAuth)
+	mux.HandleFunc("/health", s.healthHandler)
 	mux.HandleFunc("/auth", s.GetAuth)
 	mux.HandleFunc("/discogs/token", s.SaveToken)
 
@@ -70,6 +71,13 @@ func (s *Server) SaveToken(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	username, err := handlers.GetUserIdentity(requestBody.Token)
+	if err != nil {
+		http.Error(w, "Failed to get user identity", http.StatusInternalServerError)
+		slog.Error("Failed to get user identity", "error", err)
+		return
+	}
+
 	slog.Info("Saving token...", "token", requestBody.Token)
 
 	// Get database connection
@@ -77,7 +85,7 @@ func (s *Server) SaveToken(w http.ResponseWriter, r *http.Request) {
 
 	// Check if a token already exists
 	var count int
-	err := db.QueryRow("SELECT COUNT(*) FROM auth").Scan(&count)
+	err = db.QueryRow("SELECT COUNT(*) FROM auth").Scan(&count)
 	if err != nil {
 		http.Error(w, "Failed to check existing token", http.StatusInternalServerError)
 		slog.Error("Failed to check existing token", "error", err)
@@ -87,14 +95,14 @@ func (s *Server) SaveToken(w http.ResponseWriter, r *http.Request) {
 	var sqlQuery string
 	if count > 0 {
 		// Update existing token
-		sqlQuery = "UPDATE auth SET token = ?"
+		sqlQuery = "UPDATE auth SET (token, username) = (?, ?)"
 	} else {
 		// Insert new token
-		sqlQuery = "INSERT INTO auth (token) VALUES (?)"
+		sqlQuery = "INSERT INTO auth (token, username) VALUES (?, ?)"
 	}
 
 	// Execute the query
-	_, err = db.Exec(sqlQuery, requestBody.Token)
+	_, err = db.Exec(sqlQuery, requestBody.Token, username)
 	if err != nil {
 		http.Error(w, "Failed to save token", http.StatusInternalServerError)
 		slog.Error("Failed to save token", "error", err)
@@ -114,7 +122,6 @@ func (s *Server) SaveToken(w http.ResponseWriter, r *http.Request) {
 func (s *Server) GetAuth(w http.ResponseWriter, r *http.Request) {
 	db := s.db.GetDB()
 
-	// Use QueryRow for queries that return a single row
 	var token string
 	err := db.QueryRow("SELECT token FROM auth").Scan(&token)
 	if err != nil {
@@ -125,7 +132,8 @@ func (s *Server) GetAuth(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Create and send the response
+	go handlers.QueryUserCollection(token)
+
 	resp := map[string]string{"token": token}
 	jsonResp, err := json.Marshal(resp)
 	if err != nil {

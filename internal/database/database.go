@@ -26,6 +26,7 @@ type Service interface {
 	// It returns an error if the connection cannot be closed.
 	Close() error
 	GetDB() *sql.DB
+	GetToken() (string, error)
 }
 
 type service struct {
@@ -166,4 +167,17 @@ func (s *service) Close() error {
 
 func (s *service) GetDB() *sql.DB {
 	return s.db
+}
+
+func (s *service) GetToken() (string, error) {
+	var token string
+	err := s.db.QueryRow("SELECT token FROM auth").Scan(&token)
+	if err != nil {
+		if err != sql.ErrNoRows {
+			slog.Error("Database query error", "error", err)
+		}
+		return "", err
+	}
+
+	return token, nil
 }
