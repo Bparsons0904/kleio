@@ -11,18 +11,19 @@ const (
 	UserAgent = "KleioApp/1.0 +https://github.com/bparsons0904/kleio"
 )
 
-func UpdateCollection(service database.Service) {
+func UpdateCollection(service database.Service) ([]Release, error) {
 	db := service.GetDB()
 	user, err := service.GetUser()
 	if err != nil {
 		slog.Error("Failed to get user", "error", err)
-		return
+		return []Release{}, err
 	}
 
 	folders, err := GetFolders(user)
 	if err != nil {
 		slog.Error("Failed to get user folders", "error", err)
-		return
+		return []Release{}, err
+
 	}
 
 	lastSynced, err := getLocalFolderLastSynced(db)
@@ -38,9 +39,14 @@ func UpdateCollection(service database.Service) {
 	}
 
 	for _, folder := range folders {
-		go updateCollectionByFolder(user, db, folder)
+		updateCollectionByFolder(user, db, folder)
 	}
 
-	// Query each folder
-	// Save collection to DB
+	releases, err := GetAllReleases(db)
+	if err != nil {
+		slog.Error("Failed to get releases", "error", err)
+		return []Release{}, err
+	}
+
+	return releases, nil
 }

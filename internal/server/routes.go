@@ -26,7 +26,26 @@ func (s *Server) RegisterRoutes() http.Handler {
 
 func (s *Server) updateCollection(w http.ResponseWriter, r *http.Request) {
 	log.Println("Updating collection...")
-	handlers.UpdateCollection(s.db)
+	releases, err := handlers.UpdateCollection(s.db)
+	if err != nil {
+		http.Error(w, "Failed to update collection", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	// json.NewEncoder(w).Encode(releases)
+
+	jsonData, err := json.Marshal(releases)
+	if err != nil {
+		http.Error(w, "Failed to marshal releases", http.StatusInternalServerError)
+		return
+	}
+
+	_, err = w.Write(jsonData)
+	if err != nil {
+		http.Error(w, "Failed to write response", http.StatusInternalServerError)
+		return
+	}
 }
 
 func (s *Server) corsMiddleware(next http.Handler) http.Handler {
