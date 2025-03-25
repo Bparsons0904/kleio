@@ -34,7 +34,7 @@ func UpdateCollection(service database.Service) {
 
 	if lastSynced.Before(now) {
 		slog.Info("Last synced is older than 2 hours, updating folders...")
-		go updateFolders(db, folders)
+		updateFolders(db, folders)
 	}
 
 	for _, folder := range folders {

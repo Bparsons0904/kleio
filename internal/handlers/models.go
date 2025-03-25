@@ -151,45 +151,47 @@ type DiscogsResponse struct {
 			Last string `json:"last"`
 		} `json:"urls"`
 	} `json:"pagination"`
-	Releases []struct {
-		ID         int `json:"id"`
-		InstanceID int `json:"instance_id"`
-		FolderID   int `json:"folder_id"`
-		Rating     int `json:"rating"`
-		BasicInfo  struct {
-			ID          int    `json:"id"`
-			Title       string `json:"title"`
-			Year        int    `json:"year"`
+	Releases []DiscogsRelease `json:"releases"`
+}
+
+type DiscogsRelease struct {
+	ID         int `json:"id"`
+	InstanceID int `json:"instance_id"`
+	FolderID   int `json:"folder_id"`
+	Rating     int `json:"rating"`
+	BasicInfo  struct {
+		ID          int    `json:"id"`
+		Title       string `json:"title"`
+		Year        int    `json:"year"`
+		ResourceURL string `json:"resource_url"`
+		Thumb       string `json:"thumb"`
+		CoverImage  string `json:"cover_image"`
+		Formats     []struct {
+			Qty          string   `json:"qty"`
+			Descriptions []string `json:"descriptions"`
+			Name         string   `json:"name"`
+		} `json:"formats"`
+		Labels []struct {
 			ResourceURL string `json:"resource_url"`
-			Thumb       string `json:"thumb"`
-			CoverImage  string `json:"cover_image"`
-			Formats     []struct {
-				Qty          string   `json:"qty"`
-				Descriptions []string `json:"descriptions"`
-				Name         string   `json:"name"`
-			} `json:"formats"`
-			Labels []struct {
-				ResourceURL string `json:"resource_url"`
-				EntityType  string `json:"entity_type"`
-				CatNo       string `json:"catno"`
-				ID          int    `json:"id"`
-				Name        string `json:"name"`
-			} `json:"labels"`
-			Artists []struct {
-				ID          int    `json:"id"`
-				Name        string `json:"name"`
-				Join        string `json:"join"`
-				ResourceURL string `json:"resource_url"`
-				ANV         string `json:"anv"`
-				Tracks      string `json:"tracks"`
-				Role        string `json:"role"`
-			} `json:"artists"`
-			Genres []string `json:"genres"`
-			Styles []string `json:"styles"`
-		} `json:"basic_information"`
-		Notes []struct {
-			FieldID int    `json:"field_id"`
-			Value   string `json:"value"`
-		} `json:"notes"`
-	} `json:"releases"`
+			EntityType  string `json:"entity_type"`
+			CatNo       string `json:"catno"`
+			ID          int    `json:"id"`
+			Name        string `json:"name"`
+		} `json:"labels"`
+		Artists []struct {
+			ID          int    `json:"id"`
+			Name        string `json:"name"`
+			Join        string `json:"join"`
+			ResourceURL string `json:"resource_url"`
+			ANV         string `json:"anv"`
+			Tracks      string `json:"tracks"`
+			Role        string `json:"role"`
+		} `json:"artists"`
+		Genres []string `json:"genres"`
+		Styles []string `json:"styles"`
+	} `json:"basic_information"`
+	Notes []struct {
+		FieldID int    `json:"field_id"`
+		Value   string `json:"value"`
+	} `json:"notes"`
 }
