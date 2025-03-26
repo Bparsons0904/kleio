@@ -1,18 +1,18 @@
 import styles from "./GetToken.module.scss";
 import { postApi } from "../../utils/api";
 import { Show, createSignal } from "solid-js";
+import { useNavigate } from "@solidjs/router";
 
 const GetToken = () => {
   const [token, setToken] = createSignal("");
   const [isSaved, setIsSaved] = createSignal(false);
   const [isError, setIsError] = createSignal(false);
   const [errorMessage, setErrorMessage] = createSignal("");
+  const navigate = useNavigate();
 
-  // Function to save token using the API client
-  const saveToken = async (tokenValue) => {
+  const saveToken = async (tokenValue: string) => {
     try {
-      // Use your existing API client to save the token
-      const response = await postApi("discogs/token", { token: tokenValue });
+      const response = await postApi("auth/token", { token: tokenValue });
 
       if (response.status !== 200) {
         throw new Error("Failed to save token");
@@ -34,7 +34,7 @@ const GetToken = () => {
   };
 
   // Handle form submission
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: Event) => {
     e.preventDefault();
     if (!token().trim()) {
       setIsError(true);
@@ -42,7 +42,12 @@ const GetToken = () => {
       return;
     }
 
-    await saveToken(token());
+    const result = await saveToken(token());
+    console.log(result);
+    if (result) {
+      console.log("Token saved successfully");
+      navigate("/");
+    }
   };
 
   return (

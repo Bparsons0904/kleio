@@ -8,6 +8,7 @@ import GetToken from "./components/GetToken/GetToken";
 import Navbar from "./components/layout/Navbar/Navbar";
 import { fetchApi } from "./utils/api";
 import Home from "./pages/Home/Home";
+import { Route, Router } from "@solidjs/router";
 
 const App: Component = () => {
   const [auth] = createResource("auth", fetchApi);
@@ -15,16 +16,18 @@ const App: Component = () => {
   return (
     <>
       <Navbar />
-      <Switch>
-        <Match when={auth.loading}>Loading...</Match>
-        <Match when={auth.error}>Error: {auth.error.message}</Match>
-        <Match when={!!auth().data?.token}>
-          <Home />
-        </Match>
-        <Match when={!auth().data?.token}>
-          <GetToken />
-        </Match>
-      </Switch>
+      <Router>
+        <Switch>
+          <Match when={auth.loading}>Loading...</Match>
+          <Match when={auth.error}>Error: {auth.error.message}</Match>
+          <Match when={!!auth().data?.token}>
+            <Match when={!auth().data?.token}>
+              <GetToken />
+            </Match>
+            <Route path="/" component={Home} />
+          </Match>
+        </Switch>
+      </Router>
     </>
 
     // return (

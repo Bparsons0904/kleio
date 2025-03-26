@@ -6,7 +6,9 @@ import "./Navbar.scss";
 const Navbar: Component = () => {
   return (
     <nav class="navbar">
-      <div class="logo">Kleio</div>
+      <div class="logo" onclick={() => (window.location.href = "/")}>
+        Kleio
+      </div>
       <div class="nav-links">
         {/* <A href="/" end activeClass="active"> */}
         {/*   Home */}

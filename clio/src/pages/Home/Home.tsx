@@ -97,7 +97,9 @@ const Home: Component = () => {
             <p>Sync your Kleio collection with your Discogs library.</p>
           </div>
           <div class={styles.cardFooter}>
-            <button class={styles.button}>Sync Now</button>
+            <button class={styles.button} on:click={refreshCollection}>
+              Sync Now
+            </button>
           </div>
         </div>
 
@@ -118,3 +120,19 @@ const Home: Component = () => {
 };
 
 export default Home;
+
+const refreshCollection = async () => {
+  try {
+    // Use your existing API client to save the token
+    const response = await postApi("discogs/collection/refresh", {});
+
+    if (response.status !== 200) {
+      throw new Error("Failed to save token");
+    }
+
+    return response.data;
+  } catch (error) {
+    console.error("Error saving token:", error);
+    return;
+  }
+};

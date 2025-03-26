@@ -4,15 +4,6 @@ import (
 	"time"
 )
 
-// type Collection struct {
-// 	ID          int       `json:"id"`
-// 	Name        string    `json:"name"`
-// 	Count       int       `json:"count"`
-// 	ResourceURL string    `json:"resource_url"`
-// 	CreatedAt   time.Time `json:"created_at"`
-// 	UpdatedAt   time.Time `json:"updated_at"`
-// }
-
 // Release represents a vinyl release in the collection
 type Release struct {
 	ID          int       `json:"id"           db:"id"` // Release ID from Discogs
