@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
+	"time"
 
 	_ "github.com/joho/godotenv/autoload"
 	_ "github.com/mattn/go-sqlite3"
@@ -19,6 +20,8 @@ type Service interface {
 	GetToken() (string, error)
 	GetUser() (User, error)
 	SaveToken(token string, username string) error
+	GetLastFolderSync() (time.Time, error)
+	GetFolders() ([]Folder, error)
 }
 
 type service struct {

@@ -20,8 +20,8 @@ const App: Component = () => {
         <Switch>
           <Match when={auth.loading}>Loading...</Match>
           <Match when={auth.error}>Error: {auth.error.message}</Match>
-          <Match when={!!auth().data?.token}>
-            <Match when={!auth().data?.token}>
+          <Match when={!!auth().data}>
+            <Match when={!auth().data}>
               <GetToken />
             </Match>
             <Route path="/" component={Home} />

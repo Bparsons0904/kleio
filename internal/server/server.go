@@ -2,6 +2,7 @@ package server
 
 import (
 	"fmt"
+	"kleio/internal/controller"
 	"kleio/internal/database"
 	"log/slog"
 	"net/http"
@@ -13,16 +14,18 @@ import (
 )
 
 type Server struct {
-	port int
-	db   database.Service
+	port       int
+	db         database.Service
+	controller *controller.Controller
 }
 
 func NewServer() *http.Server {
 	port, _ := strconv.Atoi(os.Getenv("PORT"))
 	slog.Info("Starting server...", "port", port)
 	NewServer := &Server{
-		port: port,
-		db:   database.New(),
+		port:       port,
+		db:         database.New(),
+		controller: controller.InitNewController(),
 	}
 
 	// Declare Server config

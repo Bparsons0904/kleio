@@ -1,40 +1,25 @@
 package server
 
 import (
-	"database/sql"
 	"encoding/json"
-	"kleio/internal/handlers"
-	"log"
+	"kleio/internal/controller"
 	"log/slog"
 	"net/http"
 )
 
-func (s *Server) GetAuth(w http.ResponseWriter, r *http.Request) {
-	db := s.db.GetDB()
-
-	var token string
-	err := db.QueryRow("SELECT token FROM auth").Scan(&token)
+func (s *Server) getAuth(w http.ResponseWriter, r *http.Request) {
+	folderLastSync, collectionLastSync, err := s.controller.GetAuth()
 	if err != nil {
-		if err != sql.ErrNoRows {
-			http.Error(w, "Failed to query database", http.StatusInternalServerError)
-			log.Printf("Database query error: %v", err)
-		}
+		http.Error(w, "Failed to get auth", http.StatusInternalServerError)
 		return
 	}
 
-	go handlers.UpdateCollection(s.db)
-
-	resp := map[string]string{"token": token}
-	jsonResp, err := json.Marshal(resp)
-	if err != nil {
-		http.Error(w, "Failed to marshal response", http.StatusInternalServerError)
-		return
+	resp := map[string]string{
+		"folderLastSync":     folderLastSync.String(),
+		"collectionLastSync": collectionLastSync.String(),
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	if _, err := w.Write(jsonResp); err != nil {
-		log.Printf("Failed to write response: %v", err)
-	}
+	writeData(w, resp)
 }
 
 func (s *Server) SaveToken(w http.ResponseWriter, r *http.Request) {
@@ -50,7 +35,7 @@ func (s *Server) SaveToken(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	username, err := handlers.GetUserIdentity(token)
+	username, err := controller.GetUserIdentity(token)
 	if err != nil {
 		http.Error(w, "Failed to get user identity", http.StatusInternalServerError)
 		slog.Error("Failed to get user identity", "error", err)

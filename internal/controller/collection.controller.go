@@ -1,7 +1,8 @@
-package handlers
+package controller
 
 import (
 	"kleio/internal/database"
+	. "kleio/internal/database"
 	"log/slog"
 	"time"
 )
