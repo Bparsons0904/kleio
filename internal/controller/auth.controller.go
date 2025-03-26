@@ -24,12 +24,13 @@ func (c *Controller) GetAuth() (time.Time, time.Time, error) {
 	expectedFolderSync := now.Add(-24 * time.Hour)
 	if lastFolderSync.Before(expectedFolderSync) {
 		slog.Info("Last synced is older than 24 hours, updating folders...")
-		// c.UpdateCollection()
+		c.SyncFolders()
 	}
 
 	expectedCollectionSync := now.Add(-12 * time.Hour)
 	if lastFolderSync.Before(expectedCollectionSync) {
 		slog.Info("Last synced is older than 12 hours, updating collection...")
+		c.SyncReleases()
 		// UpdateCollection()
 	}
 
@@ -37,9 +38,4 @@ func (c *Controller) GetAuth() (time.Time, time.Time, error) {
 
 	log.Printf("token: %s", token)
 	return lastFolderSync, now, nil
-}
-
-func (c *Controller) SyncFolders() error {
-	// folder, err := c.DB.GetFolders()
-	return nil
 }

@@ -8,35 +8,34 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
-	"time"
 
 	_ "github.com/joho/godotenv/autoload"
 	_ "github.com/mattn/go-sqlite3"
 )
 
-type Service interface {
-	Close() error
-	GetDB() *sql.DB
-	GetToken() (string, error)
-	GetUser() (User, error)
-	SaveToken(token string, username string) error
-	GetLastFolderSync() (time.Time, error)
-	GetFolders() ([]Folder, error)
-}
+// type Service interface {
+// 	Close() error
+// 	GetDB() *sql.DB
+// 	GetToken() (string, error)
+// 	GetUser() (User, error)
+// 	SaveToken(token string, username string) error
+// 	GetLastFolderSync() (time.Time, error)
+// 	GetFolders() ([]Folder, error)
+// }
 
-type service struct {
-	db *sql.DB
+type Database struct {
+	DB *sql.DB
 }
 
 var (
 	dburl      = "sqlite.db"
-	dbInstance *service
+	dbInstance *Database
 )
 
-func New() Service {
+func New() Database {
 	// Reuse Connection
 	if dbInstance != nil {
-		return dbInstance
+		return *dbInstance
 	}
 
 	if err := Initialize(dburl); err != nil {
@@ -51,10 +50,10 @@ func New() Service {
 		log.Fatal(err)
 	}
 
-	dbInstance = &service{
-		db: db,
+	dbInstance = &Database{
+		DB: db,
 	}
-	return dbInstance
+	return *dbInstance
 }
 
 func Initialize(dbPath string) error {
@@ -95,11 +94,11 @@ func Initialize(dbPath string) error {
 	return nil
 }
 
-func (s *service) Close() error {
+func (s *Database) Close() error {
 	log.Printf("Disconnected from database: %s", dburl)
-	return s.db.Close()
+	return s.DB.Close()
 }
 
-func (s *service) GetDB() *sql.DB {
-	return s.db
+func (s *Database) GetDB() *sql.DB {
+	return s.DB
 }

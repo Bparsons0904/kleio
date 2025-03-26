@@ -15,7 +15,7 @@ import (
 
 type Server struct {
 	port       int
-	db         database.Service
+	DB         database.Database
 	controller *controller.Controller
 }
 
@@ -24,7 +24,7 @@ func NewServer() *http.Server {
 	slog.Info("Starting server...", "port", port)
 	NewServer := &Server{
 		port:       port,
-		db:         database.New(),
+		DB:         database.New(),
 		controller: controller.InitNewController(),
 	}
 

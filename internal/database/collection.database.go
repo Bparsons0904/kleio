@@ -6,9 +6,9 @@ import (
 	"time"
 )
 
-func (s *service) GetLastFolderSync() (time.Time, error) {
+func (s *Database) GetLastFolderSync() (time.Time, error) {
 	var lastSynced time.Time
-	err := s.db.QueryRow("SELECT last_synced FROM folders ORDER BY last_synced ASC LIMIT 1").
+	err := s.DB.QueryRow("SELECT last_synced FROM folders ORDER BY last_synced ASC LIMIT 1").
 		Scan(&lastSynced)
 	if err != nil {
 		if err != sql.ErrNoRows {
@@ -20,9 +20,9 @@ func (s *service) GetLastFolderSync() (time.Time, error) {
 	return lastSynced, nil
 }
 
-func (s *service) GetFolders() ([]Folder, error) {
+func (s *Database) GetFolders() ([]Folder, error) {
 	var folders []Folder
-	rows, err := s.db.Query("SELECT * FROM folders")
+	rows, err := s.DB.Query("SELECT * FROM folders")
 	if err != nil {
 		slog.Error("Failed to get folders", "error", err)
 		return nil, err

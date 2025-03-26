@@ -10,9 +10,9 @@ type User struct {
 	Token    string
 }
 
-func (s *service) GetUser() (User, error) {
+func (s *Database) GetUser() (User, error) {
 	var user User
-	err := s.db.QueryRow("SELECT username, token FROM auth").Scan(&user.Username, &user.Token)
+	err := s.DB.QueryRow("SELECT username, token FROM auth").Scan(&user.Username, &user.Token)
 	if err != nil {
 		if err != sql.ErrNoRows {
 			slog.Error("Database query error", "error", err)

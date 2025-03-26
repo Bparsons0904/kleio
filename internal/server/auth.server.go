@@ -14,6 +14,8 @@ func (s *Server) getAuth(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	s.controller.SetUser()
+
 	resp := map[string]string{
 		"folderLastSync":     folderLastSync.String(),
 		"collectionLastSync": collectionLastSync.String(),
@@ -44,7 +46,13 @@ func (s *Server) SaveToken(w http.ResponseWriter, r *http.Request) {
 
 	slog.Info("Saving token...", "token", token)
 
-	s.db.SaveToken(token, username)
+	err = s.DB.SaveToken(token, username)
+	if err != nil {
+		http.Error(w, "Failed to save token", http.StatusInternalServerError)
+		slog.Error("Failed to save token", "error", err)
+		return
+	}
+
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 
