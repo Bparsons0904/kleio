@@ -31,8 +31,12 @@ func (c *Controller) GetAuth() (time.Time, time.Time, error) {
 	}
 
 	lastReleaseSync, err := c.DB.GetLastReleaseSync()
+	if err != nil {
+		slog.Error("Failed to get last release sync", "error", err)
+		return time.Time{}, time.Time{}, err
+	}
 	expectedCollectionSync := now.Add(-12 * time.Hour)
-	if lastFolderSync.Before(expectedCollectionSync) {
+	if lastReleaseSync.Before(expectedCollectionSync) {
 		slog.Info("Last synced is older than 12 hours, updating collection...")
 		if err := c.SyncReleases(); err != nil {
 			slog.Error("Failed to sync collection", "error", err)

@@ -8,15 +8,16 @@ import (
 )
 
 func (s *Server) getAuth(w http.ResponseWriter, r *http.Request) {
-	folderLastSync, collectionLastSync, err := s.controller.GetAuth()
+	foldersLastSynced, collectionLastSynced, err := s.controller.GetAuth()
 	if err != nil {
 		http.Error(w, "Failed to get auth", http.StatusInternalServerError)
 		return
 	}
 
-	resp := map[string]string{
-		"folderLastSync":     folderLastSync.String(),
-		"collectionLastSync": collectionLastSync.String(),
+	resp := map[string]any{
+		"foldersLastSynced":    foldersLastSynced,
+		"collectionLastSynced": collectionLastSynced,
+		"syncingData":          false,
 	}
 
 	writeData(w, resp)

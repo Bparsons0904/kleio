@@ -20,7 +20,10 @@ func (s *Database) SaveReleases(response DiscogsResponse) error {
 	defer func() {
 		if err != nil {
 			slog.Error("Rolling back transaction due to error", "error", err)
-			tx.Rollback()
+			if err = tx.Rollback(); err != nil {
+				slog.Error("Failed to rollback transaction", "error", err)
+				return
+			}
 		}
 	}()
 

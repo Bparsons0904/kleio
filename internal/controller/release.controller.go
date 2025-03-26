@@ -35,8 +35,7 @@ func (c *Controller) SyncReleases() error {
 				return err
 			}
 
-			if len(response.Releases) == 0 ||
-				response.Pagination.Page == response.Pagination.Pages {
+			if len(response.Releases) == 0 {
 				break
 			}
 
@@ -46,6 +45,11 @@ func (c *Controller) SyncReleases() error {
 			}
 
 			page++
+
+			if page >= response.Pagination.Pages {
+				break
+			}
+
 			time.Sleep(1 * time.Second)
 		}
 	}
