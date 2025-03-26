@@ -1,8 +1,11 @@
 import { Component } from "solid-js";
 import styles from "./Home.module.scss";
 import { postApi } from "../../utils/api";
+import { useAppContext } from "../../provider/Provider";
+import { useFormattedMediumDate } from "../../utils/dates";
 
 const Home: Component = () => {
+  const store = useAppContext();
   const updateCollection = async () => {
     try {
       // Use your existing API client to save the token
@@ -95,6 +98,10 @@ const Home: Component = () => {
           </div>
           <div class={styles.cardBody}>
             <p>Sync your Kleio collection with your Discogs library.</p>
+            <p>
+              Last Sync:{" "}
+              <span>{useFormattedMediumDate(store.lastSynced())}</span>{" "}
+            </p>
           </div>
           <div class={styles.cardFooter}>
             <button class={styles.button} on:click={refreshCollection}>

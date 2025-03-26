@@ -5,45 +5,39 @@ import (
 	"time"
 )
 
-func (c *Controller) GetAuth() (time.Time, time.Time, error) {
+func (c *Controller) GetAuth() (time.Time, bool, error) {
 	_, err := c.DB.GetToken()
 	if err != nil {
 		slog.Error("Failed to get token", "error", err)
-		return time.Time{}, time.Time{}, err
+		return time.Time{}, false, err
 	}
 
 	lastFolderSync, err := c.DB.GetLastFolderSync()
 	if err != nil {
 		slog.Error("Failed to get last sync", "error", err)
-		return time.Time{}, time.Time{}, err
+		return time.Time{}, false, err
 	}
 
 	now := time.Now()
-
-	expectedFolderSync := now.Add(-24 * time.Hour)
+	syncingData := false
+	expectedFolderSync := now.Add(-12 * time.Hour)
 	if lastFolderSync.Before(expectedFolderSync) {
-		slog.Info("Last synced is older than 24 hours, updating folders...")
-		if err := c.SyncFolders(); err != nil {
-			slog.Error("Failed to sync folders", "error", err)
-			return time.Time{}, time.Time{}, err
-		}
-		lastFolderSync = now
+		syncingData = true
+		slog.Info("Last synced is older than 12 hours, updating folders...")
+		go c.syncCollection()
 	}
 
-	lastReleaseSync, err := c.DB.GetLastReleaseSync()
-	if err != nil {
-		slog.Error("Failed to get last release sync", "error", err)
-		return time.Time{}, time.Time{}, err
-	}
-	expectedCollectionSync := now.Add(-12 * time.Hour)
-	if lastReleaseSync.Before(expectedCollectionSync) {
-		slog.Info("Last synced is older than 12 hours, updating collection...")
-		if err := c.SyncReleases(); err != nil {
-			slog.Error("Failed to sync collection", "error", err)
-			return time.Time{}, time.Time{}, err
-		}
-		lastReleaseSync = now
+	return now, syncingData, nil
+}
+
+func (c *Controller) syncCollection() {
+	if err := c.SyncFolders(); err != nil {
+		slog.Error("Failed to sync folders", "error", err)
+		return
 	}
 
-	return lastFolderSync, lastReleaseSync, nil
+	if err := c.SyncReleases(); err != nil {
+		slog.Error("Failed to sync collection", "error", err)
+		return
+	}
 }
