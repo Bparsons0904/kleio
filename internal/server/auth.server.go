@@ -14,8 +14,6 @@ func (s *Server) getAuth(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	s.controller.SetUser()
-
 	resp := map[string]string{
 		"folderLastSync":     folderLastSync.String(),
 		"collectionLastSync": collectionLastSync.String(),

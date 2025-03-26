@@ -1,11 +1,22 @@
 package controller
 
-// . "kleio/internal/database"
-
-const (
-	BaseURL   = "https://api.discogs.com"
-	UserAgent = "KleioApp/1.0 +https://github.com/bparsons0904/kleio"
+import (
+	"log/slog"
 )
+
+func (c *Controller) SyncCollection() error {
+	if err := c.SyncFolders(); err != nil {
+		slog.Error("Failed to sync folders", "error", err)
+		return err
+	}
+
+	if err := c.SyncReleases(); err != nil {
+		slog.Error("Failed to sync collection", "error", err)
+		return err
+	}
+
+	return nil
+}
 
 // func UpdateCollection(service database.Database) ([]Release, error) {
 // 	db := service.GetDB()

@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"kleio/internal/database"
 	. "kleio/internal/database"
 	"log"
 	"log/slog"
@@ -13,23 +12,33 @@ import (
 	"time"
 )
 
-func (c *Controller) SyncFolders() {
-	folders, err := c.getDiscogFolders()
+func (c *Controller) SyncFolders() error {
+	user, err := c.DB.GetUser()
+	if err != nil {
+		slog.Error("Failed to get user", "error", err)
+		return err
+	}
+
+	folders, err := c.getDiscogFolders(user)
 	if err != nil {
 		slog.Error("Failed to get user folders", "error", err)
-		return
+		return err
 	}
 
 	c.updateFolders(folders)
+
+	return nil
 }
 
-func (c *Controller) getDiscogFolders() ([]Folder, error) {
+func (c *Controller) getDiscogFolders(user User) ([]Folder, error) {
 	url := fmt.Sprintf(
 		"%s/users/%s/collection/folders?token=%s",
 		BaseURL,
-		c.User.Username,
-		c.User.Token,
+		user.Username,
+		user.Token,
 	)
+
+	slog.Info("Fetching folders", "url", url)
 
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
@@ -66,12 +75,17 @@ func (c *Controller) getDiscogFolders() ([]Folder, error) {
 	return foldersResp.Folders, nil
 }
 
-func (c *Controller) updateFolders(folders []Folder) {
+func (c *Controller) updateFolders(folders []Folder) error {
 	now := time.Now().Format(time.RFC3339)
 	for _, folder := range folders {
-		c.DB.UpdateFolder(folder, now)
+		if err := c.DB.UpdateFolder(folder, now); err != nil {
+			slog.Error("Failed to update folder", "error", err)
+			return err
+		}
 	}
 	slog.Info("Folders updated")
+
+	return nil
 
 	// TODO: Check if any folders have been deleted
 }
@@ -90,7 +104,7 @@ func (c *Controller) updateFolders(folders []Folder) {
 // 	return lastSynced, nil
 // }
 
-func updateCollectionByFolder(user database.User, db *sql.DB, folder Folder) {
+func updateCollectionByFolder(user User, db *sql.DB, folder Folder) {
 	// Query collection by folder
 
 	// url := fmt.Sprintf(

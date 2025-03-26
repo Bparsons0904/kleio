@@ -12,9 +12,15 @@ import (
 )
 
 func (c *Controller) SyncReleases() error {
+	user, err := c.DB.GetUser()
+	if err != nil {
+		slog.Error("Failed to get user from database", "error", err)
+		return err
+	}
+
 	folders, err := c.DB.GetFolders()
 	if err != nil {
-		slog.Error("Failed to get user folders", "error", err)
+		slog.Error("Failed to get user folders from database", "error", err)
 		return err
 	}
 
@@ -23,12 +29,14 @@ func (c *Controller) SyncReleases() error {
 		page := 1
 		perPage := 100
 		for {
-			response, err := fetchReleasesPage(c.User, folder.ID, page, perPage)
+			slog.Info("Fetching releases page", "page", page)
+			response, err := fetchReleasesPage(user, folder.ID, page, perPage)
 			if err != nil {
 				return err
 			}
 
-			if len(response.Releases) == 0 {
+			if len(response.Releases) == 0 ||
+				response.Pagination.Page == response.Pagination.Pages {
 				break
 			}
 
