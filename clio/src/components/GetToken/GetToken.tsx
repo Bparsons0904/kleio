@@ -1,9 +1,10 @@
 import styles from "./GetToken.module.scss";
 import { postApi } from "../../utils/api";
-import { Show, createSignal } from "solid-js";
+import { Component, Show, createSignal } from "solid-js";
 import { useNavigate } from "@solidjs/router";
 
-const GetToken = () => {
+const GetToken: Component = () => {
+  console.log("Rendering GetToken component");
   const [token, setToken] = createSignal("");
   const [isSaved, setIsSaved] = createSignal(false);
   const [isError, setIsError] = createSignal(false);
@@ -46,7 +47,7 @@ const GetToken = () => {
     console.log(result);
     if (result) {
       console.log("Token saved successfully");
-      navigate("/");
+      navigate("/home");
     }
   };
 

@@ -114,7 +114,40 @@ func (s *Database) GetAllReleases() ([]Release, error) {
 			)
 			FROM release_notes rn
 			WHERE rn.release_id = r.id
-		) AS notes
+		) AS notes,
+		
+		-- Play History (JSON array)
+		(
+			SELECT json_group_array(
+				json_object(
+					'id', ph.id,
+					'release_id', ph.release_id,
+					'stylus_id', ph.stylus_id,
+					'played_at', ph.played_at,
+					'created_at', ph.created_at,
+					'updated_at', ph.updated_at,
+					'stylus', CASE WHEN ph.stylus_id IS NOT NULL THEN (
+						SELECT json_object(
+							'id', s.id,
+							'name', s.name,
+							'manufacturer', s.manufacturer,
+							'expected_lifespan_hours', s.expected_lifespan_hours,
+							'purchase_date', s.purchase_date,
+							'active', s.active,
+							'primary_stylus', s.primary_stylus,
+							'model_number', s.model_number,
+							'created_at', s.created_at,
+							'updated_at', s.updated_at
+						)
+						FROM styluses s
+						WHERE s.id = ph.stylus_id
+					) ELSE NULL END
+				)
+			)
+			FROM play_history ph
+			WHERE ph.release_id = r.id
+			ORDER BY ph.played_at DESC
+		) AS play_history
 	FROM releases r
 	ORDER BY r.title`
 
@@ -131,7 +164,7 @@ func (s *Database) GetAllReleases() ([]Release, error) {
 	// Process each row
 	for rows.Next() {
 		var release Release
-		var artistsJSON, labelsJSON, formatsJSON, genresJSON, stylesJSON, notesJSON []byte
+		var artistsJSON, labelsJSON, formatsJSON, genresJSON, stylesJSON, notesJSON, playHistoryJSON []byte
 
 		// Scan the row into our variables
 		err := rows.Scan(
@@ -153,6 +186,7 @@ func (s *Database) GetAllReleases() ([]Release, error) {
 			&genresJSON,
 			&stylesJSON,
 			&notesJSON,
+			&playHistoryJSON,
 		)
 		if err != nil {
 			slog.Error("Error scanning release row", "error", err)
@@ -256,6 +290,44 @@ func (s *Database) GetAllReleases() ([]Release, error) {
 			}
 		}
 
+		// Unmarshal the JSON data for play history
+		var playHistoryData []struct {
+			ID        int             `json:"id"`
+			ReleaseID int             `json:"release_id"`
+			StylusID  *int            `json:"stylus_id"`
+			PlayedAt  string          `json:"played_at"`
+			CreatedAt string          `json:"created_at"`
+			UpdatedAt string          `json:"updated_at"`
+			Stylus    json.RawMessage `json:"stylus"`
+		}
+
+		if err := json.Unmarshal(playHistoryJSON, &playHistoryData); err == nil {
+			for _, ph := range playHistoryData {
+				playHistory := PlayHistory{
+					ID:        ph.ID,
+					ReleaseID: ph.ReleaseID,
+					StylusID:  ph.StylusID,
+					PlayedAt:  parseTime(ph.PlayedAt),
+					CreatedAt: parseTime(ph.CreatedAt),
+					UpdatedAt: parseTime(ph.UpdatedAt),
+				}
+
+				// If stylus data is present, unmarshal it
+				if ph.Stylus != nil && len(ph.Stylus) > 2 { // Check if not null or empty {}
+					var stylusData Stylus
+					if err := json.Unmarshal(ph.Stylus, &stylusData); err == nil {
+						playHistory.Stylus = &stylusData
+					}
+				}
+
+				// Add the release reference
+				playHistory.Release = release
+
+				// Add to release's play history
+				release.PlayHistory = append(release.PlayHistory, playHistory)
+			}
+		}
+
 		releases = append(releases, release)
 	}
 
@@ -266,6 +338,24 @@ func (s *Database) GetAllReleases() ([]Release, error) {
 
 	slog.Info("Successfully fetched all releases", "count", len(releases))
 	return releases, nil
+}
+
+// Helper function to parse time strings to time.Time
+func parseTime(timeStr string) time.Time {
+	if timeStr == "" {
+		return time.Time{}
+	}
+
+	t, err := time.Parse(time.RFC3339, timeStr)
+	if err != nil {
+		// Try alternative formats if RFC3339 fails
+		t, err = time.Parse("2006-01-02 15:04:05", timeStr)
+		if err != nil {
+			return time.Time{}
+		}
+	}
+
+	return t
 }
 
 func (s *Database) SaveReleases(response DiscogsResponse) error {

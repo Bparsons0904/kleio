@@ -82,11 +82,29 @@ export interface Release {
   genres: Genre[];
   styles: Style[];
   notes: ReleaseNote[];
+  playHistory: PlayHistory[];
+}
+
+export interface Stylus {
+  id: number;
+  name: string;
+  manufacturer?: string;
+  expectedLifespan?: number;
+  purchaseDate?: string;
+  active: boolean;
+  primary: boolean;
+  modelNumber?: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface PlayHistory {
   id: number;
   releaseId: number;
+  stylusId?: number;
   playedAt: string;
   createdAt: string;
+  updatedAt: string;
+  release?: Release;
+  stylus?: Stylus;
 }

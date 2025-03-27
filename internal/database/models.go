@@ -20,12 +20,13 @@ type Release struct {
 	LastSynced  time.Time `json:"last_synced"  db:"last_synced"`
 
 	// Related entities (for JSON marshaling/unmarshaling)
-	Labels  []ReleaseLabel  `json:"labels,omitempty"`
-	Artists []ReleaseArtist `json:"artists,omitempty"`
-	Formats []Format        `json:"formats,omitempty"`
-	Genres  []Genre         `json:"genres,omitempty"`
-	Styles  []Style         `json:"styles,omitempty"`
-	Notes   []ReleaseNote   `json:"notes,omitempty"`
+	Labels      []ReleaseLabel  `json:"labels,omitempty"`
+	Artists     []ReleaseArtist `json:"artists,omitempty"`
+	Formats     []Format        `json:"formats,omitempty"`
+	Genres      []Genre         `json:"genres,omitempty"`
+	Styles      []Style         `json:"styles,omitempty"`
+	Notes       []ReleaseNote   `json:"notes,omitempty"`
+	PlayHistory []PlayHistory   `json:"play_history,omitempty"`
 }
 
 // Label represents a record label
@@ -222,4 +223,28 @@ type FormatData struct {
 type NoteData struct {
 	FieldID int    `json:"field_id"`
 	Value   string `json:"value"`
+}
+
+type Stylus struct {
+	ID               int        `json:"id"                db:"id"`
+	Name             string     `json:"name"              db:"name"`
+	Manufacturer     string     `json:"manufacturer"      db:"manufacturer"`
+	ExpectedLifespan int        `json:"expected_lifespan" db:"expected_lifespan_hours"`
+	PurchaseDate     *time.Time `json:"purchase_date"     db:"purchase_date"`
+	Active           bool       `json:"active"            db:"active"`
+	Primary          bool       `json:"primary"           db:"primary_stylus"`
+	ModelNumber      string     `json:"model_number"      db:"model_number"`
+	CreatedAt        time.Time  `json:"created_at"        db:"created_at"`
+	UpdatedAt        time.Time  `json:"updated_at"        db:"updated_at"`
+}
+
+type PlayHistory struct {
+	ID        int       `json:"id"              db:"id"`
+	ReleaseID int       `json:"release_id"      db:"release_id"`
+	StylusID  *int      `json:"stylus_id"       db:"stylus_id"`
+	PlayedAt  time.Time `json:"played_at"       db:"played_at"`
+	CreatedAt time.Time `json:"created_at"      db:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"      db:"updated_at"`
+	Release   Release   `json:"release"         db:"-"`
+	Stylus    *Stylus   `json:"stylus,omitzero" db:"-"`
 }

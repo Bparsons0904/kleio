@@ -10,14 +10,15 @@ type AuthPayload struct {
 	LastSync    time.Time          `json:"lastSync"`
 	SyncingData bool               `json:"syncingData"`
 	Releases    []database.Release `json:"releases"`
+	Stylus      []database.Stylus  `json:"stylus"`
+	Token       string             `json:"token"`
 }
 
-func (c *Controller) GetAuth() (AuthPayload, error) {
-	var payload AuthPayload
-	_, err := c.DB.GetToken()
+func (c *Controller) GetAuth() (payload AuthPayload, err error) {
+	payload.Token, err = c.DB.GetToken()
 	if err != nil {
 		slog.Error("Failed to get token", "error", err)
-		return payload, err
+		return AuthPayload{}, nil
 	}
 
 	lastSync, err := c.DB.GetLatestSync()
@@ -39,6 +40,12 @@ func (c *Controller) GetAuth() (AuthPayload, error) {
 	payload.Releases, err = c.DB.GetAllReleases()
 	if err != nil {
 		slog.Error("Failed to get releases", "error", err)
+		return payload, err
+	}
+
+	payload.Stylus, err = c.DB.GetStyluses()
+	if err != nil {
+		slog.Error("Failed to get stylus", "error", err)
 		return payload, err
 	}
 

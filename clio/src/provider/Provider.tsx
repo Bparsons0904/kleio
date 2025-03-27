@@ -6,17 +6,19 @@ import {
   ParentProps,
   useContext,
 } from "solid-js";
-import { Folder, Release } from "../types";
+import { Folder, Release, Stylus } from "../types";
 import { fetchApi } from "../utils/api";
 
 type AppStore = {
   folders: () => Folder[];
   releases: () => Release[];
+  syluses: () => Stylus[];
   lastSynced: () => string;
   isSyncing: () => boolean;
 
   setFolders: (value: Folder[]) => void;
   setReleases: (value: Release[]) => void;
+  setSyluses: (value: Stylus[]) => void;
   setLastSynced: (value: string) => void;
   setIsSyncing: (value: boolean) => void;
 };
@@ -27,6 +29,7 @@ export const AppContext = createContext<AppStore>(defaultStore as AppStore);
 export function AppProvider(props: ParentProps) {
   const [folders, setFolders] = createSignal<Folder[]>([]);
   const [releases, setReleases] = createSignal<Release[]>([]);
+  const [syluses, setSyluses] = createSignal<Stylus[]>([]);
   const [lastSynced, setLastSynced] = createSignal("");
   const [isSyncing, setIsSyncing] = createSignal(false);
 
@@ -56,11 +59,13 @@ export function AppProvider(props: ParentProps) {
   const store: AppStore = {
     folders,
     releases,
+    syluses,
     lastSynced,
     isSyncing,
 
     setFolders,
     setReleases,
+    setSyluses,
     setLastSynced,
     setIsSyncing,
   };
