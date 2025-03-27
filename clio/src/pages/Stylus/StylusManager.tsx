@@ -5,7 +5,7 @@ import { createStylus, deleteStylus, updateStylus } from "../../utils/api";
 import styles from "./StylusManager.module.scss";
 
 const StylusManager: Component = () => {
-  const { styluses } = useAppContext();
+  const { styluses, setStyluses } = useAppContext();
   console.log(styluses());
   const [isAddingStylus, setIsAddingStylus] = createSignal(false);
   const [editingStylus, setEditingStylus] = createSignal<Stylus | null>(null);
@@ -94,16 +94,13 @@ const StylusManager: Component = () => {
 
   const handleSubmit = async (e: Event) => {
     e.preventDefault();
-
     if (!name()) {
       setErrorMessage("Name is required");
       return;
     }
-
     setIsLoading(true);
     setErrorMessage("");
     setSuccessMessage("");
-
     try {
       const stylusData = {
         name: name(),
@@ -117,17 +114,23 @@ const StylusManager: Component = () => {
         owned: isOwned(),
       };
 
+      let response;
       if (editingStylus()) {
         // Update existing stylus
-        await updateStylus(editingStylus()!.id, {
+        response = await updateStylus(editingStylus()!.id, {
           ...stylusData,
           id: editingStylus()!.id,
         });
         setSuccessMessage(`Updated stylus "${name()}"`);
       } else {
         // Create new stylus
-        await createStylus(stylusData);
+        response = await createStylus(stylusData);
         setSuccessMessage(`Created new stylus "${name()}"`);
+      }
+
+      // Update styluses list with the new data from the response
+      if (response?.data) {
+        setStyluses(response.data);
       }
 
       // Reset form and exit edit mode
@@ -145,12 +148,15 @@ const StylusManager: Component = () => {
     if (!confirm(`Are you sure you want to delete "${stylus.name}"?`)) {
       return;
     }
-
     setIsLoading(true);
-
     try {
-      await deleteStylus(stylus.id);
+      const response = await deleteStylus(stylus.id);
       setSuccessMessage(`Deleted stylus "${stylus.name}"`);
+
+      // Update styluses list with the new data from the response
+      if (response?.data) {
+        setStyluses(response.data);
+      }
     } catch (error) {
       console.error("Error deleting stylus:", error);
       setErrorMessage("Failed to delete stylus. Please try again.");
@@ -173,12 +179,12 @@ const StylusManager: Component = () => {
       <div class={styles.header}>
         <h2 class={styles.title}>Stylus Manager</h2>
         <div class={styles.headerButtons}>
-          <button
-            class={styles.archiveToggle}
-            onClick={() => setShowArchived(!showArchived())}
-          >
-            {showArchived() ? "Hide Archived" : "Show Archived"}
-          </button>
+          {/* <button */}
+          {/*   class={styles.archiveToggle} */}
+          {/*   onClick={() => setShowArchived(!showArchived())} */}
+          {/* > */}
+          {/*   {showArchived() ? "Hide Archived" : "Show Archived"} */}
+          {/* </button> */}
           <Show when={!isAddingStylus()}>
             <button
               class={styles.addButton}
@@ -214,7 +220,15 @@ const StylusManager: Component = () => {
                 onChange={copyFromStylus}
               >
                 <option value="">Select a stylus</option>
-                <For each={styluses().filter((s) => s.owned === false)}>
+                <For
+                  each={styluses()
+                    .filter((s) => s.owned === true)
+                    .sort((a, b) => {
+                      if (a.primary && !b.primary) return -1;
+                      if (!a.primary && b.primary) return 1;
+                      return a.name.localeCompare(b.name);
+                    })}
+                >
                   {(stylus) => (
                     <option value={stylus.id}>
                       {stylus.name}{" "}
@@ -283,16 +297,17 @@ const StylusManager: Component = () => {
               />
             </div>
 
-            <div class={styles.checkboxGroup}>
-              <label class={styles.checkboxLabel}>
-                <input
-                  type="checkbox"
-                  checked={isOwned()}
-                  onChange={(e) => setIsOwned(e.target.checked)}
-                />
-                Currently Owned
-              </label>
-            </div>
+            {/* <div class={styles.checkboxGroup}> */}
+            {/* <label class={styles.checkboxLabel}> */}
+            {/*   <input */}
+            {/*     type="checkbox" */}
+            {/*     checked={isOwned()} */}
+            {/*     onChange={(e) => setIsOwned(e.target.checked)} */}
+            {/*     hidden */}
+            {/*   /> */}
+            {/*   Currently Owned */}
+            {/* </label> */}
+            {/* </div> */}
 
             <div class={styles.checkboxGroup}>
               <label class={styles.checkboxLabel}>
@@ -302,7 +317,7 @@ const StylusManager: Component = () => {
                   onChange={(e) => setIsActive(e.target.checked)}
                   disabled={!isOwned()}
                 />
-                Currently Active (installed on turntable)
+                Active (Working Stylus / In Rotation)
               </label>
             </div>
 
@@ -353,7 +368,13 @@ const StylusManager: Component = () => {
         <div class={styles.section}>
           <h3 class={styles.sectionTitle}>Active Styluses</h3>
           <div class={styles.stylusList}>
-            <For each={activeStyluses()}>
+            <For
+              each={activeStyluses().sort((a, b) => {
+                if (a.primary && !b.primary) return -1;
+                if (!a.primary && b.primary) return 1;
+                return a.name.localeCompare(b.name);
+              })}
+            >
               {(stylus) => (
                 <div
                   class={`${styles.stylusCard} ${stylus.primary ? styles.primaryCard : ""}`}
@@ -362,9 +383,6 @@ const StylusManager: Component = () => {
                     <h3 class={styles.stylusName}>
                       {stylus.name}
                       <div class={styles.tagsContainer}>
-                        {stylus.active && (
-                          <span class={styles.activeTag}>Active</span>
-                        )}
                         {stylus.primary && (
                           <span class={styles.primaryTag}>Primary</span>
                         )}

@@ -15,32 +15,32 @@ func (c *Controller) GetStyluses() ([]database.Stylus, error) {
 	return styluses, nil
 }
 
-func (c *Controller) CreateStylus(stylus *database.Stylus) error {
+func (c *Controller) CreateStylus(stylus *database.Stylus) ([]database.Stylus, error) {
 	err := c.DB.CreateStylus(stylus)
 	if err != nil {
 		slog.Error("Failed to create stylus", "error", err)
-		return err
+		return nil, err
 	}
 
-	return nil
+	return c.GetStyluses()
 }
 
-func (c *Controller) UpdateStylus(stylus *database.Stylus) error {
+func (c *Controller) UpdateStylus(stylus *database.Stylus) ([]database.Stylus, error) {
 	err := c.DB.UpdateStylus(stylus)
 	if err != nil {
 		slog.Error("Failed to update stylus", "error", err)
-		return err
+		return nil, err
 	}
 
-	return nil
+	return c.GetStyluses()
 }
 
-func (c *Controller) DeleteStylus(id int) error {
+func (c *Controller) DeleteStylus(id int) ([]database.Stylus, error) {
 	err := c.DB.DeleteStylus(id)
 	if err != nil {
 		slog.Error("Failed to delete stylus", "error", err)
-		return err
+		return nil, err
 	}
 
-	return nil
+	return c.GetStyluses()
 }

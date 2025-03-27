@@ -2,6 +2,7 @@ package database
 
 import (
 	"database/sql"
+	"log"
 	"log/slog"
 )
 
@@ -93,10 +94,12 @@ func (s *Database) CreateStylus(stylus *Stylus) error {
 	query := `
 		INSERT INTO styluses (
 			name, manufacturer, expected_lifespan_hours, owned, purchase_date, 
-			active, primary_stylus, 
+			active, primary_stylus 
 		) VALUES (?, ?, ?, ?, ?, ?, ?)
 		RETURNING id, created_at, updated_at
 	`
+
+	log.Println(query)
 
 	var purchaseDate any
 	if stylus.PurchaseDate != nil {
@@ -132,7 +135,7 @@ func (s *Database) UpdateStylus(stylus *Stylus) error {
       owned = ?,
 			purchase_date = ?,
 			active = ?,
-			primary_stylus = ?,
+			primary_stylus = ?
 		WHERE id = ?
 		RETURNING updated_at
 	`

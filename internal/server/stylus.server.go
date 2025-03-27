@@ -34,14 +34,14 @@ func (s *Server) createStylus(w http.ResponseWriter, r *http.Request) {
 		stylus.PurchaseDate = &purchaseDate
 	}
 
-	err = s.controller.CreateStylus(&stylus)
+	styluses, err := s.controller.CreateStylus(&stylus)
 	if err != nil {
 		http.Error(w, "Failed to create stylus", http.StatusInternalServerError)
 		return
 	}
 
 	w.WriteHeader(http.StatusCreated)
-	writeData(w, stylus)
+	writeData(w, styluses)
 }
 
 func (s *Server) updateStylus(w http.ResponseWriter, r *http.Request) {
@@ -84,13 +84,13 @@ func (s *Server) updateStylus(w http.ResponseWriter, r *http.Request) {
 		stylus.PurchaseDate = &purchaseDate
 	}
 
-	err = s.controller.UpdateStylus(&stylus)
+	styluses, err := s.controller.UpdateStylus(&stylus)
 	if err != nil {
 		http.Error(w, "Failed to update stylus", http.StatusInternalServerError)
 		return
 	}
 
-	writeData(w, stylus)
+	writeData(w, styluses)
 }
 
 func (s *Server) deleteStylus(w http.ResponseWriter, r *http.Request) {
@@ -113,11 +113,11 @@ func (s *Server) deleteStylus(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = s.controller.DeleteStylus(id)
+	styluses, err := s.controller.DeleteStylus(id)
 	if err != nil {
 		http.Error(w, "Failed to delete stylus", http.StatusInternalServerError)
 		return
 	}
 
-	w.WriteHeader(http.StatusNoContent)
+	writeData(w, styluses)
 }
