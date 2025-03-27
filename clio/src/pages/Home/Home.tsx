@@ -1,11 +1,15 @@
 import { Component } from "solid-js";
 import styles from "./Home.module.scss";
 import { postApi } from "../../utils/api";
+import { useNavigate } from "@solidjs/router";
 
 const Home: Component = () => {
-  const handleLogPlay = async (e: Event) => {
-    e.preventDefault();
-    await updateCollection();
+  const navigate = useNavigate();
+  const handleLogPlay = () => {
+    navigate("/log");
+
+    // e.preventDefault();
+    // await updateCollection();
   };
 
   return (

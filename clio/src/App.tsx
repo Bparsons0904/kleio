@@ -13,6 +13,7 @@ import { fetchApi } from "./utils/api";
 import Home from "./pages/Home/Home";
 import { Route, Router } from "@solidjs/router";
 import { AppProvider, useAppContext } from "./provider/Provider";
+import LogPlay from "./pages/LogPlay/LogPlay";
 
 const App: Component = () => {
   return (
@@ -37,6 +38,7 @@ const Main: Component = () => {
 
       store.setIsSyncing(data.syncingData);
       store.setLastSynced(data.lastSync);
+      store.setReleases(data.releases);
     }
   });
 
@@ -49,9 +51,10 @@ const Main: Component = () => {
           <Match when={!auth().data}>
             <GetToken />
           </Match>
-          <Route path="/" component={Home} />
         </Match>
       </Switch>
+      <Route path="/" component={Home} />
+      <Route path="/log" component={LogPlay} />
     </Router>
   );
 };

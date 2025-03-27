@@ -1,21 +1,29 @@
 package controller
 
 import (
+	"kleio/internal/database"
 	"log/slog"
 	"time"
 )
 
-func (c *Controller) GetAuth() (time.Time, bool, error) {
+type AuthPayload struct {
+	LastSync    time.Time          `json:"lastSync"`
+	SyncingData bool               `json:"syncingData"`
+	Releases    []database.Release `json:"releases"`
+}
+
+func (c *Controller) GetAuth() (AuthPayload, error) {
+	var payload AuthPayload
 	_, err := c.DB.GetToken()
 	if err != nil {
 		slog.Error("Failed to get token", "error", err)
-		return time.Time{}, false, err
+		return payload, err
 	}
 
 	lastSync, err := c.DB.GetLatestSync()
 	if err != nil {
 		slog.Error("Failed to get last sync", "error", err)
-		return time.Time{}, false, err
+		return payload, err
 	}
 
 	if lastSync.Status != "complete" {
@@ -25,18 +33,25 @@ func (c *Controller) GetAuth() (time.Time, bool, error) {
 			slog.Error("Failed to complete sync", "error", err)
 		}
 		go c.syncCollection()
-		return time.Time{}, true, nil
+		return payload, nil
+	}
+
+	payload.Releases, err = c.DB.GetAllReleases()
+	if err != nil {
+		slog.Error("Failed to get releases", "error", err)
+		return payload, err
 	}
 
 	expectedFolderSync := time.Now().Add(-12 * time.Hour)
-	// expectedFolderSync := time.Now()
 	if lastSync.SyncStart.Before(expectedFolderSync) {
 		slog.Info("Last synced is older than 12 hours, updating folders...")
 		go c.syncCollection()
-		return lastSync.SyncEnd, true, nil
+		payload.SyncingData = true
+		return payload, nil
 	}
 
-	return lastSync.SyncEnd, false, nil
+	payload.LastSync = lastSync.SyncStart
+	return payload, nil
 }
 
 func (c *Controller) syncCollection() {

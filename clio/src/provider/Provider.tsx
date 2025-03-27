@@ -1,7 +1,6 @@
 import {
   createContext,
   createEffect,
-  createResource,
   createSignal,
   onCleanup,
   ParentProps,
@@ -32,10 +31,8 @@ export function AppProvider(props: ParentProps) {
   const [isSyncing, setIsSyncing] = createSignal(false);
 
   createEffect(() => {
-    console.log("isSyncing", isSyncing());
     if (!isSyncing()) return;
 
-    console.log("isSyncing", isSyncing());
     const pollInterval = setInterval(async () => {
       try {
         const response = await fetchApi("collection/sync");

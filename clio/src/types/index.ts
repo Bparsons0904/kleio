@@ -83,3 +83,10 @@ export interface Release {
   styles: Style[];
   notes: ReleaseNote[];
 }
+
+export interface PlayHistory {
+  id: number;
+  releaseId: number;
+  playedAt: string;
+  createdAt: string;
+}

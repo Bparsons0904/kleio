@@ -8,18 +8,13 @@ import (
 )
 
 func (s *Server) getAuth(w http.ResponseWriter, r *http.Request) {
-	lastSync, syncingData, err := s.controller.GetAuth()
+	payload, err := s.controller.GetAuth()
 	if err != nil {
 		http.Error(w, "Failed to get auth", http.StatusInternalServerError)
 		return
 	}
 
-	resp := map[string]any{
-		"lastSync":    lastSync,
-		"syncingData": syncingData,
-	}
-
-	writeData(w, resp)
+	writeData(w, payload)
 }
 
 func (s *Server) SaveToken(w http.ResponseWriter, r *http.Request) {

@@ -193,3 +193,33 @@ type Sync struct {
 	SyncEnd   time.Time `json:"sync_end,omitzero" db:"sync_end"`
 	Status    string    `json:"status"            db:"status"` // "in_progress" or "complete" or "failed"
 }
+
+type ArtistData struct {
+	ArtistID     int    `json:"artist_id"`
+	Name         string `json:"name"`
+	ResourceURL  string `json:"resource_url"`
+	JoinRelation string `json:"join_relation"`
+	ANV          string `json:"anv"`
+	Tracks       string `json:"tracks"`
+	Role         string `json:"role"`
+}
+
+type LabelData struct {
+	LabelID     int    `json:"label_id"`
+	Name        string `json:"name"`
+	ResourceURL string `json:"resource_url"`
+	EntityType  string `json:"entity_type"`
+	CatNo       string `json:"catno"`
+}
+
+type FormatData struct {
+	FormatID     int      `json:"format_id"`
+	Name         string   `json:"name"`
+	Qty          int      `json:"qty"`
+	Descriptions []string `json:"descriptions"`
+}
+
+type NoteData struct {
+	FieldID int    `json:"field_id"`
+	Value   string `json:"value"`
+}
