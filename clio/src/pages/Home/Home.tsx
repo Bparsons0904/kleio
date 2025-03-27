@@ -1,31 +1,10 @@
 import { Component } from "solid-js";
 import styles from "./Home.module.scss";
 import { postApi } from "../../utils/api";
-import { useAppContext } from "../../provider/Provider";
-import { useFormattedMediumDate } from "../../utils/dates";
 
 const Home: Component = () => {
-  const store = useAppContext();
-  const updateCollection = async () => {
-    try {
-      // Use your existing API client to save the token
-      const response = await postApi("discogs/collection", {});
-
-      if (response.status !== 200) {
-        throw new Error("Failed to save token");
-      }
-
-      return true;
-    } catch (error) {
-      console.error("Error saving token:", error);
-      return false;
-    }
-  };
-
-  // Handle form submission
   const handleLogPlay = async (e: Event) => {
     e.preventDefault();
-
     await updateCollection();
   };
 
@@ -98,10 +77,6 @@ const Home: Component = () => {
           </div>
           <div class={styles.cardBody}>
             <p>Sync your Kleio collection with your Discogs library.</p>
-            <p>
-              Last Sync:{" "}
-              <span>{useFormattedMediumDate(store.lastSynced())}</span>{" "}
-            </p>
           </div>
           <div class={styles.cardFooter}>
             <button class={styles.button} on:click={refreshCollection}>
@@ -141,5 +116,20 @@ const refreshCollection = async () => {
   } catch (error) {
     console.error("Error saving token:", error);
     return;
+  }
+};
+
+const updateCollection = async () => {
+  try {
+    const response = await postApi("discogs/collection", {});
+
+    if (response.status !== 200) {
+      throw new Error("Failed to save token");
+    }
+
+    return true;
+  } catch (error) {
+    console.error("Error saving token:", error);
+    return false;
   }
 };

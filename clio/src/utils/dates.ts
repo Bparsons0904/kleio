@@ -1,17 +1,11 @@
-// import { createMemo } from "solid-js";
-
-export function useFormattedMediumDate(dateSignal) {
-  // const date = dateSignal();
-
-  // Handle loading state
-  // if (!date || date === "Never synced") return "Never synced";
+export function useFormattedMediumDate(date: string) {
+  if (!date) return "Never synced";
 
   try {
-    const dateObj = new Date(dateSignal);
+    const dateObj = new Date(date);
 
-    // Check if we got a valid date
     if (isNaN(dateObj.getTime())) {
-      console.log("Invalid date created from:", dateSignal);
+      console.log("Invalid date created from:", date);
       return "Invalid date";
     }
 

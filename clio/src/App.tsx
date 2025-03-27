@@ -34,6 +34,7 @@ const Main: Component = () => {
   createEffect(() => {
     if (auth.state === "ready" && auth()?.data) {
       const data = auth().data;
+
       store.setIsSyncing(data.syncingData);
       store.setLastSynced(data.lastSync);
     }

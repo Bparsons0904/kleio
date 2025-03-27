@@ -9,19 +9,8 @@ import (
 	"path/filepath"
 	"sort"
 
-	_ "github.com/joho/godotenv/autoload"
 	_ "github.com/mattn/go-sqlite3"
 )
-
-// type Service interface {
-// 	Close() error
-// 	GetDB() *sql.DB
-// 	GetToken() (string, error)
-// 	GetUser() (User, error)
-// 	SaveToken(token string, username string) error
-// 	GetLastFolderSync() (time.Time, error)
-// 	GetFolders() ([]Folder, error)
-// }
 
 type Database struct {
 	DB *sql.DB

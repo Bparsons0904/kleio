@@ -186,3 +186,10 @@ type DiscogsRelease struct {
 		Value   string `json:"value"`
 	} `json:"notes"`
 }
+
+type Sync struct {
+	ID        int64     `json:"id"                db:"id"`
+	SyncStart time.Time `json:"sync_start"        db:"sync_start"`
+	SyncEnd   time.Time `json:"sync_end,omitzero" db:"sync_end"`
+	Status    string    `json:"status"            db:"status"` // "in_progress" or "complete" or "failed"
+}

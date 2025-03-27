@@ -1,41 +1,67 @@
-import { createContext, createSignal, ParentProps, useContext } from "solid-js";
+import {
+  createContext,
+  createEffect,
+  createResource,
+  createSignal,
+  onCleanup,
+  ParentProps,
+  useContext,
+} from "solid-js";
 import { Folder, Release } from "../types";
+import { fetchApi } from "../utils/api";
 
-// Define the store type with proper TypeScript types
 type AppStore = {
-  // Accessor functions
   folders: () => Folder[];
   releases: () => Release[];
   lastSynced: () => string;
   isSyncing: () => boolean;
 
-  // Setter functions
   setFolders: (value: Folder[]) => void;
   setReleases: (value: Release[]) => void;
   setLastSynced: (value: string) => void;
   setIsSyncing: (value: boolean) => void;
 };
 
-// Create the context with a partial implementation that satisfies TypeScript
 const defaultStore: Partial<AppStore> = {};
 export const AppContext = createContext<AppStore>(defaultStore as AppStore);
 
-// Provider component
 export function AppProvider(props: ParentProps) {
-  // Create all your signals
   const [folders, setFolders] = createSignal<Folder[]>([]);
   const [releases, setReleases] = createSignal<Release[]>([]);
   const [lastSynced, setLastSynced] = createSignal("");
   const [isSyncing, setIsSyncing] = createSignal(false);
 
+  createEffect(() => {
+    console.log("isSyncing", isSyncing());
+    if (!isSyncing()) return;
+
+    console.log("isSyncing", isSyncing());
+    const pollInterval = setInterval(async () => {
+      try {
+        const response = await fetchApi("collection/sync");
+
+        if (response.data?.status === "complete") {
+          setIsSyncing(false);
+          clearInterval(pollInterval);
+        }
+      } catch (error) {
+        console.error("Error polling sync status:", error);
+        setIsSyncing(false);
+        clearInterval(pollInterval);
+      }
+    }, 1000);
+
+    onCleanup(() => {
+      clearInterval(pollInterval);
+    });
+  });
+
   const store: AppStore = {
-    // Signals
     folders,
     releases,
     lastSynced,
     isSyncing,
 
-    // Setters
     setFolders,
     setReleases,
     setLastSynced,
@@ -47,7 +73,6 @@ export function AppProvider(props: ParentProps) {
   );
 }
 
-// Hook to use the context
 export function useAppContext() {
   return useContext(AppContext);
 }
