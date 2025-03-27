@@ -93,9 +93,10 @@ export interface Stylus {
   purchaseDate?: string;
   active: boolean;
   primary: boolean;
-  modelNumber?: string;
   createdAt: string;
   updatedAt: string;
+  owned: boolean;
+  baseModel: boolean;
 }
 
 export interface PlayHistory {
@@ -107,4 +108,5 @@ export interface PlayHistory {
   updatedAt: string;
   release?: Release;
   stylus?: Stylus;
+  owned: boolean;
 }

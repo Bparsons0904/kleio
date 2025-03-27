@@ -3,30 +3,36 @@ import "./App.scss";
 import Navbar from "./components/layout/Navbar/Navbar";
 import { fetchApi } from "./utils/api";
 import { RouteSectionProps, useNavigate } from "@solidjs/router";
-import { AppProvider, useAppContext } from "./provider/Provider";
+import { useAppContext } from "./provider/Provider";
 
 const App: Component<RouteSectionProps<unknown>> = ({ children }) => {
   const navigate = useNavigate();
   const [auth] = createResource("auth", fetchApi);
-  const store = useAppContext();
+  const { setAuthPayload } = useAppContext();
 
   createEffect(() => {
-    if (auth.state === "ready" && auth()?.data?.token) {
-      const data = auth().data;
+    if (auth.state === "ready") {
+      if (auth()?.data?.token) {
+        const data = auth().data;
 
-      store.setIsSyncing(data.syncingData);
-      store.setLastSynced(data.lastSync);
-      store.setReleases(data.releases);
-      store.setSyluses(data.stylus);
+        setAuthPayload({
+          isSyncing: data.syncingData,
+          lastSynced: data.lastSync,
+          releases: data.releases,
+          stylus: data.stylus,
+        });
 
-      navigate("/");
+        navigate("/");
+      } else {
+        navigate("/getToken");
+      }
     }
   });
   return (
-    <AppProvider>
+    <>
       <Navbar />
       {children}
-    </AppProvider>
+    </>
   );
 };
 

@@ -16,6 +16,7 @@ export const fetchApi = async (url: string) => {
 };
 
 export const postApi = async (url: string, data: any) => {
+  console.log(data);
   const response = await apiClient.post(`/${url}`, data);
   return response;
 };
@@ -44,6 +45,7 @@ export const getStylusByID = async (id: number) => {
 };
 
 export const createStylus = async (stylus: any) => {
+  console.log(stylus);
   return await postApi("styluses", stylus);
 };
 

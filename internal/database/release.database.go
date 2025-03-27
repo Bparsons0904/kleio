@@ -135,9 +135,10 @@ func (s *Database) GetAllReleases() ([]Release, error) {
 							'purchase_date', s.purchase_date,
 							'active', s.active,
 							'primary_stylus', s.primary_stylus,
-							'model_number', s.model_number,
 							'created_at', s.created_at,
-							'updated_at', s.updated_at
+							'updated_at', s.updated_at,
+							'owned', s.owned,
+              'base_model', s.base_model
 						)
 						FROM styluses s
 						WHERE s.id = ph.stylus_id

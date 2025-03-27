@@ -6,6 +6,16 @@ import (
 	"time"
 )
 
+func (s *Server) getCollection(w http.ResponseWriter, r *http.Request) {
+	releases, err := s.controller.GetCollection()
+	if err != nil {
+		http.Error(w, "Failed to get collection", http.StatusInternalServerError)
+		return
+	}
+
+	writeData(w, releases)
+}
+
 func (s *Server) updateCollection(w http.ResponseWriter, r *http.Request) {
 	err := s.controller.SyncCollection()
 	if err != nil {

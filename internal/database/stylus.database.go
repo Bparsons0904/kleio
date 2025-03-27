@@ -27,7 +27,8 @@ func (s *Database) GetStyluses() ([]Stylus, error) {
 			&purchaseDate,
 			&stylus.Active,
 			&stylus.Primary,
-			&stylus.ModelNumber,
+			&stylus.Owned,
+			&stylus.BaseModel,
 			&stylus.CreatedAt,
 			&stylus.UpdatedAt,
 		)
@@ -65,10 +66,11 @@ func (s *Database) GetStylusByID(id int) (*Stylus, error) {
 		&stylus.Name,
 		&stylus.Manufacturer,
 		&stylus.ExpectedLifespan,
+		&stylus.Owned,
+		&stylus.BaseModel,
 		&purchaseDate,
 		&stylus.Active,
 		&stylus.Primary,
-		&stylus.ModelNumber,
 		&stylus.CreatedAt,
 		&stylus.UpdatedAt,
 	)
@@ -90,13 +92,13 @@ func (s *Database) GetStylusByID(id int) (*Stylus, error) {
 func (s *Database) CreateStylus(stylus *Stylus) error {
 	query := `
 		INSERT INTO styluses (
-			name, manufacturer, expected_lifespan_hours, purchase_date, 
-			active, primary_stylus, model_number
+			name, manufacturer, expected_lifespan_hours, owned, purchase_date, 
+			active, primary_stylus, 
 		) VALUES (?, ?, ?, ?, ?, ?, ?)
 		RETURNING id, created_at, updated_at
 	`
 
-	var purchaseDate interface{}
+	var purchaseDate any
 	if stylus.PurchaseDate != nil {
 		purchaseDate = stylus.PurchaseDate
 	} else {
@@ -108,10 +110,10 @@ func (s *Database) CreateStylus(stylus *Stylus) error {
 		stylus.Name,
 		stylus.Manufacturer,
 		stylus.ExpectedLifespan,
+		stylus.Owned,
 		purchaseDate,
 		stylus.Active,
 		stylus.Primary,
-		stylus.ModelNumber,
 	).Scan(&stylus.ID, &stylus.CreatedAt, &stylus.UpdatedAt)
 	if err != nil {
 		slog.Error("Failed to create stylus", "error", err)
@@ -127,15 +129,15 @@ func (s *Database) UpdateStylus(stylus *Stylus) error {
 			name = ?,
 			manufacturer = ?,
 			expected_lifespan_hours = ?,
+      owned = ?,
 			purchase_date = ?,
 			active = ?,
 			primary_stylus = ?,
-			model_number = ?
 		WHERE id = ?
 		RETURNING updated_at
 	`
 
-	var purchaseDate interface{}
+	var purchaseDate any
 	if stylus.PurchaseDate != nil {
 		purchaseDate = stylus.PurchaseDate
 	} else {
@@ -147,10 +149,10 @@ func (s *Database) UpdateStylus(stylus *Stylus) error {
 		stylus.Name,
 		stylus.Manufacturer,
 		stylus.ExpectedLifespan,
+		stylus.Owned,
 		purchaseDate,
 		stylus.Active,
 		stylus.Primary,
-		stylus.ModelNumber,
 		stylus.ID,
 	).Scan(&stylus.UpdatedAt)
 	if err != nil {

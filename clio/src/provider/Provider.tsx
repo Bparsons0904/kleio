@@ -9,18 +9,27 @@ import {
 import { Folder, Release, Stylus } from "../types";
 import { fetchApi } from "../utils/api";
 
+interface AuthPayload {
+  isSyncing: boolean;
+  lastSynced: string;
+  releases: Release[];
+  stylus: Stylus[];
+}
+
 type AppStore = {
   folders: () => Folder[];
   releases: () => Release[];
-  syluses: () => Stylus[];
+  styluses: () => Stylus[];
   lastSynced: () => string;
   isSyncing: () => boolean;
 
   setFolders: (value: Folder[]) => void;
   setReleases: (value: Release[]) => void;
-  setSyluses: (value: Stylus[]) => void;
+  setStyluses: (value: Stylus[]) => void;
   setLastSynced: (value: string) => void;
   setIsSyncing: (value: boolean) => void;
+
+  setAuthPayload: (payload: AuthPayload) => void;
 };
 
 const defaultStore: Partial<AppStore> = {};
@@ -29,7 +38,7 @@ export const AppContext = createContext<AppStore>(defaultStore as AppStore);
 export function AppProvider(props: ParentProps) {
   const [folders, setFolders] = createSignal<Folder[]>([]);
   const [releases, setReleases] = createSignal<Release[]>([]);
-  const [syluses, setSyluses] = createSignal<Stylus[]>([]);
+  const [styluses, setStyluses] = createSignal<Stylus[]>([]);
   const [lastSynced, setLastSynced] = createSignal("");
   const [isSyncing, setIsSyncing] = createSignal(false);
 
@@ -43,6 +52,10 @@ export function AppProvider(props: ParentProps) {
         if (response.data?.status === "complete") {
           setIsSyncing(false);
           clearInterval(pollInterval);
+          const result = await fetchApi("collection");
+          if (result.data) {
+            setAuthPayload(result.data);
+          }
         }
       } catch (error) {
         console.error("Error polling sync status:", error);
@@ -56,18 +69,27 @@ export function AppProvider(props: ParentProps) {
     });
   });
 
+  const setAuthPayload = (payload: AuthPayload) => {
+    setIsSyncing(payload.isSyncing);
+    setLastSynced(payload.lastSynced);
+    setReleases(payload.releases);
+    setStyluses(payload.stylus);
+  };
+
   const store: AppStore = {
     folders,
     releases,
-    syluses,
+    styluses,
     lastSynced,
     isSyncing,
 
     setFolders,
     setReleases,
-    setSyluses,
+    setStyluses,
     setLastSynced,
     setIsSyncing,
+
+    setAuthPayload,
   };
 
   return (

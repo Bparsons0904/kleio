@@ -1,6 +1,7 @@
 package server
 
 import (
+	"log/slog"
 	"net/http"
 	"strings"
 )
@@ -11,19 +12,25 @@ func (s *Server) RegisterRoutes() http.Handler {
 	// Auth and Collection routes
 	mux.HandleFunc("/auth", s.getAuth)
 	mux.HandleFunc("/auth/token", s.SaveToken)
+	mux.HandleFunc("/collection", s.getCollection)
 	mux.HandleFunc("/collection/sync", s.checkSync)
 	mux.HandleFunc("/discogs/collection", s.updateCollection)
 	mux.HandleFunc("/discogs/collection/refresh", s.updateCollection)
 
-	// Stylus routes
+	mux.HandleFunc("/styluses", func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodPost:
+			s.createStylus(w, r)
+		default:
+			slog.Warn("Method not allowed", "method", r.Method, "path", r.URL.Path)
+			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		}
+	})
+
 	mux.HandleFunc("/styluses/", func(w http.ResponseWriter, r *http.Request) {
-		path := r.URL.Path
-		if path == "/styluses/" {
-			if r.Method == http.MethodPost {
-				s.createStylus(w, r)
-			} else {
-				http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-			}
+		path := strings.TrimPrefix(r.URL.Path, "/styluses/")
+		if path == "" {
+			http.Error(w, "Missing stylus ID", http.StatusBadRequest)
 			return
 		}
 

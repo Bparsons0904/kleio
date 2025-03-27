@@ -7,10 +7,11 @@ CREATE TABLE IF NOT EXISTS styluses (
   purchase_date TIMESTAMP,
   active BOOLEAN DEFAULT FALSE,
   primary_stylus BOOLEAN DEFAULT FALSE,
-  model_number TEXT,
+  owned BOOLEAN DEFAULT FALSE,
+  base_model BOOLEAN DEFAULT FALSE,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  UNIQUE(manufacturer, model_number)
+  UNIQUE(name, manufacturer, base_model)
 );
 
 -- Create the play_history table

@@ -1,8 +1,6 @@
 package server
 
 import (
-	"encoding/json"
-	"kleio/internal/controller"
 	"log/slog"
 	"net/http"
 )
@@ -31,27 +29,11 @@ func (s *Server) SaveToken(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	username, err := controller.GetUserIdentity(token)
+	payload, err := s.controller.SaveToken(token)
 	if err != nil {
-		slog.Error("Failed to get user identity", "error", err)
-		http.Error(w, "Failed to get user identity", http.StatusInternalServerError)
+		http.Error(w, "Failed to get auth", http.StatusInternalServerError)
 		return
 	}
 
-	slog.Info("Saving token...", "token", token)
-
-	err = s.DB.SaveToken(token, username)
-	if err != nil {
-		slog.Error("Failed to save token", "error", err)
-		http.Error(w, "Failed to save token", http.StatusInternalServerError)
-		return
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-
-	response := map[string]bool{"success": true}
-	if err := json.NewEncoder(w).Encode(response); err != nil {
-		slog.Error("Failed to write response", "error", err)
-	}
+	writeData(w, payload)
 }

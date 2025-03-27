@@ -4,6 +4,10 @@ import (
 	"log/slog"
 )
 
+func (c *Controller) GetCollection() (payload AuthPayload, err error) {
+	return c.GetAuth()
+}
+
 func (c *Controller) SyncCollection() error {
 	if err := c.SyncFolders(); err != nil {
 		slog.Error("Failed to sync folders", "error", err)

@@ -2,14 +2,15 @@ import styles from "./GetToken.module.scss";
 import { postApi } from "../../utils/api";
 import { Component, Show, createSignal } from "solid-js";
 import { useNavigate } from "@solidjs/router";
+import { useAppContext } from "../../provider/Provider";
 
 const GetToken: Component = () => {
-  console.log("Rendering GetToken component");
   const [token, setToken] = createSignal("");
   const [isSaved, setIsSaved] = createSignal(false);
   const [isError, setIsError] = createSignal(false);
   const [errorMessage, setErrorMessage] = createSignal("");
   const navigate = useNavigate();
+  const { setAuthPayload } = useAppContext();
 
   const saveToken = async (tokenValue: string) => {
     try {
@@ -21,7 +22,7 @@ const GetToken: Component = () => {
 
       setIsSaved(true);
       setIsError(false);
-      return true;
+      return response.data;
     } catch (error) {
       console.error("Error saving token:", error);
       setIsError(true);
@@ -30,7 +31,7 @@ const GetToken: Component = () => {
           error.message ||
           "Failed to save token",
       );
-      return false;
+      return null;
     }
   };
 
@@ -47,6 +48,13 @@ const GetToken: Component = () => {
     console.log(result);
     if (result) {
       console.log("Token saved successfully");
+
+      setAuthPayload({
+        isSyncing: result.syncingData,
+        lastSynced: result.lastSync,
+        releases: result.releases,
+        stylus: result.stylus,
+      });
       navigate("/home");
     }
   };

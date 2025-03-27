@@ -7,7 +7,7 @@ import (
 )
 
 type AuthPayload struct {
-	LastSync    time.Time          `json:"lastSync"`
+	LastSync    time.Time          `json:"lastSync,omitzero"`
 	SyncingData bool               `json:"syncingData"`
 	Releases    []database.Release `json:"releases"`
 	Stylus      []database.Stylus  `json:"stylus"`
@@ -58,6 +58,31 @@ func (c *Controller) GetAuth() (payload AuthPayload, err error) {
 	}
 
 	payload.LastSync = lastSync.SyncStart
+	return payload, nil
+}
+
+func (c *Controller) SaveToken(token string) (payload AuthPayload, err error) {
+	username, err := GetUserIdentity(token)
+	if err != nil {
+		slog.Error("Failed to get user identity", "error", err)
+		return payload, err
+	}
+
+	err = c.DB.SaveToken(token, username)
+	if err != nil {
+		slog.Error("Failed to save token", "error", err)
+		return payload, err
+	}
+
+	payload, err = c.GetAuth()
+	if err != nil {
+		slog.Error("Failed to get auth", "error", err)
+		return payload, err
+	}
+
+	go c.syncCollection()
+	payload.SyncingData = true
+
 	return payload, nil
 }
 

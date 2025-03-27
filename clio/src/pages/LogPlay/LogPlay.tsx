@@ -4,6 +4,7 @@ import styles from "./LogPlay.module.scss";
 import { Release } from "../../types";
 
 const LogPlay: Component = () => {
+  console.log("Rendering LogPlay");
   const { releases } = useAppContext();
   const [filteredReleases, setFilteredReleases] = createSignal<Release[]>([]);
   const [searchTerm, setSearchTerm] = createSignal("");
@@ -18,10 +19,12 @@ const LogPlay: Component = () => {
   createEffect(() => {
     const term = searchTerm().toLowerCase();
     if (!term) {
-      setFilteredReleases(releases());
+      console.log("Rendering LogPlay term ");
+      setFilteredReleases(releases?.());
       return;
     }
 
+    console.log("Rendering LogPlay before ");
     const filtered = releases().filter(
       (release) =>
         release.title.toLowerCase().includes(term) ||

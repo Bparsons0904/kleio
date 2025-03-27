@@ -16,33 +16,26 @@ type Identity struct {
 	ResourceURL string `json:"resource_url"`
 }
 
-// GetUserIdentity retrieves the identity of the user associated with the token
 func GetUserIdentity(token string) (string, error) {
-	// Build the URL for the identity endpoint
 	url := fmt.Sprintf("%s/oauth/identity?token=%s", BaseURL, token)
 
-	// Create a new request
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		return "", fmt.Errorf("error creating request: %w", err)
 	}
 
-	// Set required User-Agent header
 	req.Header.Set("User-Agent", "KleioApp/1.0 +https://github.com/bparsons0904/kleio")
 
-	// Create HTTP client with timeout
 	client := &http.Client{
 		Timeout: 10 * time.Second,
 	}
 
-	// Make the request
 	resp, err := client.Do(req)
 	if err != nil {
 		return "", fmt.Errorf("error making request: %w", err)
 	}
 	defer resp.Body.Close()
 
-	// Check response status
 	if resp.StatusCode != http.StatusOK {
 		body, _ := io.ReadAll(resp.Body)
 		return "", fmt.Errorf(
@@ -52,7 +45,6 @@ func GetUserIdentity(token string) (string, error) {
 		)
 	}
 
-	// Decode the response
 	var identity Identity
 	if err := json.NewDecoder(resp.Body).Decode(&identity); err != nil {
 		return "", fmt.Errorf("error decoding response: %w", err)
