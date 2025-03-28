@@ -20,6 +20,7 @@ CREATE TABLE IF NOT EXISTS play_history (
   release_id INTEGER NOT NULL,
   stylus_id INTEGER,
   played_at TIMESTAMP NOT NULL,
+  notes TEXT,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (release_id) REFERENCES releases(id),

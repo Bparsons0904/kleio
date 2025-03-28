@@ -244,6 +244,7 @@ type PlayHistory struct {
 	ReleaseID int       `json:"releaseId"       db:"release_id"`
 	StylusID  *int      `json:"stylusId"        db:"stylus_id"`
 	PlayedAt  time.Time `json:"playedAt"        db:"played_at"`
+	Notes     string    `json:"notes,omitzero"  db:"notes"`
 	CreatedAt time.Time `json:"createdAt"       db:"created_at"`
 	UpdatedAt time.Time `json:"updatedAt"       db:"updated_at"`
 	Release   Release   `json:"release"         db:"-"`

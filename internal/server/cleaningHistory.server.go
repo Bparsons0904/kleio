@@ -38,14 +38,14 @@ func (s *Server) createCleaningHistory(w http.ResponseWriter, r *http.Request) {
 		history.CleanedAt = cleanedAt
 	}
 
-	err = s.controller.CreateCleaningHistory(&history)
+	payload, err := s.controller.CreateCleaningHistory(&history)
 	if err != nil {
 		http.Error(w, "Failed to create cleaning history", http.StatusInternalServerError)
 		return
 	}
 
 	w.WriteHeader(http.StatusCreated)
-	writeData(w, history)
+	writeData(w, payload)
 }
 
 func (s *Server) updateCleaningHistory(w http.ResponseWriter, r *http.Request) {

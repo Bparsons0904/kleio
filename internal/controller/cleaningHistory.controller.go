@@ -6,14 +6,21 @@ import (
 	"time"
 )
 
-func (c *Controller) CreateCleaningHistory(history *database.CleaningHistory) error {
-	err := c.DB.CreateCleaningHistory(history)
+func (c *Controller) CreateCleaningHistory(
+	history *database.CleaningHistory,
+) (payload Payload, err error) {
+	err = c.DB.CreateCleaningHistory(history)
 	if err != nil {
 		slog.Error("Failed to create cleaning history", "error", err)
-		return err
+		return
 	}
 
-	return nil
+	err = payload.GetPayload(c)
+	if err != nil {
+		slog.Error("Failed to get payload for cleaning history", "error", err)
+	}
+
+	return
 }
 
 func (c *Controller) UpdateCleaningHistory(history *database.CleaningHistory) error {

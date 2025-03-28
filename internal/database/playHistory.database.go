@@ -32,6 +32,7 @@ func (s *Database) GetPlayHistory(limit, offset int) ([]PlayHistory, error) {
 			&history.ReleaseID,
 			&stylusID,
 			&history.PlayedAt,
+			&history.Notes,
 			&history.CreatedAt,
 			&history.UpdatedAt,
 		)
@@ -134,6 +135,7 @@ func (s *Database) GetPlayHistoryByReleaseID(
 			&history.ReleaseID,
 			&stylusID,
 			&history.PlayedAt,
+			&history.Notes,
 			&history.CreatedAt,
 			&history.UpdatedAt,
 		)
@@ -228,8 +230,8 @@ func (s *Database) GetReleaseByID(id int) (*Release, error) {
 func (s *Database) CreatePlayHistory(history *PlayHistory) error {
 	query := `
 		INSERT INTO play_history (
-			release_id, stylus_id, played_at
-		) VALUES (?, ?, ?)
+			release_id, stylus_id, played_at, notes
+		) VALUES (?, ?, ?, ?)
 		RETURNING id, created_at, updated_at
 	`
 
@@ -245,6 +247,7 @@ func (s *Database) CreatePlayHistory(history *PlayHistory) error {
 		history.ReleaseID,
 		stylusID,
 		history.PlayedAt.Format("2006-01-02 15:04:05"),
+		history.Notes,
 	).Scan(&history.ID, &history.CreatedAt, &history.UpdatedAt)
 	if err != nil {
 		slog.Error("Failed to create play history", "error", err)
@@ -260,7 +263,8 @@ func (s *Database) UpdatePlayHistory(history *PlayHistory) error {
 		UPDATE play_history SET
 			release_id = ?,
 			stylus_id = ?,
-			played_at = ?
+			played_at = ?,
+      notes = ?
 		WHERE id = ?
 		RETURNING updated_at
 	`
@@ -277,6 +281,7 @@ func (s *Database) UpdatePlayHistory(history *PlayHistory) error {
 		history.ReleaseID,
 		stylusID,
 		history.PlayedAt,
+		history.Notes,
 		history.ID,
 	).Scan(&history.UpdatedAt)
 	if err != nil {
@@ -364,6 +369,7 @@ func (s *Database) GetPlaysByTimeRange(start, end time.Time) ([]PlayHistory, err
 			&history.ReleaseID,
 			&stylusID,
 			&history.PlayedAt,
+			&history.Notes,
 			&history.CreatedAt,
 			&history.UpdatedAt,
 		)

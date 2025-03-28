@@ -1,8 +1,10 @@
+// pages/LogPlay/LogPlay.tsx
 import { Component, createSignal, createEffect, For, Show } from "solid-js";
 import { useAppContext } from "../../provider/Provider";
 import styles from "./LogPlay.module.scss";
 import { Release, Stylus } from "../../types";
 import { createPlayHistory, createCleaningHistory } from "../../utils/api";
+import RecordActionModal from "../../components/RecordActionModal/RecordActionModal";
 
 const LogPlay: Component = () => {
   const {
@@ -12,18 +14,23 @@ const LogPlay: Component = () => {
     showError,
     setKleioStore: setAuthPayload,
   } = useAppContext();
+
   const [filteredReleases, setFilteredReleases] = createSignal<Release[]>([]);
   const [searchTerm, setSearchTerm] = createSignal("");
-  const [selectedDate, setSelectedDate] = createSignal(
-    new Date().toISOString().split("T")[0],
-  );
   const [selectedRelease, setSelectedRelease] = createSignal<Release | null>(
     null,
   );
+  const [isModalOpen, setIsModalOpen] = createSignal(false);
+
+  // Form state for the modal
+  const [selectedDate, setSelectedDate] = createSignal(
+    new Date().toISOString().split("T")[0],
+  );
   const [selectedStylus, setSelectedStylus] = createSignal<Stylus | null>(null);
+  const [notes, setNotes] = createSignal("");
   const [isSubmittingPlay, setIsSubmittingPlay] = createSignal(false);
   const [isSubmittingCleaning, setIsSubmittingCleaning] = createSignal(false);
-  const [cleaningNotes, setCleaningNotes] = createSignal("");
+  const [isSubmittingBoth, setIsSubmittingBoth] = createSignal(false);
 
   // Set primary stylus as the default selected stylus
   createEffect(() => {
@@ -56,6 +63,12 @@ const LogPlay: Component = () => {
 
   const handleReleaseClick = (release: Release) => {
     setSelectedRelease(release);
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    // We keep the selected release so clicking the card again reopens the modal
   };
 
   const handleLogPlay = async () => {
@@ -69,13 +82,15 @@ const LogPlay: Component = () => {
         releaseId: selectedRelease()!.id,
         playedAt: new Date(selectedDate()).toISOString(),
         stylusId: selectedStylus()?.id || null,
+        notes: notes(),
       };
 
       const response = await createPlayHistory(payload);
 
       if (response.status === 201) {
         showSuccess("Play logged successfully!");
-        setSelectedRelease(null);
+        setIsModalOpen(false);
+        setNotes("");
         setAuthPayload(response.data);
       } else {
         throw new Error("Failed to log play");
@@ -98,16 +113,15 @@ const LogPlay: Component = () => {
       const payload = {
         releaseId: selectedRelease()!.id,
         cleanedAt: new Date(selectedDate()).toISOString(),
-        notes: cleaningNotes(),
+        notes: notes(),
       };
 
       const response = await createCleaningHistory(payload);
 
-      console.log(response);
       if (response.status === 201) {
         showSuccess("Cleaning logged successfully!");
-        setSelectedRelease(null);
-        setCleaningNotes("");
+        setIsModalOpen(false);
+        setNotes("");
         setAuthPayload(response.data);
       } else {
         throw new Error("Failed to log cleaning");
@@ -120,11 +134,51 @@ const LogPlay: Component = () => {
     }
   };
 
-  // Get only active styluses for the dropdown
-  const activeStyluses = () => {
-    return (
-      styluses()?.filter((stylus) => stylus.active || stylus.primary) || []
-    );
+  const handleLogBoth = async () => {
+    if (!selectedRelease()) {
+      return;
+    }
+
+    try {
+      setIsSubmittingBoth(true);
+
+      // Create cleaning payload
+      const cleaningPayload = {
+        releaseId: selectedRelease()!.id,
+        cleanedAt: new Date(selectedDate()).toISOString(),
+        notes: notes(),
+      };
+
+      // Create play payload
+      const playPayload = {
+        releaseId: selectedRelease()!.id,
+        playedAt: new Date(selectedDate()).toISOString(),
+        stylusId: selectedStylus()?.id || null,
+        notes: notes(),
+      };
+
+      // Log cleaning first
+      const cleaningResponse = await createCleaningHistory(cleaningPayload);
+      if (cleaningResponse.status !== 201) {
+        throw new Error("Failed to log cleaning");
+      }
+
+      // Then log play
+      const playResponse = await createPlayHistory(playPayload);
+      if (playResponse.status !== 201) {
+        throw new Error("Failed to log play");
+      }
+
+      showSuccess("Both cleaning and play logged successfully!");
+      setIsModalOpen(false);
+      setNotes("");
+      setAuthPayload(playResponse.data); // Use the latest response data
+    } catch (error) {
+      console.error("Error logging both:", error);
+      showError("Failed to log both activities. Please try again.");
+    } finally {
+      setIsSubmittingBoth(false);
+    }
   };
 
   const formatDate = (dateString: string) => {
@@ -143,66 +197,8 @@ const LogPlay: Component = () => {
         Record when you play or clean records from your collection.
       </p>
 
-      <div class={styles.logPlayForm}>
-        {/* ROW 1: Date and stylus selection */}
-        <div class={styles.controlsRow}>
-          <div class={styles.formControl}>
-            <label class={styles.label} for="playDate">
-              Date
-            </label>
-            <input
-              type="date"
-              id="playDate"
-              class={styles.datePicker}
-              value={selectedDate()}
-              onInput={(e) => setSelectedDate(e.target.value)}
-            />
-          </div>
-
-          <div class={styles.formControl}>
-            <label class={styles.label} for="stylusSelect">
-              Stylus Used (for Play)
-            </label>
-            <select
-              id="stylusSelect"
-              class={styles.stylusSelect}
-              value={selectedStylus()?.id || ""}
-              onChange={(e) => {
-                const id = parseInt(e.target.value);
-                const stylus = styluses().find((s) => s.id === id);
-                setSelectedStylus(stylus || null);
-              }}
-            >
-              <option value="">None</option>
-              <For each={activeStyluses()}>
-                {(stylus) => (
-                  <option value={stylus.id}>
-                    {stylus.name} {stylus.primary ? "(Primary)" : ""}
-                  </option>
-                )}
-              </For>
-            </select>
-          </div>
-        </div>
-
-        {/* Additional row for cleaning notes */}
-        <Show when={selectedRelease()}>
-          <div class={styles.formControl} style="margin-top: 1rem;">
-            <label class={styles.label} for="cleaningNotes">
-              Cleaning Notes (optional)
-            </label>
-            <textarea
-              id="cleaningNotes"
-              class={styles.textarea}
-              value={cleaningNotes()}
-              onInput={(e) => setCleaningNotes(e.target.value)}
-              placeholder="Enter any notes about this cleaning..."
-              rows="2"
-            />
-          </div>
-        </Show>
-
-        {/* ROW 2: Search input */}
+      <div class={styles.logForm}>
+        {/* Search input */}
         <div class={styles.searchSection}>
           <label class={styles.label} for="releaseSearch">
             Search Your Collection
@@ -217,30 +213,12 @@ const LogPlay: Component = () => {
           />
         </div>
 
-        {/* ROW 3: Collection title and log buttons */}
-        <div class={styles.collectionHeader}>
-          <h2 class={styles.sectionTitle}>Your Collection</h2>
-          <div class={styles.actionButtons}>
-            <button
-              class={styles.cleaningButton}
-              disabled={!selectedRelease() || isSubmittingCleaning()}
-              onClick={handleLogCleaning}
-            >
-              {isSubmittingCleaning() ? "Logging..." : "Log Cleaning"}
-            </button>
-            <button
-              class={styles.logButton}
-              disabled={!selectedRelease() || isSubmittingPlay()}
-              onClick={handleLogPlay}
-            >
-              {isSubmittingPlay() ? "Logging..." : "Log Play"}
-            </button>
-          </div>
-        </div>
+        {/* Collection heading */}
+        <h2 class={styles.sectionTitle}>Your Collection</h2>
 
         {/* Release list */}
         <div class={styles.releasesSection}>
-          {filteredReleases()?.length === 0 ? (
+          {filteredReleases().length === 0 ? (
             <p class={styles.noResults}>
               No releases found. Try a different search term.
             </p>
@@ -299,14 +277,29 @@ const LogPlay: Component = () => {
             </div>
           )}
         </div>
-
-        {/* Removed the bottom action section since we moved the button up */}
-        {!selectedRelease() && (
-          <p class={styles.selectionHint}>
-            Please select a release to log a play or cleaning
-          </p>
-        )}
       </div>
+
+      {/* The modal */}
+      <Show when={selectedRelease()}>
+        <RecordActionModal
+          isOpen={isModalOpen()}
+          onClose={handleCloseModal}
+          release={selectedRelease()!}
+          date={selectedDate()}
+          setDate={setSelectedDate}
+          selectedStylus={selectedStylus()}
+          setSelectedStylus={setSelectedStylus}
+          styluses={styluses()}
+          notes={notes()}
+          setNotes={setNotes}
+          onLogPlay={handleLogPlay}
+          onLogCleaning={handleLogCleaning}
+          onLogBoth={handleLogBoth}
+          isSubmittingPlay={isSubmittingPlay()}
+          isSubmittingCleaning={isSubmittingCleaning()}
+          isSubmittingBoth={isSubmittingBoth()}
+        />
+      </Show>
     </div>
   );
 };

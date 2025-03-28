@@ -110,6 +110,7 @@ export interface PlayHistory {
   release?: Release;
   stylus?: Stylus;
   owned: boolean;
+  notes?: string;
 }
 export interface CleaningHistory {
   id: number;

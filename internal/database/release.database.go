@@ -129,6 +129,7 @@ func (s *Database) GetAllReleases() ([]Release, error) {
 					'played_at', ph.played_at,
 					'created_at', ph.created_at,
 					'updated_at', ph.updated_at,
+					'notes', ph.notes,
 					'stylus', CASE WHEN ph.stylus_id IS NOT NULL THEN (
 						SELECT json_object(
 							'id', s.id,
@@ -321,6 +322,7 @@ func (s *Database) GetAllReleases() ([]Release, error) {
 			CreatedAt string          `json:"created_at"`
 			UpdatedAt string          `json:"updated_at"`
 			Stylus    json.RawMessage `json:"stylus"`
+			Notes     string          `json:"notes"`
 		}
 
 		if err := json.Unmarshal(playHistoryJSON, &playHistoryData); err == nil {
@@ -332,6 +334,7 @@ func (s *Database) GetAllReleases() ([]Release, error) {
 					PlayedAt:  parseTime(ph.PlayedAt),
 					CreatedAt: parseTime(ph.CreatedAt),
 					UpdatedAt: parseTime(ph.UpdatedAt),
+					Notes:     ph.Notes,
 				}
 
 				// If stylus data is present, unmarshal it
