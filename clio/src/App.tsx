@@ -12,20 +12,18 @@ const App: Component<RouteSectionProps<unknown>> = ({ children }) => {
 
   createEffect(() => {
     if (auth.state === "ready") {
-      if (auth()?.data?.token) {
-        const data = auth().data;
-
-        setAuthPayload({
-          isSyncing: data.syncingData,
-          lastSynced: data.lastSync,
-          releases: data.releases,
-          stylus: data.stylus,
-        });
-
-        navigate("/");
-      } else {
+      if (!auth()?.data?.token) {
         navigate("/getToken");
+        return;
       }
+
+      const data = auth().data;
+      setAuthPayload({
+        isSyncing: data.syncingData,
+        lastSynced: data.lastSync,
+        releases: data.releases,
+        stylus: data.stylus,
+      });
     }
   });
   return (

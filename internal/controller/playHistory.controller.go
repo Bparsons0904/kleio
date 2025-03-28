@@ -7,6 +7,10 @@ import (
 )
 
 func (c *Controller) CreatePlayHistory(history *database.PlayHistory) error {
+	if history.PlayedAt.IsZero() {
+		history.PlayedAt = time.Now()
+	}
+
 	err := c.DB.CreatePlayHistory(history)
 	if err != nil {
 		slog.Error("Failed to create play history", "error", err)

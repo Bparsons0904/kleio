@@ -322,7 +322,7 @@ func (s *Database) GetAllReleases() ([]Release, error) {
 				}
 
 				// Add the release reference
-				playHistory.Release = release
+				// playHistory.Release = release
 
 				// Add to release's play history
 				release.PlayHistory = append(release.PlayHistory, playHistory)

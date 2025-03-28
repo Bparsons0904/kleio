@@ -91,6 +91,15 @@ const LogPlay: Component = () => {
     );
   };
 
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    });
+  };
+
   return (
     <div class={styles.container}>
       <h1 class={styles.title}>Log Play</h1>
@@ -191,6 +200,9 @@ const LogPlay: Component = () => {
                       ) : (
                         <div class={styles.noImage}>No Image</div>
                       )}
+                      {release.year && (
+                        <div class={styles.releaseYear}>{release.year}</div>
+                      )}
                     </div>
                     <div class={styles.releaseInfo}>
                       <h3 class={styles.releaseTitle}>{release.title}</h3>
@@ -200,8 +212,13 @@ const LogPlay: Component = () => {
                           .map((artist) => artist.artist?.name)
                           .join(", ")}
                       </p>
-                      {release.year && (
-                        <p class={styles.releaseYear}>{release.year}</p>
+                      {release.playHistory && release.playHistory.length > 0 ? (
+                        <p class={styles.lastPlayed}>
+                          Last played:{" "}
+                          {formatDate(release.playHistory[0].playedAt)}
+                        </p>
+                      ) : (
+                        <p class={styles.neverPlayed}>Never played</p>
                       )}
                     </div>
                   </div>

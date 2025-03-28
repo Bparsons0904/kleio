@@ -233,18 +233,18 @@ func (s *Database) CreatePlayHistory(history *PlayHistory) error {
 		RETURNING id, created_at, updated_at
 	`
 
-	var stylusID interface{}
+	var stylusID int
 	if history.StylusID != nil {
 		stylusID = *history.StylusID
 	} else {
-		stylusID = nil
+		stylusID = 0
 	}
 
 	err := s.DB.QueryRow(
 		query,
 		history.ReleaseID,
 		stylusID,
-		history.PlayedAt,
+		history.PlayedAt.Format("2006-01-02 15:04:05"),
 	).Scan(&history.ID, &history.CreatedAt, &history.UpdatedAt)
 	if err != nil {
 		slog.Error("Failed to create play history", "error", err)
@@ -265,11 +265,11 @@ func (s *Database) UpdatePlayHistory(history *PlayHistory) error {
 		RETURNING updated_at
 	`
 
-	var stylusID interface{}
+	var stylusID int
 	if history.StylusID != nil {
 		stylusID = *history.StylusID
 	} else {
-		stylusID = nil
+		stylusID = 0
 	}
 
 	err := s.DB.QueryRow(
