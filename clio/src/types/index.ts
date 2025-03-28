@@ -83,6 +83,7 @@ export interface Release {
   styles: Style[];
   notes: ReleaseNote[];
   playHistory: PlayHistory[];
+  cleaningHistory: CleaningHistory[];
 }
 
 export interface Stylus {
@@ -109,4 +110,13 @@ export interface PlayHistory {
   release?: Release;
   stylus?: Stylus;
   owned: boolean;
+}
+export interface CleaningHistory {
+  id: number;
+  releaseId: number;
+  cleanedAt: string;
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
+  release?: Release;
 }

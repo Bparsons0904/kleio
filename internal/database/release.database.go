@@ -10,6 +10,8 @@ import (
 	"time"
 )
 
+// Update to internal/database/release.database.go
+
 func (s *Database) GetAllReleases() ([]Release, error) {
 	// Query to get all releases with their related data as JSON
 	query := `
@@ -139,7 +141,7 @@ func (s *Database) GetAllReleases() ([]Release, error) {
 							'created_at', s.created_at,
 							'updated_at', s.updated_at,
 							'owned', s.owned,
-              'base_model', s.base_model
+							'base_model', s.base_model
 						)
 						FROM styluses s
 						WHERE s.id = ph.stylus_id
@@ -149,7 +151,24 @@ func (s *Database) GetAllReleases() ([]Release, error) {
 			FROM play_history ph
 			WHERE ph.release_id = r.id
 			ORDER BY ph.played_at DESC
-		) AS play_history
+		) AS play_history,
+		
+		-- Cleaning History (JSON array)
+		(
+			SELECT json_group_array(
+				json_object(
+					'id', ch.id,
+					'release_id', ch.release_id,
+					'cleaned_at', ch.cleaned_at,
+					'notes', ch.notes,
+					'created_at', ch.created_at,
+					'updated_at', ch.updated_at
+				)
+			)
+			FROM cleaning_history ch
+			WHERE ch.release_id = r.id
+			ORDER BY ch.cleaned_at DESC
+		) AS cleaning_history
 	FROM releases r
 	ORDER BY r.title`
 
@@ -166,7 +185,7 @@ func (s *Database) GetAllReleases() ([]Release, error) {
 	// Process each row
 	for rows.Next() {
 		var release Release
-		var artistsJSON, labelsJSON, formatsJSON, genresJSON, stylesJSON, notesJSON, playHistoryJSON []byte
+		var artistsJSON, labelsJSON, formatsJSON, genresJSON, stylesJSON, notesJSON, playHistoryJSON, cleaningHistoryJSON []byte
 
 		// Scan the row into our variables
 		err := rows.Scan(
@@ -189,6 +208,7 @@ func (s *Database) GetAllReleases() ([]Release, error) {
 			&stylesJSON,
 			&notesJSON,
 			&playHistoryJSON,
+			&cleaningHistoryJSON,
 		)
 		if err != nil {
 			slog.Error("Error scanning release row", "error", err)
@@ -315,7 +335,6 @@ func (s *Database) GetAllReleases() ([]Release, error) {
 				}
 
 				// If stylus data is present, unmarshal it
-				// if ph.Stylus != nil && len(ph.Stylus) > 2 { // Check if not null or empty {}
 				if len(ph.Stylus) > 2 { // Check if not null or empty {}
 					var stylusData Stylus
 					if err := json.Unmarshal(ph.Stylus, &stylusData); err == nil {
@@ -323,15 +342,45 @@ func (s *Database) GetAllReleases() ([]Release, error) {
 					}
 				}
 
-				// Add the release reference
-				// playHistory.Release = release
-
 				// Add to release's play history
 				release.PlayHistory = append(release.PlayHistory, playHistory)
 			}
 		}
+
+		// Sort play history by played_at (most recent first)
 		sort.Slice(release.PlayHistory, func(i, j int) bool {
 			return release.PlayHistory[i].PlayedAt.After(release.PlayHistory[j].PlayedAt)
+		})
+
+		// Unmarshal the JSON data for cleaning history
+		var cleaningHistoryData []struct {
+			ID        int    `json:"id"`
+			ReleaseID int    `json:"release_id"`
+			CleanedAt string `json:"cleaned_at"`
+			Notes     string `json:"notes"`
+			CreatedAt string `json:"created_at"`
+			UpdatedAt string `json:"updated_at"`
+		}
+
+		if err := json.Unmarshal(cleaningHistoryJSON, &cleaningHistoryData); err == nil {
+			for _, ch := range cleaningHistoryData {
+				cleaningHistory := CleaningHistory{
+					ID:        ch.ID,
+					ReleaseID: ch.ReleaseID,
+					CleanedAt: parseTime(ch.CleanedAt),
+					Notes:     ch.Notes,
+					CreatedAt: parseTime(ch.CreatedAt),
+					UpdatedAt: parseTime(ch.UpdatedAt),
+				}
+
+				// Add to release's cleaning history
+				release.CleaningHistory = append(release.CleaningHistory, cleaningHistory)
+			}
+		}
+
+		// Sort cleaning history by cleaned_at (most recent first)
+		sort.Slice(release.CleaningHistory, func(i, j int) bool {
+			return release.CleaningHistory[i].CleanedAt.After(release.CleaningHistory[j].CleanedAt)
 		})
 
 		releases = append(releases, release)

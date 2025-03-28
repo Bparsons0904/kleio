@@ -20,13 +20,14 @@ type Release struct {
 	LastSynced  time.Time `json:"lastSynced"  db:"last_synced"`
 
 	// Related entities (for JSON marshaling/unmarshaling)
-	Labels      []ReleaseLabel  `json:"labels,omitempty"`
-	Artists     []ReleaseArtist `json:"artists,omitempty"`
-	Formats     []Format        `json:"formats,omitempty"`
-	Genres      []Genre         `json:"genres,omitempty"`
-	Styles      []Style         `json:"styles,omitempty"`
-	Notes       []ReleaseNote   `json:"notes,omitempty"`
-	PlayHistory []PlayHistory   `json:"playHistory,omitempty"`
+	Labels          []ReleaseLabel    `json:"labels,omitempty"`
+	Artists         []ReleaseArtist   `json:"artists,omitempty"`
+	Formats         []Format          `json:"formats,omitempty"`
+	Genres          []Genre           `json:"genres,omitempty"`
+	Styles          []Style           `json:"styles,omitempty"`
+	Notes           []ReleaseNote     `json:"notes,omitempty"`
+	PlayHistory     []PlayHistory     `json:"playHistory,omitempty"`
+	CleaningHistory []CleaningHistory `json:"cleaningHistory,omitempty"`
 }
 
 // Label represents a record label

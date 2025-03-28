@@ -21,6 +21,7 @@ func (c *Controller) CreatePlayHistory(history *database.PlayHistory) (payload P
 	if err != nil {
 		slog.Error("Failed to get payload for play history", "error", err)
 	}
+	slog.Info("Created play history", "id", history.ID, "payload", payload)
 
 	return
 }

@@ -1,8 +1,8 @@
-import { Component, createSignal, createEffect, For } from "solid-js";
+import { Component, createSignal, createEffect, For, Show } from "solid-js";
 import { useAppContext } from "../../provider/Provider";
 import styles from "./LogPlay.module.scss";
 import { Release, Stylus } from "../../types";
-import { createPlayHistory } from "../../utils/api";
+import { createPlayHistory, createCleaningHistory } from "../../utils/api";
 
 const LogPlay: Component = () => {
   const {
@@ -21,7 +21,9 @@ const LogPlay: Component = () => {
     null,
   );
   const [selectedStylus, setSelectedStylus] = createSignal<Stylus | null>(null);
-  const [isSubmitting, setIsSubmitting] = createSignal(false);
+  const [isSubmittingPlay, setIsSubmittingPlay] = createSignal(false);
+  const [isSubmittingCleaning, setIsSubmittingCleaning] = createSignal(false);
+  const [cleaningNotes, setCleaningNotes] = createSignal("");
 
   // Set primary stylus as the default selected stylus
   createEffect(() => {
@@ -62,7 +64,7 @@ const LogPlay: Component = () => {
     }
 
     try {
-      setIsSubmitting(true);
+      setIsSubmittingPlay(true);
       const payload = {
         releaseId: selectedRelease()!.id,
         playedAt: new Date(selectedDate()).toISOString(),
@@ -72,7 +74,6 @@ const LogPlay: Component = () => {
       const response = await createPlayHistory(payload);
 
       if (response.status === 201) {
-        // Using toast instead of alert
         showSuccess("Play logged successfully!");
         setSelectedRelease(null);
         setAuthPayload(response.data);
@@ -83,7 +84,39 @@ const LogPlay: Component = () => {
       console.error("Error logging play:", error);
       showError("Failed to log play. Please try again.");
     } finally {
-      setIsSubmitting(false);
+      setIsSubmittingPlay(false);
+    }
+  };
+
+  const handleLogCleaning = async () => {
+    if (!selectedRelease()) {
+      return;
+    }
+
+    try {
+      setIsSubmittingCleaning(true);
+      const payload = {
+        releaseId: selectedRelease()!.id,
+        cleanedAt: new Date(selectedDate()).toISOString(),
+        notes: cleaningNotes(),
+      };
+
+      const response = await createCleaningHistory(payload);
+
+      console.log(response);
+      if (response.status === 201) {
+        showSuccess("Cleaning logged successfully!");
+        setSelectedRelease(null);
+        setCleaningNotes("");
+        setAuthPayload(response.data);
+      } else {
+        throw new Error("Failed to log cleaning");
+      }
+    } catch (error) {
+      console.error("Error logging cleaning:", error);
+      showError("Failed to log cleaning. Please try again.");
+    } finally {
+      setIsSubmittingCleaning(false);
     }
   };
 
@@ -105,9 +138,9 @@ const LogPlay: Component = () => {
 
   return (
     <div class={styles.container}>
-      <h1 class={styles.title}>Log Play</h1>
+      <h1 class={styles.title}>Log Play & Cleaning</h1>
       <p class={styles.subtitle}>
-        Record when you play a record from your collection.
+        Record when you play or clean records from your collection.
       </p>
 
       <div class={styles.logPlayForm}>
@@ -115,7 +148,7 @@ const LogPlay: Component = () => {
         <div class={styles.controlsRow}>
           <div class={styles.formControl}>
             <label class={styles.label} for="playDate">
-              Date Played
+              Date
             </label>
             <input
               type="date"
@@ -128,7 +161,7 @@ const LogPlay: Component = () => {
 
           <div class={styles.formControl}>
             <label class={styles.label} for="stylusSelect">
-              Stylus Used
+              Stylus Used (for Play)
             </label>
             <select
               id="stylusSelect"
@@ -152,6 +185,23 @@ const LogPlay: Component = () => {
           </div>
         </div>
 
+        {/* Additional row for cleaning notes */}
+        <Show when={selectedRelease()}>
+          <div class={styles.formControl} style="margin-top: 1rem;">
+            <label class={styles.label} for="cleaningNotes">
+              Cleaning Notes (optional)
+            </label>
+            <textarea
+              id="cleaningNotes"
+              class={styles.textarea}
+              value={cleaningNotes()}
+              onInput={(e) => setCleaningNotes(e.target.value)}
+              placeholder="Enter any notes about this cleaning..."
+              rows="2"
+            />
+          </div>
+        </Show>
+
         {/* ROW 2: Search input */}
         <div class={styles.searchSection}>
           <label class={styles.label} for="releaseSearch">
@@ -167,21 +217,30 @@ const LogPlay: Component = () => {
           />
         </div>
 
-        {/* ROW 3: Collection title and log button */}
+        {/* ROW 3: Collection title and log buttons */}
         <div class={styles.collectionHeader}>
           <h2 class={styles.sectionTitle}>Your Collection</h2>
-          <button
-            class={styles.logButton}
-            disabled={!selectedRelease() || isSubmitting()}
-            onClick={handleLogPlay}
-          >
-            {isSubmitting() ? "Logging..." : "Log Play"}
-          </button>
+          <div class={styles.actionButtons}>
+            <button
+              class={styles.cleaningButton}
+              disabled={!selectedRelease() || isSubmittingCleaning()}
+              onClick={handleLogCleaning}
+            >
+              {isSubmittingCleaning() ? "Logging..." : "Log Cleaning"}
+            </button>
+            <button
+              class={styles.logButton}
+              disabled={!selectedRelease() || isSubmittingPlay()}
+              onClick={handleLogPlay}
+            >
+              {isSubmittingPlay() ? "Logging..." : "Log Play"}
+            </button>
+          </div>
         </div>
 
         {/* Release list */}
         <div class={styles.releasesSection}>
-          {filteredReleases().length === 0 ? (
+          {filteredReleases()?.length === 0 ? (
             <p class={styles.noResults}>
               No releases found. Try a different search term.
             </p>
@@ -223,6 +282,16 @@ const LogPlay: Component = () => {
                       ) : (
                         <p class={styles.neverPlayed}>Never played</p>
                       )}
+                      {/* Add last cleaned info */}
+                      {release.cleaningHistory &&
+                      release.cleaningHistory.length > 0 ? (
+                        <p class={styles.lastCleaned}>
+                          Last cleaned:{" "}
+                          {formatDate(release.cleaningHistory[0].cleanedAt)}
+                        </p>
+                      ) : (
+                        <p class={styles.neverCleaned}>Never cleaned</p>
+                      )}
                     </div>
                   </div>
                 )}
@@ -234,7 +303,7 @@ const LogPlay: Component = () => {
         {/* Removed the bottom action section since we moved the button up */}
         {!selectedRelease() && (
           <p class={styles.selectionHint}>
-            Please select a release to log a play
+            Please select a release to log a play or cleaning
           </p>
         )}
       </div>

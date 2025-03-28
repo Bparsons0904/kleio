@@ -80,5 +80,38 @@ func (s *Server) RegisterRoutes() http.Handler {
 		}
 	})
 
+	// Cleaning history routes
+	mux.HandleFunc("/cleanings", func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodPost:
+			s.createCleaningHistory(w, r)
+		default:
+			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		}
+	})
+
+	mux.HandleFunc("/cleanings/counts", s.getCleaningCountsByRelease)
+	mux.HandleFunc("/cleanings/range", s.getCleaningsByTimeRange)
+
+	mux.HandleFunc("/cleanings/", func(w http.ResponseWriter, r *http.Request) {
+		// Skip if it's one of the special routes
+		path := r.URL.Path
+		if path == "/cleanings/" ||
+			strings.HasPrefix(path, "/cleanings/counts") ||
+			strings.HasPrefix(path, "/cleanings/range") {
+			return
+		}
+
+		// Handling routes with IDs
+		switch r.Method {
+		case http.MethodPut:
+			s.updateCleaningHistory(w, r)
+		case http.MethodDelete:
+			s.deleteCleaningHistory(w, r)
+		default:
+			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		}
+	})
+
 	return s.corsMiddleware(mux)
 }

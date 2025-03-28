@@ -6,8 +6,6 @@ import (
 	"kleio/internal/database"
 	"log/slog"
 	"net/http"
-	"os"
-	"strconv"
 	"time"
 
 	_ "github.com/joho/godotenv/autoload"
@@ -20,10 +18,9 @@ type Server struct {
 }
 
 func NewServer() *http.Server {
-	port, _ := strconv.Atoi(os.Getenv("PORT"))
-	slog.Info("Starting server...", "port", port)
+	slog.Info("Starting server...", "port", 38080)
 	NewServer := &Server{
-		port:       port,
+		port:       38080,
 		DB:         database.New(),
 		controller: controller.InitNewController(),
 	}

@@ -55,7 +55,7 @@ const GetToken: Component = () => {
         releases: result.releases,
         stylus: result.stylus,
       });
-      navigate("/home");
+      navigate("/");
     }
   };
 
