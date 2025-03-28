@@ -79,3 +79,14 @@ export const deletePlayHistory = async (id: number) => {
 export const createCleaningHistory = async (cleaningHistory: any) => {
   return await postApi("cleanings", cleaningHistory);
 };
+
+export const updateCleaningHistory = async (
+  id: number,
+  cleaningHistory: any,
+) => {
+  return await putApi(`cleanings/${id}`, cleaningHistory);
+};
+
+export const deleteCleaningHistory = async (id: number) => {
+  return await deleteApi(`cleanings/${id}`);
+};

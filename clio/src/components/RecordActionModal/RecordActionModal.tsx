@@ -1,6 +1,16 @@
-import { Component, Show } from "solid-js";
+import { Component, Show, createSignal } from "solid-js";
 import styles from "./RecordActionModal.module.scss";
 import { Release, Stylus } from "../../types";
+import RecordHistoryItem from "../RecordHistoryItem/RecordHistoryItem";
+import ConfirmationModal from "../ConfirmationModal/ConfirmationModal";
+import EditHistoryPanel from "../EditHistoryPanel/EditHistoryPanel";
+import {
+  deletePlayHistory,
+  updatePlayHistory,
+  deleteCleaningHistory,
+  updateCleaningHistory,
+} from "../../utils/api";
+import { useAppContext } from "../../provider/Provider";
 
 interface RecordActionModalProps {
   isOpen: boolean;
@@ -22,6 +32,23 @@ interface RecordActionModalProps {
 }
 
 const RecordActionModal: Component<RecordActionModalProps> = (props) => {
+  const { showSuccess, showError, setKleioStore } = useAppContext();
+
+  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = createSignal(false);
+  const [deleteItemId, setDeleteItemId] = createSignal<number | null>(null);
+  const [deleteItemType, setDeleteItemType] = createSignal<
+    "play" | "cleaning" | null
+  >(null);
+
+  const [isEditPanelOpen, setIsEditPanelOpen] = createSignal(false);
+  const [editItem, setEditItem] = createSignal<{
+    id: number;
+    type: "play" | "cleaning";
+    date: string;
+    notes?: string;
+    stylusId?: number;
+  } | null>(null);
+
   // Get only active styluses for the dropdown
   const activeStyluses = () => {
     return (
@@ -30,13 +57,121 @@ const RecordActionModal: Component<RecordActionModalProps> = (props) => {
   };
 
   // Format date helper
-  const formatDisplayDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    });
+  // const formatDisplayDate = (dateString: string) => {
+  //   const date = new Date(dateString);
+  //   return date.toLocaleDateString("en-US", {
+  //     year: "numeric",
+  //     month: "short",
+  //     day: "numeric",
+  //   });
+  // };
+
+  const handleEdit = (id: number, type: "play" | "cleaning") => {
+    if (type === "play") {
+      const playItem = props.release.playHistory.find((item) => item.id === id);
+      if (playItem) {
+        setEditItem({
+          id,
+          type,
+          date: playItem.playedAt,
+          notes: playItem.notes,
+          stylusId: playItem.stylusId,
+        });
+        setIsEditPanelOpen(true);
+      }
+    } else {
+      const cleaningItem = props.release.cleaningHistory.find(
+        (item) => item.id === id,
+      );
+      if (cleaningItem) {
+        setEditItem({
+          id,
+          type,
+          date: cleaningItem.cleanedAt,
+          notes: cleaningItem.notes,
+        });
+        setIsEditPanelOpen(true);
+      }
+    }
+  };
+
+  const handleDelete = (id: number, type: "play" | "cleaning") => {
+    setDeleteItemId(id);
+    setDeleteItemType(type);
+    setIsDeleteConfirmOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteItemId() || !deleteItemType()) return;
+
+    try {
+      if (deleteItemType() === "play") {
+        const response = await deletePlayHistory(deleteItemId()!);
+        if (response.status === 204) {
+          showSuccess("Play record deleted successfully");
+          if (response.data) {
+            setKleioStore(response.data);
+          }
+        }
+      } else {
+        const response = await deleteCleaningHistory(deleteItemId()!);
+        if (response.status === 204) {
+          showSuccess("Cleaning record deleted successfully");
+          if (response.data) {
+            setKleioStore(response.data);
+          }
+        }
+      }
+    } catch (error) {
+      console.error("Error deleting record:", error);
+      showError("Failed to delete record");
+    } finally {
+      setIsDeleteConfirmOpen(false);
+      setDeleteItemId(null);
+      setDeleteItemType(null);
+    }
+  };
+
+  const handleSaveEdit = async (data: {
+    id: number;
+    type: "play" | "cleaning";
+    date: string;
+    notes: string;
+    stylusId?: number;
+  }) => {
+    try {
+      if (data.type === "play") {
+        const response = await updatePlayHistory(data.id, {
+          releaseId: props.release.id,
+          playedAt: data.date,
+          stylusId: data.stylusId,
+          notes: data.notes,
+        });
+
+        if (response.status === 200) {
+          showSuccess("Play record updated successfully");
+          if (response.data) {
+            setKleioStore(response.data);
+          }
+        }
+      } else {
+        const response = await updateCleaningHistory(data.id, {
+          releaseId: props.release.id,
+          cleanedAt: data.date,
+          notes: data.notes,
+        });
+
+        if (response.status === 200) {
+          showSuccess("Cleaning record updated successfully");
+          if (response.data) {
+            setKleioStore(response.data);
+          }
+        }
+      }
+    } catch (error) {
+      console.error("Error updating record:", error);
+      showError("Failed to update record");
+    }
   };
 
   return (
@@ -152,25 +287,21 @@ const RecordActionModal: Component<RecordActionModalProps> = (props) => {
 
           <div class={styles.historySection}>
             <h3 class={styles.historyTitle}>Record History</h3>
-            {/* <div class={styles.historyTabs}> */}
-            {/*   <button class={`${styles.historyTab} ${styles.active}`}> */}
-            {/*     All */}
-            {/*   </button> */}
-            {/*   <button class={styles.historyTab}>Plays</button> */}
-            {/*   <button class={styles.historyTab}>Cleanings</button> */}
-            {/* </div> */}
 
             <div class={styles.historyList}>
-              {/* Show plays and cleanings in chronological order */}
+              {/* Combine play and cleaning history, sort by date */}
               {[
                 ...(props.release.playHistory || []).map((play) => ({
-                  type: "play",
+                  id: play.id,
+                  type: "play" as const,
                   date: new Date(play.playedAt),
                   notes: play.notes || "",
                   stylus: play.stylus?.name,
+                  stylusId: play.stylusId,
                 })),
                 ...(props.release.cleaningHistory || []).map((cleaning) => ({
-                  type: "cleaning",
+                  id: cleaning.id,
+                  type: "cleaning" as const,
                   date: new Date(cleaning.cleanedAt),
                   notes: cleaning.notes || "",
                 })),
@@ -178,30 +309,15 @@ const RecordActionModal: Component<RecordActionModalProps> = (props) => {
                 .sort((a, b) => b.date.getTime() - a.date.getTime())
                 .slice(0, 10) // Show only the 10 most recent activities
                 .map((item) => (
-                  <div
-                    class={`${styles.historyItem} ${item.type === "play" ? styles.playItem : styles.cleaningItem}`}
-                  >
-                    <div class={styles.historyItemHeader}>
-                      <span class={styles.historyItemType}>
-                        {item.type === "play" ? "► Played" : "✓ Cleaned"}
-                      </span>
-                      <span class={styles.historyItemDate}>
-                        {formatDisplayDate(item.date.toISOString())}
-                      </span>
-                    </div>
-                    {/* @ts-expect-error Cleaning history doesn't have a stylus, but is not a problem */}
-                    {item.stylus && (
-                      <div class={styles.historyItemStylus}>
-                        {/* @ts-expect-error Cleaning history doesn't have a stylus, but is not a problem */}
-                        Stylus: {item.stylus}
-                      </div>
-                    )}
-                    {item.notes && (
-                      <div class={styles.historyItemNotes}>
-                        Notes: {item.notes}
-                      </div>
-                    )}
-                  </div>
+                  <RecordHistoryItem
+                    id={item.id}
+                    type={item.type}
+                    date={item.date.toISOString()}
+                    notes={item.notes}
+                    stylus={item.stylus}
+                    onEdit={handleEdit}
+                    onDelete={handleDelete}
+                  />
                 ))}
 
               {!props.release.playHistory?.length &&
@@ -214,6 +330,32 @@ const RecordActionModal: Component<RecordActionModalProps> = (props) => {
           </div>
         </div>
       </div>
+
+      {/* Confirmation modal for delete */}
+      <ConfirmationModal
+        isOpen={isDeleteConfirmOpen()}
+        title="Confirm Delete"
+        message={`Are you sure you want to delete this ${deleteItemType() === "play" ? "play" : "cleaning"} record? This action cannot be undone.`}
+        confirmText="Delete"
+        onConfirm={confirmDelete}
+        onCancel={() => setIsDeleteConfirmOpen(false)}
+        isDestructive={true}
+      />
+
+      {/* Edit panel */}
+      <Show when={editItem()}>
+        <EditHistoryPanel
+          isOpen={isEditPanelOpen()}
+          onClose={() => setIsEditPanelOpen(false)}
+          id={editItem()!.id}
+          type={editItem()!.type}
+          date={editItem()!.date}
+          notes={editItem()!.notes}
+          stylusId={editItem()!.stylusId}
+          styluses={props.styluses}
+          onSave={handleSaveEdit}
+        />
+      </Show>
     </Show>
   );
 };

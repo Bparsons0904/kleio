@@ -25,3 +25,8 @@ VALUES
 -- Denon
 ('DL-103', 'Denon', 1500, 0, 0, true),
 ('DL-110', 'Denon', 1500, 0, 0, true);
+
+INSERT OR IGNORE INTO styluses 
+(name, manufacturer, expected_lifespan_hours, active, primary_stylus, owned, base_model) 
+VALUES
+('MP-110', 'Nagaoka', 1000, 1, 1, 1, 0);

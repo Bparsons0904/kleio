@@ -12,7 +12,7 @@ const StylusManager: Component = () => {
   const [isLoading, setIsLoading] = createSignal(false);
   const [successMessage, setSuccessMessage] = createSignal("");
   const [errorMessage, setErrorMessage] = createSignal("");
-  const [showArchived, setShowArchived] = createSignal(false);
+  const [showArchived] = createSignal(false);
   // Form state for new/editing stylus
   const [name, setName] = createSignal("");
   const [manufacturer, setManufacturer] = createSignal("");
@@ -87,8 +87,8 @@ const StylusManager: Component = () => {
     setPurchaseDate("");
 
     // Set default values for new copy
-    setIsActive(false);
-    setIsPrimary(false);
+    setIsActive(true);
+    setIsPrimary(true);
     setIsOwned(true);
   };
 
@@ -222,7 +222,7 @@ const StylusManager: Component = () => {
                 <option value="">Select a stylus</option>
                 <For
                   each={styluses()
-                    .filter((s) => s.owned === true)
+                    .filter((s) => s.baseModel === true)
                     .sort((a, b) => {
                       if (a.primary && !b.primary) return -1;
                       if (!a.primary && b.primary) return 1;
