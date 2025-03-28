@@ -90,13 +90,13 @@ func (s *Server) updatePlayHistory(w http.ResponseWriter, r *http.Request) {
 		history.PlayedAt = playedAt
 	}
 
-	err = s.controller.UpdatePlayHistory(&history)
+	payload, err := s.controller.UpdatePlayHistory(&history)
 	if err != nil {
 		http.Error(w, "Failed to update play history", http.StatusInternalServerError)
 		return
 	}
 
-	writeData(w, history)
+	writeData(w, payload)
 }
 
 func (s *Server) deletePlayHistory(w http.ResponseWriter, r *http.Request) {
@@ -120,13 +120,13 @@ func (s *Server) deletePlayHistory(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = s.controller.DeletePlayHistory(id)
+	payload, err := s.controller.DeletePlayHistory(id)
 	if err != nil {
 		http.Error(w, "Failed to delete play history", http.StatusInternalServerError)
 		return
 	}
 
-	w.WriteHeader(http.StatusNoContent)
+	writeData(w, payload)
 }
 
 func (s *Server) getPlayCounts(w http.ResponseWriter, r *http.Request) {

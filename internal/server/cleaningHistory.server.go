@@ -90,13 +90,13 @@ func (s *Server) updateCleaningHistory(w http.ResponseWriter, r *http.Request) {
 		history.CleanedAt = cleanedAt
 	}
 
-	err = s.controller.UpdateCleaningHistory(&history)
+	payload, err := s.controller.UpdateCleaningHistory(&history)
 	if err != nil {
 		http.Error(w, "Failed to update cleaning history", http.StatusInternalServerError)
 		return
 	}
 
-	writeData(w, history)
+	writeData(w, payload)
 }
 
 func (s *Server) deleteCleaningHistory(w http.ResponseWriter, r *http.Request) {
@@ -120,13 +120,13 @@ func (s *Server) deleteCleaningHistory(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = s.controller.DeleteCleaningHistory(id)
+	payload, err := s.controller.DeleteCleaningHistory(id)
 	if err != nil {
 		http.Error(w, "Failed to delete cleaning history", http.StatusInternalServerError)
 		return
 	}
 
-	w.WriteHeader(http.StatusNoContent)
+	writeData(w, payload)
 }
 
 func (s *Server) getCleaningCountsByRelease(w http.ResponseWriter, r *http.Request) {

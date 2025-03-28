@@ -23,24 +23,36 @@ func (c *Controller) CreateCleaningHistory(
 	return
 }
 
-func (c *Controller) UpdateCleaningHistory(history *database.CleaningHistory) error {
-	err := c.DB.UpdateCleaningHistory(history)
+func (c *Controller) UpdateCleaningHistory(
+	history *database.CleaningHistory,
+) (payload Payload, err error) {
+	err = c.DB.UpdateCleaningHistory(history)
 	if err != nil {
 		slog.Error("Failed to update cleaning history", "error", err)
-		return err
+		return
 	}
 
-	return nil
+	err = payload.GetPayload(c)
+	if err != nil {
+		slog.Error("Failed to get payload for cleaning history", "error", err)
+	}
+
+	return
 }
 
-func (c *Controller) DeleteCleaningHistory(id int) error {
-	err := c.DB.DeleteCleaningHistory(id)
+func (c *Controller) DeleteCleaningHistory(id int) (payload Payload, err error) {
+	err = c.DB.DeleteCleaningHistory(id)
 	if err != nil {
 		slog.Error("Failed to delete cleaning history", "error", err)
-		return err
+		return
 	}
 
-	return nil
+	err = payload.GetPayload(c)
+	if err != nil {
+		slog.Error("Failed to get payload for cleaning history", "error", err)
+	}
+
+	return
 }
 
 func (c *Controller) GetCleaningsByTimeRange(

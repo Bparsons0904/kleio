@@ -25,24 +25,34 @@ func (c *Controller) CreatePlayHistory(history *database.PlayHistory) (payload P
 	return
 }
 
-func (c *Controller) UpdatePlayHistory(history *database.PlayHistory) error {
-	err := c.DB.UpdatePlayHistory(history)
+func (c *Controller) UpdatePlayHistory(history *database.PlayHistory) (payload Payload, err error) {
+	err = c.DB.UpdatePlayHistory(history)
 	if err != nil {
 		slog.Error("Failed to update play history", "error", err)
-		return err
+		return
 	}
 
-	return nil
+	err = payload.GetPayload(c)
+	if err != nil {
+		slog.Error("Failed to get payload for play history", "error", err)
+	}
+
+	return
 }
 
-func (c *Controller) DeletePlayHistory(id int) error {
-	err := c.DB.DeletePlayHistory(id)
+func (c *Controller) DeletePlayHistory(id int) (payload Payload, err error) {
+	err = c.DB.DeletePlayHistory(id)
 	if err != nil {
 		slog.Error("Failed to delete play history", "error", err)
-		return err
+		return
 	}
 
-	return nil
+	err = payload.GetPayload(c)
+	if err != nil {
+		slog.Error("Failed to get payload for play history", "error", err)
+	}
+
+	return
 }
 
 func (c *Controller) GetPlayCountByRelease() (map[int]int, error) {
