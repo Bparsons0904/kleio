@@ -61,6 +61,16 @@
 .historyItemType {
   font-weight: 600;
   font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.historyItems {
+  display: flex;
+  flex-direction: row;
+  gap: 0.5rem;
+  min-width: 11ch;
 }
 
 .historyItemDate {
@@ -70,7 +80,13 @@
 
 .historyItemStylus {
   font-size: 0.85rem;
-  margin-bottom: 0.25rem;
+  display: flex;
+  align-items: center;
+}
+
+.noteIcon {
+  display: flex;
+  align-items: center;
 }
 
 .noteIconWrapper {

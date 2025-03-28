@@ -1,9 +1,11 @@
-import { Component, Show, createSignal } from "solid-js";
+import { Component, Match, Show, Switch, createSignal } from "solid-js";
 import styles from "./RecordHistoryItem.module.scss";
 import NotesViewPanel from "../NotesViewPanel/NotesViewPanel";
 import { BiSolidEdit } from "solid-icons/bi";
 import { VsNote } from "solid-icons/vs";
 import { FaSolidTrash } from "solid-icons/fa";
+import { BsVinylFill } from "solid-icons/bs";
+import { TbWashTemperature5 } from "solid-icons/tb";
 
 export interface HistoryItemProps {
   id: number;
@@ -32,8 +34,6 @@ const RecordHistoryItem: Component<HistoryItemProps> = (props) => {
     setIsNotesPanelOpen(true);
   };
 
-  console.log("props", props.stylus);
-
   return (
     <>
       <div
@@ -43,17 +43,24 @@ const RecordHistoryItem: Component<HistoryItemProps> = (props) => {
           <div class={styles.historyItemHeader}>
             <div class={styles.typeAndNotes}>
               <span class={styles.historyItemType}>
-                {props.type === "play" ? "► Played" : "✓ Cleaned"}
+                <Switch>
+                  <Match when={props.type === "play"}>
+                    <span class={styles.historyItems}>
+                      <BsVinylFill size={18} /> Played
+                    </span>
+                  </Match>
+                  <Match when={props.type === "cleaning"}>
+                    <span class={styles.historyItems}>
+                      <TbWashTemperature5 size={20} /> Cleaned
+                    </span>
+                  </Match>
+                </Switch>
               </span>
 
               <Show when={props.stylus}>
-                <button
-                  class={styles.noteButton}
-                  onClick={openNotesPanel}
-                  title="View notes"
-                >
-                  <VsNote class={styles.noteIcon} size={16} />
-                </button>
+                <div class={styles.historyItemStylus}>
+                  Stylus: {props.stylus}
+                </div>
               </Show>
               <Show when={props.notes}>
                 <button
@@ -61,7 +68,7 @@ const RecordHistoryItem: Component<HistoryItemProps> = (props) => {
                   onClick={openNotesPanel}
                   title="View notes"
                 >
-                  <VsNote class={styles.noteIcon} size={16} />
+                  <VsNote class={styles.noteIcon} size={18} />
                 </button>
               </Show>
             </div>
@@ -94,10 +101,6 @@ const RecordHistoryItem: Component<HistoryItemProps> = (props) => {
               </span>
             </div>
           </div>
-
-          <Show when={props.stylus}>
-            <div class={styles.historyItemStylus}>Stylus: {props.stylus}</div>
-          </Show>
         </div>
       </div>
       {/* Notes Panel */}
