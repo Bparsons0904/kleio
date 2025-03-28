@@ -27,7 +27,7 @@ func (c *Controller) GetAuth() (payload AuthPayload, err error) {
 		return payload, err
 	}
 
-	if lastSync.Status != "complete" {
+	if lastSync.Status == "" && lastSync.Status != "complete" {
 		slog.Error("Last sync failed, re-syncing", "error", err)
 		err := c.DB.CompleteSync(lastSync.ID, false)
 		if err != nil {
@@ -49,7 +49,9 @@ func (c *Controller) GetAuth() (payload AuthPayload, err error) {
 		return payload, err
 	}
 
-	expectedFolderSync := time.Now().Add(-12 * time.Hour)
+	// expectedFolderSync := time.Now().Add(-12 * time.Hour)
+
+	expectedFolderSync := time.Now()
 	if lastSync.SyncStart.Before(expectedFolderSync) {
 		slog.Info("Last synced is older than 12 hours, updating folders...")
 		go c.syncCollection()

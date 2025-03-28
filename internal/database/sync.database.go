@@ -23,7 +23,7 @@ func (s *Database) GetLatestSync() (Sync, error) {
 		if err == sql.ErrNoRows {
 			return Sync{}, nil
 		}
-		slog.Error("Database query error", "error", err, "query", query)
+		slog.Error("Database query error for latest sync", "error", err, "query", query)
 		return Sync{}, err
 	}
 	return sync, nil

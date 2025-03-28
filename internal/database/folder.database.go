@@ -8,18 +8,6 @@ import (
 )
 
 func (s *Database) GetLastFolderSync() (time.Time, error) {
-	// var lastSynced time.Time
-	// err := s.DB.QueryRow("SELECT last_synced FROM folders ORDER BY last_synced ASC LIMIT 1").
-	// 	Scan(&lastSynced)
-	// if err != nil {
-	// 	if err != sql.ErrNoRows {
-	// 		slog.Error("Database query error", "error", err)
-	// 	}
-	// 	return time.Time{}, err
-	// }
-	//
-	// return lastSynced, nil
-
 	return s.GetLastSync("folders")
 }
 

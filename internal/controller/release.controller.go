@@ -25,11 +25,9 @@ func (c *Controller) SyncReleases() error {
 	}
 
 	for _, folder := range folders {
-		slog.Info("Fetching releases for folder", "folderID", folder.ID, "name", folder.Name)
 		page := 1
 		perPage := 100
 		for {
-			slog.Info("Fetching releases page", "page", page)
 			response, err := fetchReleasesPage(user, folder.ID, page, perPage)
 			if err != nil {
 				return err
@@ -70,6 +68,8 @@ func fetchReleasesPage(user database.User, folderID, page, perPage int) (Discogs
 		page,
 		perPage,
 	)
+
+	slog.Info("Fetching releases page", "url", url)
 
 	// Create a new request
 	req, err := http.NewRequest("GET", url, nil)

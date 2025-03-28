@@ -838,277 +838,277 @@ func saveNotes(tx *sql.Tx, release DiscogsRelease,
 	return nil
 }
 
-func GetAllReleases(db *sql.DB) ([]Release, error) {
-	// Use the query that fetches all releases with JSON-aggregated related data
-	query := `
-	SELECT 
-		r.id,
-		r.instance_id,
-		r.folder_id,
-		r.rating,
-		r.title,
-		r.year,
-		r.resource_url,
-		r.thumb,
-		r.cover_image,
-		r.created_at,
-		r.updated_at,
-		r.last_synced,
-		
-		-- Artists (JSON array)
-		(
-			SELECT json_group_array(
-				json_object(
-					'artist_id', a.id,
-					'name', a.name,
-					'resource_url', a.resource_url,
-					'join_relation', ra.join_relation,
-					'anv', ra.anv,
-					'tracks', ra.tracks,
-					'role', ra.role
-				)
-			)
-			FROM release_artists ra
-			JOIN artists a ON ra.artist_id = a.id
-			WHERE ra.release_id = r.id
-		) AS artists_json,
-		
-		-- Labels (JSON array)
-		(
-			SELECT json_group_array(
-				json_object(
-					'label_id', l.id,
-					'name', l.name,
-					'resource_url', l.resource_url,
-					'entity_type', l.entity_type,
-					'catno', rl.catno
-				)
-			)
-			FROM release_labels rl
-			JOIN labels l ON rl.label_id = l.id
-			WHERE rl.release_id = r.id
-		) AS labels_json,
-		
-		-- Formats with descriptions (JSON array)
-		(
-			SELECT json_group_array(
-				json_object(
-					'id', f.id,
-					'release_id', f.release_id,
-					'name', f.name,
-					'qty', f.qty,
-					'descriptions', (
-						SELECT json_group_array(fd.description)
-						FROM format_descriptions fd
-						WHERE fd.format_id = f.id
-					)
-				)
-			)
-			FROM formats f
-			WHERE f.release_id = r.id
-		) AS formats_json,
-		
-		-- Genres (JSON array)
-		(
-			SELECT json_group_array(
-				json_object(
-					'id', g.id,
-					'name', g.name
-				)
-			)
-			FROM release_genres rg
-			JOIN genres g ON rg.genre_id = g.id
-			WHERE rg.release_id = r.id
-		) AS genres_json,
-		
-		-- Styles (JSON array)
-		(
-			SELECT json_group_array(
-				json_object(
-					'id', s.id,
-					'name', s.name
-				)
-			)
-			FROM release_styles rs
-			JOIN styles s ON rs.style_id = s.id
-			WHERE rs.release_id = r.id
-		) AS styles_json,
-		
-		-- Notes (JSON array)
-		(
-			SELECT json_group_array(
-				json_object(
-					'release_id', rn.release_id,
-					'field_id', rn.field_id,
-					'value', rn.value
-				)
-			)
-			FROM release_notes rn
-			WHERE rn.release_id = r.id
-		) AS notes_json
-	FROM releases r
-	ORDER BY r.title`
-
-	// Execute the query
-	rows, err := db.Query(query)
-	if err != nil {
-		return nil, fmt.Errorf("error querying releases: %w", err)
-	}
-	defer rows.Close()
-
-	// Prepare slice to hold all releases
-	var releases []Release
-
-	// Process each row
-	for rows.Next() {
-		var release Release
-		var artistsJSON, labelsJSON, formatsJSON, genresJSON, stylesJSON, notesJSON []byte
-
-		// Scan the row into our variables
-		err := rows.Scan(
-			&release.ID,
-			&release.InstanceID,
-			&release.FolderID,
-			&release.Rating,
-			&release.Title,
-			&release.Year,
-			&release.ResourceURL,
-			&release.Thumb,
-			&release.CoverImage,
-			&release.CreatedAt,
-			&release.UpdatedAt,
-			&release.LastSynced,
-			&artistsJSON,
-			&labelsJSON,
-			&formatsJSON,
-			&genresJSON,
-			&stylesJSON,
-			&notesJSON,
-		)
-		if err != nil {
-			slog.Error("Error scanning release row", "error", err)
-			continue // Skip this release but continue with others
-		}
-
-		// Unmarshal the JSON arrays into our struct fields
-		// Artists
-		var artistsData []struct {
-			ArtistID     int    `json:"artist_id"`
-			Name         string `json:"name"`
-			ResourceURL  string `json:"resource_url"`
-			JoinRelation string `json:"join_relation"`
-			ANV          string `json:"anv"`
-			Tracks       string `json:"tracks"`
-			Role         string `json:"role"`
-		}
-		if err := json.Unmarshal(artistsJSON, &artistsData); err == nil {
-			for _, a := range artistsData {
-				artist := &Artist{
-					ID:          a.ArtistID,
-					Name:        a.Name,
-					ResourceURL: a.ResourceURL,
-				}
-				releaseArtist := ReleaseArtist{
-					ReleaseID:    release.ID,
-					ArtistID:     a.ArtistID,
-					JoinRelation: a.JoinRelation,
-					ANV:          a.ANV,
-					Tracks:       a.Tracks,
-					Role:         a.Role,
-					Artist:       artist,
-				}
-				release.Artists = append(release.Artists, releaseArtist)
-			}
-		}
-
-		// Labels
-		var labelsData []struct {
-			LabelID     int    `json:"label_id"`
-			Name        string `json:"name"`
-			ResourceURL string `json:"resource_url"`
-			EntityType  string `json:"entity_type"`
-			CatNo       string `json:"catno"`
-		}
-		if err := json.Unmarshal(labelsJSON, &labelsData); err == nil {
-			for _, l := range labelsData {
-				label := &Label{
-					ID:          l.LabelID,
-					Name:        l.Name,
-					ResourceURL: l.ResourceURL,
-					EntityType:  l.EntityType,
-				}
-				releaseLabel := ReleaseLabel{
-					ReleaseID: release.ID,
-					LabelID:   l.LabelID,
-					CatNo:     l.CatNo,
-					Label:     label,
-				}
-				release.Labels = append(release.Labels, releaseLabel)
-			}
-		}
-
-		// Formats with descriptions
-		var formatsData []Format
-		if err := json.Unmarshal(formatsJSON, &formatsData); err == nil {
-			for _, f := range formatsData {
-				format := Format{
-					ID:           f.ID,
-					ReleaseID:    f.ReleaseID,
-					Name:         f.Name,
-					Qty:          f.Qty,
-					Descriptions: f.Descriptions,
-				}
-				release.Formats = append(release.Formats, format)
-			}
-		}
-
-		// Genres
-		var genresData []struct {
-			ID   int    `json:"id"`
-			Name string `json:"name"`
-		}
-		if err := json.Unmarshal(genresJSON, &genresData); err == nil {
-			for _, g := range genresData {
-				genre := Genre{
-					ID:   g.ID,
-					Name: g.Name,
-				}
-				release.Genres = append(release.Genres, genre)
-			}
-		}
-
-		// Styles
-		var stylesData []Style
-		if err := json.Unmarshal(stylesJSON, &stylesData); err == nil {
-			for _, s := range stylesData {
-				style := Style{
-					ID:   s.ID,
-					Name: s.Name,
-				}
-				release.Styles = append(release.Styles, style)
-			}
-		}
-
-		// Notes
-		var notesData []ReleaseNote
-		if err := json.Unmarshal(notesJSON, &notesData); err == nil {
-			for _, n := range notesData {
-				note := ReleaseNote{
-					ReleaseID: n.ReleaseID,
-					FieldID:   n.FieldID,
-					Value:     n.Value,
-				}
-				release.Notes = append(release.Notes, note)
-			}
-		}
-
-		releases = append(releases, release)
-	}
-
-	if err := rows.Err(); err != nil {
-		return releases, fmt.Errorf("error iterating releases: %w", err)
-	}
-
-	slog.Info("Retrieved all releases", "count", len(releases))
-	return releases, nil
-}
+// func GetAllReleases(db *sql.DB) ([]Release, error) {
+// 	// Use the query that fetches all releases with JSON-aggregated related data
+// 	query := `
+// 	SELECT
+// 		r.id,
+// 		r.instance_id,
+// 		r.folder_id,
+// 		r.rating,
+// 		r.title,
+// 		r.year,
+// 		r.resource_url,
+// 		r.thumb,
+// 		r.cover_image,
+// 		r.created_at,
+// 		r.updated_at,
+// 		r.last_synced,
+//
+// 		-- Artists (JSON array)
+// 		(
+// 			SELECT json_group_array(
+// 				json_object(
+// 					'artist_id', a.id,
+// 					'name', a.name,
+// 					'resource_url', a.resource_url,
+// 					'join_relation', ra.join_relation,
+// 					'anv', ra.anv,
+// 					'tracks', ra.tracks,
+// 					'role', ra.role
+// 				)
+// 			)
+// 			FROM release_artists ra
+// 			JOIN artists a ON ra.artist_id = a.id
+// 			WHERE ra.release_id = r.id
+// 		) AS artists_json,
+//
+// 		-- Labels (JSON array)
+// 		(
+// 			SELECT json_group_array(
+// 				json_object(
+// 					'label_id', l.id,
+// 					'name', l.name,
+// 					'resource_url', l.resource_url,
+// 					'entity_type', l.entity_type,
+// 					'catno', rl.catno
+// 				)
+// 			)
+// 			FROM release_labels rl
+// 			JOIN labels l ON rl.label_id = l.id
+// 			WHERE rl.release_id = r.id
+// 		) AS labels_json,
+//
+// 		-- Formats with descriptions (JSON array)
+// 		(
+// 			SELECT json_group_array(
+// 				json_object(
+// 					'id', f.id,
+// 					'release_id', f.release_id,
+// 					'name', f.name,
+// 					'qty', f.qty,
+// 					'descriptions', (
+// 						SELECT json_group_array(fd.description)
+// 						FROM format_descriptions fd
+// 						WHERE fd.format_id = f.id
+// 					)
+// 				)
+// 			)
+// 			FROM formats f
+// 			WHERE f.release_id = r.id
+// 		) AS formats_json,
+//
+// 		-- Genres (JSON array)
+// 		(
+// 			SELECT json_group_array(
+// 				json_object(
+// 					'id', g.id,
+// 					'name', g.name
+// 				)
+// 			)
+// 			FROM release_genres rg
+// 			JOIN genres g ON rg.genre_id = g.id
+// 			WHERE rg.release_id = r.id
+// 		) AS genres_json,
+//
+// 		-- Styles (JSON array)
+// 		(
+// 			SELECT json_group_array(
+// 				json_object(
+// 					'id', s.id,
+// 					'name', s.name
+// 				)
+// 			)
+// 			FROM release_styles rs
+// 			JOIN styles s ON rs.style_id = s.id
+// 			WHERE rs.release_id = r.id
+// 		) AS styles_json,
+//
+// 		-- Notes (JSON array)
+// 		(
+// 			SELECT json_group_array(
+// 				json_object(
+// 					'release_id', rn.release_id,
+// 					'field_id', rn.field_id,
+// 					'value', rn.value
+// 				)
+// 			)
+// 			FROM release_notes rn
+// 			WHERE rn.release_id = r.id
+// 		) AS notes_json
+// 	FROM releases r
+// 	ORDER BY r.title`
+//
+// 	// Execute the query
+// 	rows, err := db.Query(query)
+// 	if err != nil {
+// 		return nil, fmt.Errorf("error querying releases: %w", err)
+// 	}
+// 	defer rows.Close()
+//
+// 	// Prepare slice to hold all releases
+// 	var releases []Release
+//
+// 	// Process each row
+// 	for rows.Next() {
+// 		var release Release
+// 		var artistsJSON, labelsJSON, formatsJSON, genresJSON, stylesJSON, notesJSON []byte
+//
+// 		// Scan the row into our variables
+// 		err := rows.Scan(
+// 			&release.ID,
+// 			&release.InstanceID,
+// 			&release.FolderID,
+// 			&release.Rating,
+// 			&release.Title,
+// 			&release.Year,
+// 			&release.ResourceURL,
+// 			&release.Thumb,
+// 			&release.CoverImage,
+// 			&release.CreatedAt,
+// 			&release.UpdatedAt,
+// 			&release.LastSynced,
+// 			&artistsJSON,
+// 			&labelsJSON,
+// 			&formatsJSON,
+// 			&genresJSON,
+// 			&stylesJSON,
+// 			&notesJSON,
+// 		)
+// 		if err != nil {
+// 			slog.Error("Error scanning release row", "error", err)
+// 			continue // Skip this release but continue with others
+// 		}
+//
+// 		// Unmarshal the JSON arrays into our struct fields
+// 		// Artists
+// 		var artistsData []struct {
+// 			ArtistID     int    `json:"artist_id"`
+// 			Name         string `json:"name"`
+// 			ResourceURL  string `json:"resource_url"`
+// 			JoinRelation string `json:"join_relation"`
+// 			ANV          string `json:"anv"`
+// 			Tracks       string `json:"tracks"`
+// 			Role         string `json:"role"`
+// 		}
+// 		if err := json.Unmarshal(artistsJSON, &artistsData); err == nil {
+// 			for _, a := range artistsData {
+// 				artist := &Artist{
+// 					ID:          a.ArtistID,
+// 					Name:        a.Name,
+// 					ResourceURL: a.ResourceURL,
+// 				}
+// 				releaseArtist := ReleaseArtist{
+// 					ReleaseID:    release.ID,
+// 					ArtistID:     a.ArtistID,
+// 					JoinRelation: a.JoinRelation,
+// 					ANV:          a.ANV,
+// 					Tracks:       a.Tracks,
+// 					Role:         a.Role,
+// 					Artist:       artist,
+// 				}
+// 				release.Artists = append(release.Artists, releaseArtist)
+// 			}
+// 		}
+//
+// 		// Labels
+// 		var labelsData []struct {
+// 			LabelID     int    `json:"label_id"`
+// 			Name        string `json:"name"`
+// 			ResourceURL string `json:"resource_url"`
+// 			EntityType  string `json:"entity_type"`
+// 			CatNo       string `json:"catno"`
+// 		}
+// 		if err := json.Unmarshal(labelsJSON, &labelsData); err == nil {
+// 			for _, l := range labelsData {
+// 				label := &Label{
+// 					ID:          l.LabelID,
+// 					Name:        l.Name,
+// 					ResourceURL: l.ResourceURL,
+// 					EntityType:  l.EntityType,
+// 				}
+// 				releaseLabel := ReleaseLabel{
+// 					ReleaseID: release.ID,
+// 					LabelID:   l.LabelID,
+// 					CatNo:     l.CatNo,
+// 					Label:     label,
+// 				}
+// 				release.Labels = append(release.Labels, releaseLabel)
+// 			}
+// 		}
+//
+// 		// Formats with descriptions
+// 		var formatsData []Format
+// 		if err := json.Unmarshal(formatsJSON, &formatsData); err == nil {
+// 			for _, f := range formatsData {
+// 				format := Format{
+// 					ID:           f.ID,
+// 					ReleaseID:    f.ReleaseID,
+// 					Name:         f.Name,
+// 					Qty:          f.Qty,
+// 					Descriptions: f.Descriptions,
+// 				}
+// 				release.Formats = append(release.Formats, format)
+// 			}
+// 		}
+//
+// 		// Genres
+// 		var genresData []struct {
+// 			ID   int    `json:"id"`
+// 			Name string `json:"name"`
+// 		}
+// 		if err := json.Unmarshal(genresJSON, &genresData); err == nil {
+// 			for _, g := range genresData {
+// 				genre := Genre{
+// 					ID:   g.ID,
+// 					Name: g.Name,
+// 				}
+// 				release.Genres = append(release.Genres, genre)
+// 			}
+// 		}
+//
+// 		// Styles
+// 		var stylesData []Style
+// 		if err := json.Unmarshal(stylesJSON, &stylesData); err == nil {
+// 			for _, s := range stylesData {
+// 				style := Style{
+// 					ID:   s.ID,
+// 					Name: s.Name,
+// 				}
+// 				release.Styles = append(release.Styles, style)
+// 			}
+// 		}
+//
+// 		// Notes
+// 		var notesData []ReleaseNote
+// 		if err := json.Unmarshal(notesJSON, &notesData); err == nil {
+// 			for _, n := range notesData {
+// 				note := ReleaseNote{
+// 					ReleaseID: n.ReleaseID,
+// 					FieldID:   n.FieldID,
+// 					Value:     n.Value,
+// 				}
+// 				release.Notes = append(release.Notes, note)
+// 			}
+// 		}
+//
+// 		releases = append(releases, release)
+// 	}
+//
+// 	if err := rows.Err(); err != nil {
+// 		return releases, fmt.Errorf("error iterating releases: %w", err)
+// 	}
+//
+// 	slog.Info("Retrieved all releases", "count", len(releases))
+// 	return releases, nil
+// }
