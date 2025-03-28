@@ -314,6 +314,7 @@ const RecordActionModal: Component<RecordActionModalProps> = (props) => {
                     type={item.type}
                     date={item.date.toISOString()}
                     notes={item.notes}
+                    // @ts-expect-error Stylus doesn't exist on cleaning
                     stylus={item.stylus}
                     onEdit={handleEdit}
                     onDelete={handleDelete}

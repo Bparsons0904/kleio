@@ -1,6 +1,8 @@
 import { Component, Show } from "solid-js";
 import styles from "./NotesViewPanel.module.scss";
-import { X, Calendar, Headphones } from "lucide-solid";
+import { AiOutlineClose } from "solid-icons/ai";
+import { AiTwotoneCalendar } from "solid-icons/ai";
+import { ImHeadphones } from "solid-icons/im";
 
 export interface NotesViewPanelProps {
   isOpen: boolean;
@@ -29,20 +31,20 @@ const NotesViewPanel: Component<NotesViewPanelProps> = (props) => {
         <div class={styles.panelHeader}>
           <h2 class={styles.panelTitle}>{props.title}</h2>
           <button class={styles.closeButton} onClick={props.onClose}>
-            <X size={20} />
+            <AiOutlineClose size={20} />
           </button>
         </div>
 
         <div class={styles.panelBody}>
           <div class={styles.metadata}>
             <div class={styles.metadataItem}>
-              <Calendar size={18} />
+              <AiTwotoneCalendar size={18} />
               <span>{formatDate(props.date)}</span>
             </div>
 
             <Show when={props.stylus}>
               <div class={styles.metadataItem}>
-                <Headphones size={18} />
+                <ImHeadphones size={18} />
                 <span>{props.stylus}</span>
               </div>
             </Show>

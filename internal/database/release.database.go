@@ -339,9 +339,90 @@ func (s *Database) GetAllReleases() ([]Release, error) {
 
 				// If stylus data is present, unmarshal it
 				if len(ph.Stylus) > 2 { // Check if not null or empty {}
-					var stylusData Stylus
-					if err := json.Unmarshal(ph.Stylus, &stylusData); err == nil {
+					// Temporary struct with string fields for dates and int for bools
+					var tempStylus struct {
+						ID               int     `json:"id"`
+						Name             string  `json:"name"`
+						Manufacturer     string  `json:"manufacturer"`
+						ExpectedLifespan int     `json:"expected_lifespan_hours"`
+						PurchaseDate     *string `json:"purchase_date"`
+						Active           int     `json:"active"`
+						Primary          int     `json:"primary_stylus"`
+						CreatedAt        string  `json:"created_at"`
+						UpdatedAt        string  `json:"updated_at"`
+						Owned            int     `json:"owned"`
+						BaseModel        int     `json:"base_model"`
+					}
+
+					if err := json.Unmarshal(ph.Stylus, &tempStylus); err == nil {
+						// Parse time fields
+						var createdAt, updatedAt time.Time
+						var purchaseDate *time.Time
+
+						// Parse created_at and updated_at
+						if tempStylus.CreatedAt != "" {
+							t, err := time.Parse("2006-01-02 15:04:05", tempStylus.CreatedAt)
+							if err != nil {
+								slog.Error(
+									"Failed to parse created_at",
+									"error",
+									err,
+									"value",
+									tempStylus.CreatedAt,
+								)
+							} else {
+								createdAt = t
+							}
+						}
+
+						if tempStylus.UpdatedAt != "" {
+							t, err := time.Parse("2006-01-02 15:04:05", tempStylus.UpdatedAt)
+							if err != nil {
+								slog.Error(
+									"Failed to parse updated_at",
+									"error",
+									err,
+									"value",
+									tempStylus.UpdatedAt,
+								)
+							} else {
+								updatedAt = t
+							}
+						}
+
+						// Parse purchase_date (which might be null)
+						if tempStylus.PurchaseDate != nil && *tempStylus.PurchaseDate != "" {
+							t, err := time.Parse("2006-01-02 15:04:05", *tempStylus.PurchaseDate)
+							if err != nil {
+								slog.Error(
+									"Failed to parse purchase_date",
+									"error",
+									err,
+									"value",
+									*tempStylus.PurchaseDate,
+								)
+							} else {
+								purchaseDate = &t
+							}
+						}
+
+						// Convert to actual Stylus struct
+						stylusData := Stylus{
+							ID:               tempStylus.ID,
+							Name:             tempStylus.Name,
+							Manufacturer:     tempStylus.Manufacturer,
+							ExpectedLifespan: tempStylus.ExpectedLifespan,
+							PurchaseDate:     purchaseDate,
+							Active:           tempStylus.Active != 0,
+							Primary:          tempStylus.Primary != 0,
+							CreatedAt:        createdAt,
+							UpdatedAt:        updatedAt,
+							Owned:            tempStylus.Owned != 0,
+							BaseModel:        tempStylus.BaseModel != 0,
+						}
 						playHistory.Stylus = &stylusData
+					} else {
+						slog.Error("Failed to unmarshal stylus data", "error", err, "data", string(ph.Stylus))
 					}
 				}
 

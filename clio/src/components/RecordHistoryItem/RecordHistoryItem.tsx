@@ -1,7 +1,9 @@
 import { Component, Show, createSignal } from "solid-js";
 import styles from "./RecordHistoryItem.module.scss";
-import { MessageSquareText, Pencil, Trash2 } from "lucide-solid";
 import NotesViewPanel from "../NotesViewPanel/NotesViewPanel";
+import { BiSolidEdit } from "solid-icons/bi";
+import { VsNote } from "solid-icons/vs";
+import { FaSolidTrash } from "solid-icons/fa";
 
 export interface HistoryItemProps {
   id: number;
@@ -30,6 +32,8 @@ const RecordHistoryItem: Component<HistoryItemProps> = (props) => {
     setIsNotesPanelOpen(true);
   };
 
+  console.log("props", props.stylus);
+
   return (
     <>
       <div
@@ -42,13 +46,22 @@ const RecordHistoryItem: Component<HistoryItemProps> = (props) => {
                 {props.type === "play" ? "► Played" : "✓ Cleaned"}
               </span>
 
+              <Show when={props.stylus}>
+                <button
+                  class={styles.noteButton}
+                  onClick={openNotesPanel}
+                  title="View notes"
+                >
+                  <VsNote class={styles.noteIcon} size={16} />
+                </button>
+              </Show>
               <Show when={props.notes}>
                 <button
                   class={styles.noteButton}
                   onClick={openNotesPanel}
                   title="View notes"
                 >
-                  <MessageSquareText class={styles.noteIcon} size={16} />
+                  <VsNote class={styles.noteIcon} size={16} />
                 </button>
               </Show>
             </div>
@@ -63,7 +76,7 @@ const RecordHistoryItem: Component<HistoryItemProps> = (props) => {
                   }}
                   title="Edit"
                 >
-                  <Pencil size={16} />
+                  <BiSolidEdit size={16} />
                 </button>
                 <button
                   class={styles.deleteButton}
@@ -73,7 +86,7 @@ const RecordHistoryItem: Component<HistoryItemProps> = (props) => {
                   }}
                   title="Delete"
                 >
-                  <Trash2 size={16} />
+                  <FaSolidTrash size={16} />
                 </button>
               </div>
               <span class={styles.historyItemDate}>
@@ -87,7 +100,6 @@ const RecordHistoryItem: Component<HistoryItemProps> = (props) => {
           </Show>
         </div>
       </div>
-
       {/* Notes Panel */}
       <Show when={props.notes}>
         <NotesViewPanel

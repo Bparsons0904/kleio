@@ -6,20 +6,18 @@ import (
 
 // Release represents a vinyl release in the collection
 type Release struct {
-	ID          int       `json:"id"          db:"id"` // Release ID from Discogs
-	InstanceID  int       `json:"instanceId"  db:"instance_id"`
-	FolderID    int       `json:"folderId"    db:"folder_id"`
-	Rating      int       `json:"rating"      db:"rating"`
-	Title       string    `json:"title"       db:"title"`
-	Year        *int      `json:"year"        db:"year"` // Pointer since it can be null
-	ResourceURL string    `json:"resourceUrl" db:"resource_url"`
-	Thumb       string    `json:"thumb"       db:"thumb"`
-	CoverImage  string    `json:"coverImage"  db:"cover_image"`
-	CreatedAt   time.Time `json:"createdAt"   db:"created_at"`
-	UpdatedAt   time.Time `json:"updatedAt"   db:"updated_at"`
-	LastSynced  time.Time `json:"lastSynced"  db:"last_synced"`
-
-	// Related entities (for JSON marshaling/unmarshaling)
+	ID              int               `json:"id"                        db:"id"`
+	InstanceID      int               `json:"instanceId"                db:"instance_id"`
+	FolderID        int               `json:"folderId"                  db:"folder_id"`
+	Rating          int               `json:"rating"                    db:"rating"`
+	Title           string            `json:"title"                     db:"title"`
+	Year            *int              `json:"year"                      db:"year"`
+	ResourceURL     string            `json:"resourceUrl"               db:"resource_url"`
+	Thumb           string            `json:"thumb"                     db:"thumb"`
+	CoverImage      string            `json:"coverImage"                db:"cover_image"`
+	CreatedAt       time.Time         `json:"createdAt"                 db:"created_at"`
+	UpdatedAt       time.Time         `json:"updatedAt"                 db:"updated_at"`
+	LastSynced      time.Time         `json:"lastSynced"                db:"last_synced"`
 	Labels          []ReleaseLabel    `json:"labels,omitempty"`
 	Artists         []ReleaseArtist   `json:"artists,omitempty"`
 	Formats         []Format          `json:"formats,omitempty"`

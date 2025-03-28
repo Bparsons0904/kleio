@@ -1,7 +1,7 @@
 import { Component, createSignal, Show } from "solid-js";
 import styles from "./EditHistoryPanel.module.scss";
-import { X } from "lucide-solid";
 import { Stylus } from "../../types";
+import { AiOutlineClose } from "solid-icons/ai";
 
 export interface EditHistoryPanelProps {
   isOpen: boolean;
@@ -54,7 +54,7 @@ const EditHistoryPanel: Component<EditHistoryPanelProps> = (props) => {
             Edit {props.type === "play" ? "Play" : "Cleaning"} Record
           </h2>
           <button class={styles.closeButton} onClick={props.onClose}>
-            <X size={20} />
+            <AiOutlineClose size={20} />
           </button>
         </div>
 
