@@ -38,14 +38,14 @@ func (s *Server) createPlayHistory(w http.ResponseWriter, r *http.Request) {
 		history.PlayedAt = playedAt
 	}
 
-	err = s.controller.CreatePlayHistory(&history)
+	payload, err := s.controller.CreatePlayHistory(&history)
 	if err != nil {
 		http.Error(w, "Failed to create play history", http.StatusInternalServerError)
 		return
 	}
 
 	w.WriteHeader(http.StatusCreated)
-	writeData(w, history)
+	writeData(w, payload)
 }
 
 func (s *Server) updatePlayHistory(w http.ResponseWriter, r *http.Request) {

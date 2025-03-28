@@ -1,12 +1,17 @@
-import { Component, createSignal, createEffect, For, Show } from "solid-js";
+import { Component, createSignal, createEffect, For } from "solid-js";
 import { useAppContext } from "../../provider/Provider";
 import styles from "./LogPlay.module.scss";
 import { Release, Stylus } from "../../types";
 import { createPlayHistory } from "../../utils/api";
 
 const LogPlay: Component = () => {
-  console.log("Rendering LogPlay");
-  const { releases, styluses } = useAppContext();
+  const {
+    releases,
+    styluses,
+    showSuccess,
+    showError,
+    setKleioStore: setAuthPayload,
+  } = useAppContext();
   const [filteredReleases, setFilteredReleases] = createSignal<Release[]>([]);
   const [searchTerm, setSearchTerm] = createSignal("");
   const [selectedDate, setSelectedDate] = createSignal(
@@ -64,21 +69,19 @@ const LogPlay: Component = () => {
         stylusId: selectedStylus()?.id || null,
       };
 
-      console.log("Logging play:", payload);
-
       const response = await createPlayHistory(payload);
 
       if (response.status === 201) {
-        // Success feedback
-        alert("Play logged successfully!");
-        // Optionally reset form
+        // Using toast instead of alert
+        showSuccess("Play logged successfully!");
         setSelectedRelease(null);
+        setAuthPayload(response.data);
       } else {
         throw new Error("Failed to log play");
       }
     } catch (error) {
       console.error("Error logging play:", error);
-      alert("Failed to log play. Please try again.");
+      showError("Failed to log play. Please try again.");
     } finally {
       setIsSubmitting(false);
     }

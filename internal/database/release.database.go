@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log/slog"
+	"sort"
 	"strconv"
 	"time"
 )
@@ -314,7 +315,8 @@ func (s *Database) GetAllReleases() ([]Release, error) {
 				}
 
 				// If stylus data is present, unmarshal it
-				if ph.Stylus != nil && len(ph.Stylus) > 2 { // Check if not null or empty {}
+				// if ph.Stylus != nil && len(ph.Stylus) > 2 { // Check if not null or empty {}
+				if len(ph.Stylus) > 2 { // Check if not null or empty {}
 					var stylusData Stylus
 					if err := json.Unmarshal(ph.Stylus, &stylusData); err == nil {
 						playHistory.Stylus = &stylusData
@@ -328,6 +330,9 @@ func (s *Database) GetAllReleases() ([]Release, error) {
 				release.PlayHistory = append(release.PlayHistory, playHistory)
 			}
 		}
+		sort.Slice(release.PlayHistory, func(i, j int) bool {
+			return release.PlayHistory[i].PlayedAt.After(release.PlayHistory[j].PlayedAt)
+		})
 
 		releases = append(releases, release)
 	}

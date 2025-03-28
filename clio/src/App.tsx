@@ -8,7 +8,7 @@ import { useAppContext } from "./provider/Provider";
 const App: Component<RouteSectionProps<unknown>> = ({ children }) => {
   const navigate = useNavigate();
   const [auth] = createResource("auth", fetchApi);
-  const { setAuthPayload } = useAppContext();
+  const { setKleioStore: setAuthPayload } = useAppContext();
 
   createEffect(() => {
     if (auth.state === "ready") {

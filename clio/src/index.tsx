@@ -7,6 +7,7 @@ import LogPlay from "./pages/LogPlay/LogPlay";
 import App from "./App";
 import StylusManager from "./pages/Stylus/StylusManager";
 import { AppProvider } from "./provider/Provider";
+import "./styles/reset.scss";
 
 render(
   () => (

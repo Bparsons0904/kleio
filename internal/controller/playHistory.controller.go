@@ -6,18 +6,23 @@ import (
 	"time"
 )
 
-func (c *Controller) CreatePlayHistory(history *database.PlayHistory) error {
+func (c *Controller) CreatePlayHistory(history *database.PlayHistory) (payload Payload, err error) {
 	if history.PlayedAt.IsZero() {
 		history.PlayedAt = time.Now()
 	}
 
-	err := c.DB.CreatePlayHistory(history)
+	err = c.DB.CreatePlayHistory(history)
 	if err != nil {
 		slog.Error("Failed to create play history", "error", err)
-		return err
+		return
 	}
 
-	return nil
+	err = payload.GetPayload(c)
+	if err != nil {
+		slog.Error("Failed to get payload for play history", "error", err)
+	}
+
+	return
 }
 
 func (c *Controller) UpdatePlayHistory(history *database.PlayHistory) error {

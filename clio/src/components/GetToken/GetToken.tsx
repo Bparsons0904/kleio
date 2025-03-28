@@ -10,7 +10,7 @@ const GetToken: Component = () => {
   const [isError, setIsError] = createSignal(false);
   const [errorMessage, setErrorMessage] = createSignal("");
   const navigate = useNavigate();
-  const { setAuthPayload } = useAppContext();
+  const { setKleioStore: setAuthPayload } = useAppContext();
 
   const saveToken = async (tokenValue: string) => {
     try {

@@ -1,3 +1,4 @@
+// src/provider/Provider.tsx (modified)
 import {
   createContext,
   createEffect,
@@ -5,15 +6,23 @@ import {
   onCleanup,
   ParentProps,
   useContext,
+  Show,
 } from "solid-js";
 import { Folder, Release, Stylus } from "../types";
 import { fetchApi } from "../utils/api";
+import Toast, { ToastType } from "../components/layout/Toast/Toast";
 
-interface AuthPayload {
+interface Payload {
   isSyncing: boolean;
   lastSynced: string;
   releases: Release[];
   stylus: Stylus[];
+}
+
+interface ToastState {
+  message: string;
+  type: ToastType;
+  duration?: number;
 }
 
 type AppStore = {
@@ -29,7 +38,14 @@ type AppStore = {
   setLastSynced: (value: string) => void;
   setIsSyncing: (value: boolean) => void;
 
-  setAuthPayload: (payload: AuthPayload) => void;
+  setKleioStore: (payload: Payload) => void;
+
+  // Toast functions
+  showToast: (message: string, type: ToastType, duration?: number) => void;
+  showSuccess: (message: string, duration?: number) => void;
+  showError: (message: string, duration?: number) => void;
+  showInfo: (message: string, duration?: number) => void;
+  clearToast: () => void;
 };
 
 const defaultStore: Partial<AppStore> = {};
@@ -41,6 +57,7 @@ export function AppProvider(props: ParentProps) {
   const [styluses, setStyluses] = createSignal<Stylus[]>([]);
   const [lastSynced, setLastSynced] = createSignal("");
   const [isSyncing, setIsSyncing] = createSignal(false);
+  const [toast, setToast] = createSignal<ToastState | null>(null);
 
   createEffect(() => {
     if (!isSyncing()) return;
@@ -69,11 +86,32 @@ export function AppProvider(props: ParentProps) {
     });
   });
 
-  const setAuthPayload = (payload: AuthPayload) => {
+  const setAuthPayload = (payload: Payload) => {
     setIsSyncing(payload.isSyncing);
     setLastSynced(payload.lastSynced);
     setReleases(payload.releases);
     setStyluses(payload.stylus);
+  };
+
+  // Toast functions
+  const showToast = (message: string, type: ToastType, duration?: number) => {
+    setToast({ message, type, duration });
+  };
+
+  const showSuccess = (message: string, duration?: number) => {
+    showToast(message, "success", duration);
+  };
+
+  const showError = (message: string, duration?: number) => {
+    showToast(message, "error", duration || 5000); // Longer duration for errors
+  };
+
+  const showInfo = (message: string, duration?: number) => {
+    showToast(message, "info", duration);
+  };
+
+  const clearToast = () => {
+    setToast(null);
   };
 
   const store: AppStore = {
@@ -89,11 +127,30 @@ export function AppProvider(props: ParentProps) {
     setLastSynced,
     setIsSyncing,
 
-    setAuthPayload,
+    setKleioStore: setAuthPayload,
+
+    // Toast functions
+    showToast,
+    showSuccess,
+    showError,
+    showInfo,
+    clearToast,
   };
 
   return (
-    <AppContext.Provider value={store}>{props.children}</AppContext.Provider>
+    <AppContext.Provider value={store}>
+      {props.children}
+      <Show when={toast()}>
+        {(activeToast) => (
+          <Toast
+            message={activeToast().message}
+            type={activeToast().type}
+            duration={activeToast().duration}
+            onClose={clearToast}
+          />
+        )}
+      </Show>
+    </AppContext.Provider>
   );
 }
 

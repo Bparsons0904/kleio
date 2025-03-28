@@ -1,0 +1,76 @@
+/* Box sizing for all elements */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+/* Make base font consistent */
+html {
+  font-family: "Arial", sans-serif;
+  line-height: 1.5;
+  font-size: 16px;
+  -webkit-text-size-adjust: 100%;
+}
+
+/* Remove outline for non-keyboard interactions */
+:focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* Better form element defaults */
+button,
+input,
+optgroup,
+select,
+textarea {
+  font-family: inherit;
+  font-size: 100%;
+  line-height: 1.15;
+  margin: 0;
+}
+
+/* Remove default button styling */
+button {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+}
+
+/* Avoid text overflow */
+p,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  overflow-wrap: break-word;
+}
+
+/* Lists */
+ul,
+ol {
+  list-style: none;
+}
+
+/* Links */
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+/* Images */
+img {
+  max-width: 100%;
+  display: block;
+}
+
+/* Form elements */
+input[type="date"],
+input[type="datetime-local"],
+input[type="time"] {
+  font-family: inherit;
+}
