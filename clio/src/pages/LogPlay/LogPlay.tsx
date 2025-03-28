@@ -1,11 +1,12 @@
-import { Component, createSignal, createEffect, For } from "solid-js";
+import { Component, createSignal, createEffect, For, Show } from "solid-js";
 import { useAppContext } from "../../provider/Provider";
 import styles from "./LogPlay.module.scss";
-import { Release } from "../../types";
+import { Release, Stylus } from "../../types";
+import { createPlayHistory } from "../../utils/api";
 
 const LogPlay: Component = () => {
   console.log("Rendering LogPlay");
-  const { releases } = useAppContext();
+  const { releases, styluses } = useAppContext();
   const [filteredReleases, setFilteredReleases] = createSignal<Release[]>([]);
   const [searchTerm, setSearchTerm] = createSignal("");
   const [selectedDate, setSelectedDate] = createSignal(
@@ -14,17 +15,27 @@ const LogPlay: Component = () => {
   const [selectedRelease, setSelectedRelease] = createSignal<Release | null>(
     null,
   );
+  const [selectedStylus, setSelectedStylus] = createSignal<Stylus | null>(null);
+  const [isSubmitting, setIsSubmitting] = createSignal(false);
+
+  // Set primary stylus as the default selected stylus
+  createEffect(() => {
+    const primaryStylus = styluses()?.find(
+      (stylus) => stylus.primary && stylus.active,
+    );
+    if (primaryStylus) {
+      setSelectedStylus(primaryStylus);
+    }
+  });
 
   // Filter releases based on search term
   createEffect(() => {
     const term = searchTerm().toLowerCase();
     if (!term) {
-      console.log("Rendering LogPlay term ");
       setFilteredReleases(releases?.());
       return;
     }
 
-    console.log("Rendering LogPlay before ");
     const filtered = releases().filter(
       (release) =>
         release.title.toLowerCase().includes(term) ||
@@ -40,12 +51,44 @@ const LogPlay: Component = () => {
     setSelectedRelease(release);
   };
 
-  const handleLogPlay = () => {
-    // This will be implemented later
-    console.log("Logging play:", {
-      releaseId: selectedRelease()?.id,
-      date: selectedDate(),
-    });
+  const handleLogPlay = async () => {
+    if (!selectedRelease()) {
+      return;
+    }
+
+    try {
+      setIsSubmitting(true);
+      const payload = {
+        releaseId: selectedRelease()!.id,
+        playedAt: new Date(selectedDate()).toISOString(),
+        stylusId: selectedStylus()?.id || null,
+      };
+
+      console.log("Logging play:", payload);
+
+      const response = await createPlayHistory(payload);
+
+      if (response.status === 201) {
+        // Success feedback
+        alert("Play logged successfully!");
+        // Optionally reset form
+        setSelectedRelease(null);
+      } else {
+        throw new Error("Failed to log play");
+      }
+    } catch (error) {
+      console.error("Error logging play:", error);
+      alert("Failed to log play. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // Get only active styluses for the dropdown
+  const activeStyluses = () => {
+    return (
+      styluses()?.filter((stylus) => stylus.active || stylus.primary) || []
+    );
   };
 
   return (
@@ -56,19 +99,48 @@ const LogPlay: Component = () => {
       </p>
 
       <div class={styles.logPlayForm}>
-        <div class={styles.datePickerSection}>
-          <label class={styles.label} for="playDate">
-            Date Played
-          </label>
-          <input
-            type="date"
-            id="playDate"
-            class={styles.datePicker}
-            value={selectedDate()}
-            onInput={(e) => setSelectedDate(e.target.value)}
-          />
+        {/* ROW 1: Date and stylus selection */}
+        <div class={styles.controlsRow}>
+          <div class={styles.formControl}>
+            <label class={styles.label} for="playDate">
+              Date Played
+            </label>
+            <input
+              type="date"
+              id="playDate"
+              class={styles.datePicker}
+              value={selectedDate()}
+              onInput={(e) => setSelectedDate(e.target.value)}
+            />
+          </div>
+
+          <div class={styles.formControl}>
+            <label class={styles.label} for="stylusSelect">
+              Stylus Used
+            </label>
+            <select
+              id="stylusSelect"
+              class={styles.stylusSelect}
+              value={selectedStylus()?.id || ""}
+              onChange={(e) => {
+                const id = parseInt(e.target.value);
+                const stylus = styluses().find((s) => s.id === id);
+                setSelectedStylus(stylus || null);
+              }}
+            >
+              <option value="">None</option>
+              <For each={activeStyluses()}>
+                {(stylus) => (
+                  <option value={stylus.id}>
+                    {stylus.name} {stylus.primary ? "(Primary)" : ""}
+                  </option>
+                )}
+              </For>
+            </select>
+          </div>
         </div>
 
+        {/* ROW 2: Search input */}
         <div class={styles.searchSection}>
           <label class={styles.label} for="releaseSearch">
             Search Your Collection
@@ -83,8 +155,20 @@ const LogPlay: Component = () => {
           />
         </div>
 
-        <div class={styles.releasesSection}>
+        {/* ROW 3: Collection title and log button */}
+        <div class={styles.collectionHeader}>
           <h2 class={styles.sectionTitle}>Your Collection</h2>
+          <button
+            class={styles.logButton}
+            disabled={!selectedRelease() || isSubmitting()}
+            onClick={handleLogPlay}
+          >
+            {isSubmitting() ? "Logging..." : "Log Play"}
+          </button>
+        </div>
+
+        {/* Release list */}
+        <div class={styles.releasesSection}>
           {filteredReleases().length === 0 ? (
             <p class={styles.noResults}>
               No releases found. Try a different search term.
@@ -127,20 +211,12 @@ const LogPlay: Component = () => {
           )}
         </div>
 
-        <div class={styles.actionSection}>
-          <button
-            class={styles.logButton}
-            disabled={!selectedRelease()}
-            onClick={handleLogPlay}
-          >
-            Log Play
-          </button>
-          {!selectedRelease() && (
-            <p class={styles.selectionHint}>
-              Please select a release to log a play
-            </p>
-          )}
-        </div>
+        {/* Removed the bottom action section since we moved the button up */}
+        {!selectedRelease() && (
+          <p class={styles.selectionHint}>
+            Please select a release to log a play
+          </p>
+        )}
       </div>
     </div>
   );

@@ -27,6 +27,20 @@
   margin-bottom: 2rem;
 }
 
+// ROW 1: Date and stylus controls
+.controlsRow {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 1.5rem;
+}
+
+.formControl {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  max-width: 300px;
+}
+
 .label {
   display: block;
   font-weight: 500;
@@ -36,12 +50,10 @@
 
 .datePicker {
   width: 100%;
-  max-width: 300px;
   padding: 0.75rem;
   border: 1px solid #ddd;
   border-radius: 4px;
   font-size: 1rem;
-  margin-bottom: 1.5rem;
 
   &:focus {
     outline: none;
@@ -50,7 +62,31 @@
   }
 }
 
-.datePickerSection,
+.stylusSelect {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 1rem;
+  background-color: white; /* Explicitly set white background */
+  cursor: pointer;
+  appearance: none; /* Remove default browser styling */
+
+  /* Custom dropdown arrow with padding */
+  background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23333%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center; /* Add padding to the right */
+  background-size: 0.8rem auto; /* Control the size of the arrow */
+  padding-right: 2.5rem; /* Make room for the arrow with extra padding */
+
+  &:focus {
+    outline: none;
+    border-color: #3273dc;
+    box-shadow: 0 0 0 2px rgba(50, 115, 220, 0.25);
+  }
+}
+
+// ROW 2: Search section
 .searchSection {
   margin-bottom: 1.5rem;
 }
@@ -69,15 +105,52 @@
   }
 }
 
+// ROW 3: Collection header with title and button
+.collectionHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
 .sectionTitle {
   font-size: 1.3rem;
   font-weight: 600;
   color: #444;
-  margin-bottom: 1rem;
+  margin: 0;
 }
 
+.logButton {
+  padding: 0.75rem 1.5rem;
+  background-color: #3273dc;
+  color: white;
+  font-weight: 500;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 1rem;
+  transition:
+    background-color 0.2s,
+    opacity 0.2s;
+
+  &:hover:not(:disabled) {
+    background-color: darken(#3273dc, 5%);
+  }
+
+  &:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(50, 115, 220, 0.25);
+  }
+
+  &:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+  }
+}
+
+// Release list section
 .releasesSection {
-  margin-bottom: 2rem;
+  margin-bottom: 1rem;
 }
 
 .releasesList {
@@ -175,49 +248,35 @@
   font-style: italic;
 }
 
-.actionSection {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-.logButton {
-  padding: 0.75rem 1.5rem;
-  background-color: #3273dc;
-  color: white;
-  font-weight: 500;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 1rem;
-  transition:
-    background-color 0.2s,
-    opacity 0.2s;
-
-  &:hover:not(:disabled) {
-    background-color: darken(#3273dc, 5%);
-  }
-
-  &:focus {
-    outline: none;
-    box-shadow: 0 0 0 2px rgba(50, 115, 220, 0.25);
-  }
-
-  &:disabled {
-    opacity: 0.7;
-    cursor: not-allowed;
-  }
-}
-
 .selectionHint {
   margin-top: 0.75rem;
   font-size: 0.875rem;
   color: #888;
   font-style: italic;
+  text-align: center;
 }
 
 // Responsive adjustments
 @media (max-width: 768px) {
+  .controlsRow {
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .formControl {
+    max-width: 100%;
+  }
+
+  .collectionHeader {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+
+  .logButton {
+    width: 100%;
+  }
+
   .releasesList {
     grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
   }

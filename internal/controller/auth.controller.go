@@ -49,9 +49,8 @@ func (c *Controller) GetAuth() (payload AuthPayload, err error) {
 		return payload, err
 	}
 
-	// expectedFolderSync := time.Now().Add(-12 * time.Hour)
-
-	expectedFolderSync := time.Now()
+	expectedFolderSync := time.Now().Add(-12 * time.Hour)
+	// expectedFolderSync := time.Now()
 	if lastSync.SyncStart.Before(expectedFolderSync) {
 		slog.Info("Last synced is older than 12 hours, updating folders...")
 		go c.syncCollection()
