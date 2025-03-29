@@ -1,4 +1,3 @@
-// pages/LogPlay/LogPlay.tsx
 import { Component, createSignal, createEffect, For, Show } from "solid-js";
 import { useAppContext } from "../../provider/Provider";
 import styles from "./LogPlay.module.scss";
@@ -59,6 +58,17 @@ const LogPlay: Component = () => {
     );
 
     setFilteredReleases(filtered);
+  });
+
+  createEffect(() => {
+    if (selectedRelease()) {
+      for (const release of releases()) {
+        if (release.id === selectedRelease().id) {
+          setSelectedRelease(release);
+          break;
+        }
+      }
+    }
   });
 
   const handleReleaseClick = (release: Release) => {
