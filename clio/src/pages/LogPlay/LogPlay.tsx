@@ -99,7 +99,6 @@ const LogPlay: Component = () => {
 
       if (response.status === 201) {
         showSuccess("Play logged successfully!");
-        setIsModalOpen(false);
         setNotes("");
         setAuthPayload(response.data);
       } else {
@@ -130,7 +129,6 @@ const LogPlay: Component = () => {
 
       if (response.status === 201) {
         showSuccess("Cleaning logged successfully!");
-        setIsModalOpen(false);
         setNotes("");
         setAuthPayload(response.data);
       } else {

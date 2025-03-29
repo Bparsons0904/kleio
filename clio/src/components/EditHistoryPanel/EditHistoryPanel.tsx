@@ -1,30 +1,28 @@
-import { Component, createSignal, Show } from "solid-js";
+import { Component, createEffect, createSignal, Show } from "solid-js";
 import styles from "./EditHistoryPanel.module.scss";
 import { Stylus } from "../../types";
 import { AiOutlineClose } from "solid-icons/ai";
 
-export interface EditHistoryPanelProps {
-  isOpen: boolean;
-  onClose: () => void;
-  type: "play" | "cleaning";
+interface EditItem {
   id: number;
+  type: "play" | "cleaning";
   date: string;
   notes?: string;
   stylusId?: number;
+}
+
+export interface EditHistoryPanelProps {
+  isOpen: boolean;
+  onClose: () => void;
+  editItem: EditItem | null;
   styluses: Stylus[];
-  onSave: (data: {
-    id: number;
-    type: "play" | "cleaning";
-    date: string;
-    notes: string;
-    stylusId?: number;
-  }) => void;
+  onSave: (data: EditItem) => void;
 }
 
 const EditHistoryPanel: Component<EditHistoryPanelProps> = (props) => {
-  const [date, setDate] = createSignal(props.date.split("T")[0]);
-  const [notes, setNotes] = createSignal(props.notes || "");
-  const [stylusId, setStylusId] = createSignal(props.stylusId);
+  const [date, setDate] = createSignal(props.editItem.date.split("T")[0]);
+  const [notes, setNotes] = createSignal(props.editItem.notes || "");
+  const [stylusId, setStylusId] = createSignal(props.editItem.stylusId);
   const [isSubmitting, setIsSubmitting] = createSignal(false);
 
   const handleSave = async () => {
@@ -32,17 +30,25 @@ const EditHistoryPanel: Component<EditHistoryPanelProps> = (props) => {
 
     try {
       props.onSave({
-        id: props.id,
-        type: props.type,
+        id: props.editItem.id,
+        type: props.editItem.type,
         date: new Date(date()).toISOString(),
         notes: notes(),
-        ...(props.type === "play" && { stylusId: stylusId() }),
+        ...(props.editItem.type === "play" && { stylusId: stylusId() }),
       });
     } finally {
       setIsSubmitting(false);
       props.onClose();
     }
   };
+
+  createEffect(() => {
+    if (props.editItem) {
+      setDate(props.editItem.date.split("T")[0]);
+      setNotes(props.editItem.notes || "");
+      setStylusId(props.editItem.stylusId);
+    }
+  });
 
   return (
     <div class={`${styles.panelWrapper} ${props.isOpen ? styles.open : ""}`}>
@@ -51,7 +57,7 @@ const EditHistoryPanel: Component<EditHistoryPanelProps> = (props) => {
       <div class={styles.panel}>
         <div class={styles.panelHeader}>
           <h2 class={styles.panelTitle}>
-            Edit {props.type === "play" ? "Play" : "Cleaning"} Record
+            Edit {props.editItem.type === "play" ? "Play" : "Cleaning"} Record
           </h2>
           <button class={styles.closeButton} onClick={props.onClose}>
             <AiOutlineClose size={20} />
@@ -72,7 +78,7 @@ const EditHistoryPanel: Component<EditHistoryPanelProps> = (props) => {
             />
           </div>
 
-          <Show when={props.type === "play"}>
+          <Show when={props.editItem.type === "play"}>
             <div class={styles.formGroup}>
               <label class={styles.label} for="editStylus">
                 Stylus

@@ -348,11 +348,12 @@ const RecordActionModal: Component<RecordActionModalProps> = (props) => {
         <EditHistoryPanel
           isOpen={isEditPanelOpen()}
           onClose={() => setIsEditPanelOpen(false)}
-          id={editItem()!.id}
-          type={editItem()!.type}
-          date={editItem()!.date}
-          notes={editItem()!.notes}
-          stylusId={editItem()!.stylusId}
+          editItem={editItem()}
+          // id={editItem()!.id}
+          // type={editItem()!.type}
+          // date={editItem()!.date}
+          // notes={editItem()!.notes}
+          // stylusId={editItem()!.stylusId}
           styluses={props.styluses}
           onSave={handleSaveEdit}
         />
