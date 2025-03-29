@@ -280,7 +280,7 @@ func (s *Database) UpdatePlayHistory(history *PlayHistory) error {
 		query,
 		history.ReleaseID,
 		stylusID,
-		history.PlayedAt,
+		history.PlayedAt.Format("2006-01-02 15:04:05"),
 		history.Notes,
 		history.ID,
 	).Scan(&history.UpdatedAt)

@@ -107,7 +107,7 @@ const RecordActionModal: Component<RecordActionModalProps> = (props) => {
     try {
       if (deleteItemType() === "play") {
         const response = await deletePlayHistory(deleteItemId()!);
-        if (response.status === 204) {
+        if (response.status === 200) {
           showSuccess("Play record deleted successfully");
           if (response.data) {
             setKleioStore(response.data);
@@ -115,7 +115,7 @@ const RecordActionModal: Component<RecordActionModalProps> = (props) => {
         }
       } else {
         const response = await deleteCleaningHistory(deleteItemId()!);
-        if (response.status === 204) {
+        if (response.status === 200) {
           showSuccess("Cleaning record deleted successfully");
           if (response.data) {
             setKleioStore(response.data);

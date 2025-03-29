@@ -6,7 +6,6 @@ import styles from "./StylusManager.module.scss";
 
 const StylusManager: Component = () => {
   const { styluses, setStyluses } = useAppContext();
-  console.log(styluses());
   const [isAddingStylus, setIsAddingStylus] = createSignal(false);
   const [editingStylus, setEditingStylus] = createSignal<Stylus | null>(null);
   const [isLoading, setIsLoading] = createSignal(false);

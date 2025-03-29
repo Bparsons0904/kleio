@@ -50,7 +50,7 @@ func (s *Database) UpdateCleaningHistory(history *CleaningHistory) error {
 	err := s.DB.QueryRow(
 		query,
 		history.ReleaseID,
-		history.CleanedAt,
+		history.CleanedAt.Format("2006-01-02 15:04:05"),
 		history.Notes,
 		history.ID,
 	).Scan(&history.UpdatedAt)

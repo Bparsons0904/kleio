@@ -45,10 +45,7 @@ const GetToken: Component = () => {
     }
 
     const result = await saveToken(token());
-    console.log(result);
     if (result) {
-      console.log("Token saved successfully");
-
       setAuthPayload({
         isSyncing: result.syncingData,
         lastSynced: result.lastSync,

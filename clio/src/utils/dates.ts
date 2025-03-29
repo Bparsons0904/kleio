@@ -5,7 +5,6 @@ export function useFormattedMediumDate(date: string) {
     const dateObj = new Date(date);
 
     if (isNaN(dateObj.getTime())) {
-      console.log("Invalid date created from:", date);
       return "Invalid date";
     }
 
