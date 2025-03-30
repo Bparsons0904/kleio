@@ -39,7 +39,7 @@ func (c *Controller) SaveToken(token string) (payload Payload, err error) {
 		return payload, err
 	}
 
-	go c.asyncCollection()
+	go c.AsyncCollection()
 	payload.SyncingData = true
 
 	return payload, nil

@@ -27,7 +27,7 @@ func (p *Payload) GetLastSync(controller *Controller) error {
 		if err != nil {
 			slog.Error("Failed to complete sync", "error", err)
 		}
-		go controller.asyncCollection()
+		go controller.AsyncCollection()
 		return nil
 	}
 
@@ -37,7 +37,7 @@ func (p *Payload) GetLastSync(controller *Controller) error {
 	// expectedFolderSync := time.Now()
 	if lastSync.SyncStart.Before(expectedFolderSync) {
 		slog.Info("Last synced is older than 12 hours, updating folders...")
-		go controller.asyncCollection()
+		go controller.AsyncCollection()
 		p.SyncingData = true
 	}
 

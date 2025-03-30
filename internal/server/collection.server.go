@@ -18,10 +18,10 @@ func (s *Server) getCollection(w http.ResponseWriter, r *http.Request) {
 
 func (s *Server) updateCollection(w http.ResponseWriter, r *http.Request) {
 	slog.Info("Updating collection, actually just syncing details")
-	s.controller.SyncTracksAndDuration()
+	go s.controller.AsyncCollection()
 
-	// response := map[string]any{"status": "ok", "isSyncing": true}
-	// writeData(w, response)
+	response := map[string]any{"isSyncing": true}
+	writeData(w, response)
 }
 
 func (s *Server) checkSync(w http.ResponseWriter, r *http.Request) {

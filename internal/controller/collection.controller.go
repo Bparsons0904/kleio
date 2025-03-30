@@ -27,62 +27,71 @@ func (c *Controller) SyncCollection() error {
 		return err
 	}
 
+	if err := c.syncTracksAndDuration(); err != nil {
+		slog.Error("Failed to sync tracks and duration", "error", err)
+		return err
+	}
+
 	return nil
 }
 
-func (c *Controller) asyncCollection() {
+func (c *Controller) AsyncCollection() (err error) {
+	defer func() {
+		if err != nil {
+			slog.Error("Failed to sync collection", "error", err)
+			err := c.DB.CleanupAbandonedSyncs()
+			if err != nil {
+				slog.Error("Failed to cleanup abandoned syncs", "error", err)
+			}
+		}
+	}()
+
 	id, err := c.DB.StartSync()
 	if err != nil {
 		slog.Error("Failed to start sync", "error", err)
-		return
+		return c.DB.CompleteSync(id, false)
 	}
 
-	if err := c.SyncFolders(); err != nil {
-		slog.Error("Failed to sync folders", "error", err)
-		return
-	}
-
-	if err := c.SyncReleases(); err != nil {
+	if err = c.SyncCollection(); err != nil {
 		slog.Error("Failed to sync collection", "error", err)
-		return
+		return c.DB.CompleteSync(id, false)
 	}
 
 	if err := c.DB.CompleteSync(id, true); err != nil {
 		slog.Error("Failed to complete sync", "error", err)
-		err := c.DB.CleanupAbandonedSyncs()
-		if err != nil {
-			slog.Error("Failed to cleanup abandoned syncs", "error", err)
-		}
+		return err
 	}
+
+	return nil
 }
 
-func (c *Controller) SyncTracksAndDuration() {
+func (c *Controller) syncTracksAndDuration() error {
 	releases, err := c.DB.GetReleasesWithoutDuration()
 	if err != nil {
 		slog.Error("Failed to get releases without duration", "error", err)
-		return
+		return err
 	}
 
 	user, err := c.DB.GetUser()
 	if err != nil {
 		slog.Error("Failed to get user", "error", err)
-		return
+		return err
 	}
 
-	count := 0
 	for _, release := range releases {
-		count++
 		slog.Info("Processing release", "releaseID", release.ID)
 		err := c.processReleaseTracks(release, user)
 		if err != nil {
 			slog.Error("Failed to process release tracks", "error", err)
-			break
+			return err
 		}
 
 		if c.RateLimit.ShouldThrottle() {
 			time.Sleep(15 * time.Second)
 		}
 	}
+
+	return nil
 }
 
 func (c *Controller) processReleaseTracks(release database.Release, user database.User) error {
