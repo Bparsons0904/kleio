@@ -1,7 +1,10 @@
 package controller
 
 import (
+	"kleio/internal/database"
+	"log"
 	"log/slog"
+	"time"
 )
 
 func (c *Controller) GetCollection() (payload Payload, err error) {
@@ -53,7 +56,7 @@ func (c *Controller) asyncCollection() {
 	}
 }
 
-func (c *Controller) SyncTrackAndDuration() {
+func (c *Controller) SyncTracksAndDuration() {
 	releases, err := c.DB.GetReleasesWithoutDuration()
 	if err != nil {
 		slog.Error("Failed to get releases without duration", "error", err)
@@ -66,17 +69,61 @@ func (c *Controller) SyncTrackAndDuration() {
 		return
 	}
 
-	err = c.GetReleaseDetails(releases[0].ResourceURL, user.Token)
+	count := 0
+	for _, release := range releases {
+		count++
+		slog.Info("Processing release", "releaseID", release.ID)
+		err := c.processReleaseTracks(release, user)
+		if err != nil {
+			slog.Error("Failed to process release tracks", "error", err)
+			break
+		}
+		// Run at every 2 seconds, 30 per minute
+		time.Sleep(2 * time.Second) // Sleep for 2seconds
+		if count == 5 {
+			break
+		}
+	}
+}
+
+func (c *Controller) processReleaseTracks(release database.Release, user database.User) error {
+	tracks, err := c.GetReleaseDetails(release, user.Token)
 	if err != nil {
-		slog.Error("Failed to get track and duration", "error", err)
-		return
+		slog.Error("processReleaseTracks: Failed to get track and duration", "error", err)
+		return err
 	}
 
-	//  for _, release := range releases {
-	//    err := c.GetReleaseDetails(release.ResourceURL, user.Token)
-	//    if err != nil {
-	//      slog.Error("Failed to get track and duration", "error", err)
-	//      continue
-	//    }
-	// }
+	err = c.DB.SaveTracks(release.ID, tracks)
+	if err != nil {
+		slog.Error("processReleaseTracks: Failed to save tracks", "error", err)
+		return err
+	}
+
+	durationSeconds, isDurationEstimated, err := c.calculateTrackDurations(release.ID, tracks)
+	if err != nil {
+		slog.Error("processReleaseTracks: Failed to calculate track durations", "error", err)
+		return err
+	}
+
+	log.Println("duration", "seconds", durationSeconds, "estimated", isDurationEstimated)
+	if durationSeconds == 0 {
+		slog.Error(
+			"processReleaseTracks: Duration",
+			"seconds",
+			durationSeconds,
+			"estimated",
+			isDurationEstimated,
+			"resourceURL",
+			release.ResourceURL,
+		)
+		return err
+	}
+
+	err = c.DB.UpdateReleaseWithDetails(release.ID, durationSeconds, isDurationEstimated)
+	if err != nil {
+		slog.Error("processReleaseTracks: Failed to update release duration", "error", err)
+		return err
+	}
+
+	return nil
 }

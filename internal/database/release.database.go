@@ -968,12 +968,29 @@ func saveNotes(tx *sql.Tx, release DiscogsRelease,
 
 func (s *Database) GetReleasesWithoutDuration() ([]Release, error) {
 	query := `
-		SELECT 
-			id, resource_url
-		FROM releases 
-		WHERE play_duration IS NULL
-		ORDER BY RANDOM() -- Randomize to distribute across collection 
-	`
+        SELECT 
+            r.id, r.resource_url,
+            (
+                SELECT json_group_array(
+                    json_object(
+                        'format_id', f.id,
+                        'name', f.name,
+                        'qty', f.qty,
+                        'descriptions', (
+                            SELECT json_group_array(fd.description)
+                            FROM format_descriptions fd
+                            WHERE fd.format_id = f.id
+                        )
+                    )
+                )
+                FROM formats f
+                WHERE f.release_id = r.id
+            ) AS formats
+        FROM releases r
+        WHERE r.play_duration IS NULL
+        ORDER BY RANDOM() -- Randomize to distribute across collection
+        
+    `
 
 	rows, err := s.DB.Query(query)
 	if err != nil {
@@ -985,11 +1002,29 @@ func (s *Database) GetReleasesWithoutDuration() ([]Release, error) {
 	var releases []Release
 	for rows.Next() {
 		var release Release
-		err := rows.Scan(&release.ID, &release.ResourceURL)
+		var formatsJSON []byte
+
+		err := rows.Scan(&release.ID, &release.ResourceURL, &formatsJSON)
 		if err != nil {
 			slog.Error("Failed to scan release", "error", err)
 			continue
 		}
+
+		// Parse formats to help with estimation
+		var formatsData []FormatData
+		if err := json.Unmarshal(formatsJSON, &formatsData); err == nil {
+			for _, f := range formatsData {
+				format := Format{
+					ID:           f.FormatID,
+					ReleaseID:    release.ID,
+					Name:         f.Name,
+					Qty:          f.Qty,
+					Descriptions: f.Descriptions,
+				}
+				release.Formats = append(release.Formats, format)
+			}
+		}
+
 		releases = append(releases, release)
 	}
 

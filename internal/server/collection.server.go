@@ -17,8 +17,8 @@ func (s *Server) getCollection(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) updateCollection(w http.ResponseWriter, r *http.Request) {
-	slog.Info("Updating collection")
-	s.controller.SyncTrackAndDuration()
+	slog.Info("Updating collection, actually just syncing details")
+	s.controller.SyncTracksAndDuration()
 
 	// response := map[string]any{"status": "ok", "isSyncing": true}
 	// writeData(w, response)
