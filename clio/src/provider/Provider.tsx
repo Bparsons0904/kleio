@@ -12,7 +12,7 @@ import { Folder, Release, Stylus } from "../types";
 import { fetchApi } from "../utils/api";
 import Toast, { ToastType } from "../components/layout/Toast/Toast";
 
-interface Payload {
+export interface Payload {
   isSyncing: boolean;
   lastSynced: string;
   releases: Release[];
@@ -64,7 +64,7 @@ export function AppProvider(props: ParentProps) {
 
     const pollInterval = setInterval(async () => {
       try {
-        const response = await fetchApi("collection/sync");
+        const response = await fetchApi<Payload>("collection/sync");
 
         if (response.data?.status === "complete") {
           setIsSyncing(false);

@@ -6,26 +6,48 @@ import (
 
 // Release represents a vinyl release in the collection
 type Release struct {
-	ID              int               `json:"id"                        db:"id"`
-	InstanceID      int               `json:"instanceId"                db:"instance_id"`
-	FolderID        int               `json:"folderId"                  db:"folder_id"`
-	Rating          int               `json:"rating"                    db:"rating"`
-	Title           string            `json:"title"                     db:"title"`
-	Year            *int              `json:"year"                      db:"year"`
-	ResourceURL     string            `json:"resourceUrl"               db:"resource_url"`
-	Thumb           string            `json:"thumb"                     db:"thumb"`
-	CoverImage      string            `json:"coverImage"                db:"cover_image"`
-	CreatedAt       time.Time         `json:"createdAt"                 db:"created_at"`
-	UpdatedAt       time.Time         `json:"updatedAt"                 db:"updated_at"`
-	LastSynced      time.Time         `json:"lastSynced"                db:"last_synced"`
-	Labels          []ReleaseLabel    `json:"labels,omitempty"`
-	Artists         []ReleaseArtist   `json:"artists,omitempty"`
-	Formats         []Format          `json:"formats,omitempty"`
-	Genres          []Genre           `json:"genres,omitempty"`
-	Styles          []Style           `json:"styles,omitempty"`
-	Notes           []ReleaseNote     `json:"notes,omitempty"`
-	PlayHistory     []PlayHistory     `json:"playHistory,omitempty"`
-	CleaningHistory []CleaningHistory `json:"cleaningHistory,omitempty"`
+	ID                    int               `json:"id"                        db:"id"`
+	InstanceID            int               `json:"instanceId"                db:"instance_id"`
+	FolderID              int               `json:"folderId"                  db:"folder_id"`
+	Rating                int               `json:"rating"                    db:"rating"`
+	Title                 string            `json:"title"                     db:"title"`
+	Year                  *int              `json:"year"                      db:"year"`
+	ResourceURL           string            `json:"resourceUrl"               db:"resource_url"`
+	Thumb                 string            `json:"thumb"                     db:"thumb"`
+	CoverImage            string            `json:"coverImage"                db:"cover_image"`
+	PlayDuration          *int              `json:"playDuration"              db:"play_duration"`
+	PlayDurationEstimated *bool             `json:"playDurationEstimated"     db:"play_duration_estimated"`
+	CreatedAt             time.Time         `json:"createdAt"                 db:"created_at"`
+	UpdatedAt             time.Time         `json:"updatedAt"                 db:"updated_at"`
+	Labels                []ReleaseLabel    `json:"labels,omitempty"`
+	Artists               []ReleaseArtist   `json:"artists,omitempty"`
+	Formats               []Format          `json:"formats,omitempty"`
+	Genres                []Genre           `json:"genres,omitempty"`
+	Styles                []Style           `json:"styles,omitempty"`
+	Notes                 []ReleaseNote     `json:"notes,omitempty"`
+	PlayHistory           []PlayHistory     `json:"playHistory,omitempty"`
+	CleaningHistory       []CleaningHistory `json:"cleaningHistory,omitempty"`
+	Tracks                []Track           `json:"tracks,omitzero"`
+}
+
+// Track represents a track/song on a release
+type Track struct {
+	ID              int       `json:"id"              db:"id"`
+	ReleaseID       int       `json:"releaseId"       db:"release_id"`
+	Position        string    `json:"position"        db:"position"` // e.g., "A1", "B2", etc.
+	Title           string    `json:"title"           db:"title"`
+	DurationText    string    `json:"durationText"    db:"duration_text"`    // Original format from Discogs (e.g., "3:45")
+	DurationSeconds int       `json:"durationSeconds" db:"duration_seconds"` // Normalized duration in seconds
+	CreatedAt       time.Time `json:"createdAt"       db:"created_at"`
+	UpdatedAt       time.Time `json:"updatedAt"       db:"updated_at"`
+}
+
+// DiscogsTrack represents the track format received from Discogs API
+type DiscogsTrack struct {
+	Duration string `json:"duration"` // Original duration string from Discogs (e.g., "3:45")
+	Position string `json:"position"` // "A1", "B2", etc.
+	Title    string `json:"title"`    // Track title
+	Type     string `json:"type_"`    // Usually "track", sometimes "heading" for section labels
 }
 
 // Label represents a record label
@@ -122,7 +144,6 @@ type Folder struct {
 	ResourceURL string    `json:"resource_url" db:"resource_url"`
 	CreatedAt   time.Time `json:"created_at"`
 	UpdatedAt   time.Time `json:"updated_at"`
-	LastSynced  time.Time `json:"last_synced"`
 }
 
 // FoldersResponse represents the response from the Discogs API folders endpoint

@@ -183,7 +183,7 @@ func (s *Database) GetReleaseByID(id int) (*Release, error) {
 		SELECT 
 			r.id, r.instance_id, r.folder_id, r.rating, r.title, 
 			r.year, r.resource_url, r.thumb, r.cover_image, 
-			r.created_at, r.updated_at, r.last_synced
+			r.created_at, r.updated_at
 		FROM releases r
 		WHERE r.id = ?
 	`
@@ -205,7 +205,6 @@ func (s *Database) GetReleaseByID(id int) (*Release, error) {
 		&release.CoverImage,
 		&release.CreatedAt,
 		&release.UpdatedAt,
-		&release.LastSynced,
 	)
 	if err != nil {
 		if err == sql.ErrNoRows {

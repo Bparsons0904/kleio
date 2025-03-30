@@ -22,6 +22,3 @@ CREATE INDEX IF NOT EXISTS idx_releases_title ON releases(title);
 
 -- Index for year-based queries
 CREATE INDEX IF NOT EXISTS idx_releases_year ON releases(year);
-
--- Index for timestamp queries
-CREATE INDEX IF NOT EXISTS idx_releases_last_synced ON releases(last_synced);

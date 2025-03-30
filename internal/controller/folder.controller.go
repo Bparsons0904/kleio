@@ -79,9 +79,8 @@ func (c *Controller) getDiscogFolders(user User) ([]Folder, error) {
 }
 
 func (c *Controller) updateFolders(folders []Folder) error {
-	now := time.Now().Format(time.RFC3339)
 	for _, folder := range folders {
-		if err := c.DB.UpdateFolder(folder, now); err != nil {
+		if err := c.DB.UpdateFolder(folder); err != nil {
 			slog.Error("Failed to update folder", "error", err)
 			return err
 		}

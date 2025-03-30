@@ -25,7 +25,6 @@ func (s *Database) GetAllReleases() ([]Release, error) {
 		r.cover_image,
 		r.created_at,
 		r.updated_at,
-		r.last_synced,
 		
 		-- Artists (JSON array)
 		(
@@ -199,7 +198,6 @@ func (s *Database) GetAllReleases() ([]Release, error) {
 			&release.CoverImage,
 			&release.CreatedAt,
 			&release.UpdatedAt,
-			&release.LastSynced,
 			&artistsJSON,
 			&labelsJSON,
 			&formatsJSON,
@@ -513,14 +511,11 @@ func (s *Database) SaveReleases(response DiscogsResponse) error {
 		}
 	}()
 
-	// Set the current time for all last_synced values
-	now := time.Now().Format(time.RFC3339)
-
 	// Process each release
 	for _, release := range response.Releases {
 		// Map the release to our database schema
 		// 1. Insert/Update the main release
-		err = saveRelease(tx, release, now)
+		err = saveRelease(tx, release)
 		if err != nil {
 			return err
 		}
@@ -573,15 +568,14 @@ func (s *Database) SaveReleases(response DiscogsResponse) error {
 }
 
 // saveRelease handles inserting or updating a release in the database
-func saveRelease(tx *sql.Tx, release DiscogsRelease, now string,
-) error {
+func saveRelease(tx *sql.Tx, release DiscogsRelease) error {
 	// Prepare statement for release upsert
 	stmt, err := tx.Prepare(`
 		INSERT INTO releases (
 			id, instance_id, folder_id, rating, title, year, 
-			resource_url, thumb, cover_image, last_synced
+			resource_url, thumb, cover_image
 		)
-		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
 		ON CONFLICT(id) DO UPDATE SET
 			instance_id = excluded.instance_id,
 			folder_id = excluded.folder_id,
@@ -591,7 +585,6 @@ func saveRelease(tx *sql.Tx, release DiscogsRelease, now string,
 			resource_url = excluded.resource_url,
 			thumb = excluded.thumb,
 			cover_image = excluded.cover_image,
-			last_synced = excluded.last_synced,
 			updated_at = CURRENT_TIMESTAMP
 	`)
 	if err != nil {
@@ -610,7 +603,6 @@ func saveRelease(tx *sql.Tx, release DiscogsRelease, now string,
 		release.BasicInfo.ResourceURL,
 		release.BasicInfo.Thumb,
 		release.BasicInfo.CoverImage,
-		now,
 	)
 	if err != nil {
 		return fmt.Errorf("failed to execute release statement: %w", err)
@@ -972,4 +964,40 @@ func saveNotes(tx *sql.Tx, release DiscogsRelease,
 	}
 
 	return nil
+}
+
+func (s *Database) GetReleasesWithoutDuration() ([]Release, error) {
+	query := `
+		SELECT 
+			id, resource_url
+		FROM releases 
+		WHERE play_duration IS NULL
+		ORDER BY RANDOM() -- Randomize to distribute across collection 
+	`
+
+	rows, err := s.DB.Query(query)
+	if err != nil {
+		slog.Error("Failed to query releases without duration", "error", err)
+		return nil, err
+	}
+	defer rows.Close()
+
+	var releases []Release
+	for rows.Next() {
+		var release Release
+		err := rows.Scan(&release.ID, &release.ResourceURL)
+		if err != nil {
+			slog.Error("Failed to scan release", "error", err)
+			continue
+		}
+		releases = append(releases, release)
+	}
+
+	if err = rows.Err(); err != nil {
+		slog.Error("Error iterating release rows", "error", err)
+		return releases, err
+	}
+
+	slog.Info("Found releases without duration information", "count", len(releases))
+	return releases, nil
 }

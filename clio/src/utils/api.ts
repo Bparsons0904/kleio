@@ -11,6 +11,7 @@ export const apiClient = axios.create({
 });
 
 export const fetchApi = async (url: string) => {
+  console.log("Fetching:", url, apiClient.defaults.baseURL);
   const data = await apiClient.get(`/${url}`);
   return data;
 };
@@ -87,4 +88,8 @@ export const updateCleaningHistory = async (
 
 export const deleteCleaningHistory = async (id: number) => {
   return await deleteApi(`cleanings/${id}`);
+};
+
+export const refreshCollection = async () => {
+  return await fetchApi("collection/resync");
 };

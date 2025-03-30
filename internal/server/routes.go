@@ -14,7 +14,7 @@ func (s *Server) RegisterRoutes() http.Handler {
 	mux.HandleFunc("/auth/token", s.SaveToken)
 	mux.HandleFunc("/collection", s.getCollection)
 	mux.HandleFunc("/collection/sync", s.checkSync)
-	mux.HandleFunc("/discogs/collection", s.updateCollection)
+	mux.HandleFunc("/collection/resync", s.updateCollection)
 	mux.HandleFunc("/discogs/collection/refresh", s.updateCollection)
 
 	mux.HandleFunc("/styluses", func(w http.ResponseWriter, r *http.Request) {

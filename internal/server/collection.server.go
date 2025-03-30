@@ -17,13 +17,11 @@ func (s *Server) getCollection(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) updateCollection(w http.ResponseWriter, r *http.Request) {
-	err := s.controller.SyncCollection()
-	if err != nil {
-		http.Error(w, "Failed to update collection", http.StatusInternalServerError)
-		return
-	}
+	slog.Info("Updating collection")
+	s.controller.SyncTrackAndDuration()
 
-	// writeData(w, releases)
+	// response := map[string]any{"status": "ok", "isSyncing": true}
+	// writeData(w, response)
 }
 
 func (s *Server) checkSync(w http.ResponseWriter, r *http.Request) {

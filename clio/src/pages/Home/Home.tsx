@@ -1,9 +1,11 @@
 import { Component } from "solid-js";
 import styles from "./Home.module.scss";
-import { postApi } from "../../utils/api";
+import { refreshCollection } from "../../utils/api";
 import { useNavigate } from "@solidjs/router";
+// import { useAppContext } from "../../provider/Provider";
 
 const Home: Component = () => {
+  // const { setKleioStore } = useAppContext();
   const navigate = useNavigate();
   const handleLogPlay = () => {
     navigate("/log");
@@ -14,6 +16,18 @@ const Home: Component = () => {
 
   const handleManageStyluses = () => {
     navigate("/equipment");
+  };
+
+  const handleResync = async () => {
+    try {
+      const releases = await refreshCollection();
+      if (releases) {
+        // TODO: Update state
+        // setKleioStore(releases.data);
+      }
+    } catch (error) {
+      console.error("Error resyncing:", error);
+    }
   };
 
   return (
@@ -101,7 +115,7 @@ const Home: Component = () => {
             <p>Sync your Kleio collection with your Discogs library.</p>
           </div>
           <div class={styles.cardFooter}>
-            <button class={styles.button} on:click={refreshCollection}>
+            <button class={styles.button} on:click={handleResync}>
               Sync Now
             </button>
           </div>
@@ -125,21 +139,22 @@ const Home: Component = () => {
 
 export default Home;
 
-const refreshCollection = async () => {
-  try {
-    // Use your existing API client to save the token
-    const response = await postApi("discogs/collection/refresh", {});
-
-    if (response.status !== 200) {
-      throw new Error("Failed to save token");
-    }
-
-    return response.data;
-  } catch (error) {
-    console.error("Error saving token:", error);
-    return;
-  }
-};
+// const refreshCollection = async () => {
+//   try {
+//     // Use your existing API client to save the token
+//     //
+//     const response = await refreshCollection();
+//
+//     if (response().status !== 200) {
+//       throw new Error("Failed to save token");
+//     }
+//
+//     return response().data;
+//   } catch (error) {
+//     console.error("Error saving token:", error);
+//     return;
+//   }
+// };
 
 // const updateCollection = async () => {
 //   try {

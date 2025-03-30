@@ -52,3 +52,31 @@ func (c *Controller) asyncCollection() {
 		}
 	}
 }
+
+func (c *Controller) SyncTrackAndDuration() {
+	releases, err := c.DB.GetReleasesWithoutDuration()
+	if err != nil {
+		slog.Error("Failed to get releases without duration", "error", err)
+		return
+	}
+
+	user, err := c.DB.GetUser()
+	if err != nil {
+		slog.Error("Failed to get user", "error", err)
+		return
+	}
+
+	err = c.GetReleaseDetails(releases[0].ResourceURL, user.Token)
+	if err != nil {
+		slog.Error("Failed to get track and duration", "error", err)
+		return
+	}
+
+	//  for _, release := range releases {
+	//    err := c.GetReleaseDetails(release.ResourceURL, user.Token)
+	//    if err != nil {
+	//      slog.Error("Failed to get track and duration", "error", err)
+	//      continue
+	//    }
+	// }
+}

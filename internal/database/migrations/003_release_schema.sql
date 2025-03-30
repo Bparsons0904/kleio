@@ -7,11 +7,12 @@ CREATE TABLE IF NOT EXISTS releases (
   title TEXT NOT NULL,
   year INTEGER,
   resource_url TEXT,
-  thumb TEXT, -- Thumbnail image URL
-  cover_image TEXT, -- Cover image URL
+  thumb TEXT, 
+  cover_image TEXT,
+  play_duration INTEGER,
+  play_duration_estimated BOOLEAN DEFAULT FALSE,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  last_synced TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (folder_id) REFERENCES folders(id)
 );
 
