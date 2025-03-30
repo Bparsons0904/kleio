@@ -78,10 +78,9 @@ func (c *Controller) SyncTracksAndDuration() {
 			slog.Error("Failed to process release tracks", "error", err)
 			break
 		}
-		// Run at every 2 seconds, 30 per minute
-		time.Sleep(2 * time.Second) // Sleep for 2seconds
-		if count == 5 {
-			break
+
+		if c.RateLimit.ShouldThrottle() {
+			time.Sleep(15 * time.Second)
 		}
 	}
 }

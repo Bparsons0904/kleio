@@ -10,11 +10,13 @@ const (
 )
 
 type Controller struct {
-	DB database.Database
+	DB        database.Database
+	RateLimit RateLimit
 }
 
 func InitNewController() *Controller {
 	return &Controller{
-		DB: database.New(),
+		DB:        database.New(),
+		RateLimit: RateLimit{},
 	}
 }

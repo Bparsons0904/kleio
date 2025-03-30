@@ -2,11 +2,11 @@ package controller
 
 import (
 	"encoding/json"
-	"fmt"
 	"io"
 	"kleio/internal/database"
 	"log/slog"
 	"net/http"
+	"reflect"
 	"regexp"
 	"strconv"
 	"strings"
@@ -41,13 +41,7 @@ func (c *Controller) GetReleaseDetails(
 	}
 	defer resp.Body.Close()
 
-	// Check for rate limiting
-	if resp.StatusCode == http.StatusTooManyRequests {
-		// Get retry after header if available
-		retryAfter := resp.Header.Get("Retry-After")
-		slog.Warn("Rate limited by Discogs API", "retryAfter", retryAfter)
-		return nil, err
-	}
+	c.RateLimit.UpdateLimits(resp)
 
 	// Check response status
 	if resp.StatusCode != http.StatusOK {
@@ -55,7 +49,8 @@ func (c *Controller) GetReleaseDetails(
 		slog.Error("API returned non-200 status",
 			"status", resp.StatusCode,
 			"body", string(body),
-			"url", resourceURL)
+			"url", resourceURL,
+		)
 		return nil, err
 	}
 
@@ -77,15 +72,7 @@ func (c *Controller) GetReleaseDetails(
 			continue
 		}
 
-		durationSeconds, err := convertDurationToSeconds(discTrack.Duration)
-		if err != nil {
-			slog.Error("Failed to parse track duration",
-				"error", err,
-				"track", discTrack.Title,
-				"duration", discTrack.Duration)
-			durationSeconds = 0
-		}
-
+		durationSeconds := convertDurationToSeconds(discTrack.Duration)
 		track := database.Track{
 			ReleaseID:       release.ID,
 			Position:        discTrack.Position,
@@ -133,69 +120,79 @@ func (c *Controller) calculateTrackDurations(
 	return totalDurationSeconds, isDurationEstimated, nil
 }
 
-func (c *Controller) SaveReleaseDetails(
-	releaseDetails database.Release,
-	tracks []database.Track,
-) error {
-	// Save tracks and update release duration
-	err := c.DB.SaveTracks(releaseDetails.ID, tracks)
-	if err != nil {
-		slog.Error("Failed to save tracks", "error", err, "releaseID", releaseDetails.ID)
-		return err
+func calculateTimeToDuration(parts []string, index int, multiplier int) int {
+	if len(parts) > index {
+		seconds, err := strconv.Atoi(parts[index])
+		if err != nil {
+			slog.Error(
+				"Failed to parse seconds",
+				"error",
+				err,
+				"seconds",
+				parts[index],
+				"index",
+				index,
+			)
+			return 0
+		}
+		return seconds * multiplier
 	}
-
-	// Update release duration
-	// err = c.DB.UpdateReleaseWithDetails(
-	// 	releaseDetails.ID,
-	// 	totalDurationSeconds,
-	// 	isDurationEstimated,
-	// )
-	// if err != nil {
-	// 	slog.Error(
-	// 		"Failed to update release duration",
-	// 		"error",
-	// 		err,
-	// 		"releaseID",
-	// 		releaseDetails.ID,
-	// 	)
-	// 	return err
-	// }
-
-	return nil
+	return 0
 }
 
-// Helper to convert duration string to seconds
-func convertDurationToSeconds(duration string) (int, error) {
-	// Handle empty strings
+func convertDurationToSeconds(duration string) int {
 	if duration == "" {
-		return 0, nil
+		return 0
 	}
 
-	// Check if the duration is already in seconds format (just a number)
-	if seconds, err := strconv.Atoi(duration); err == nil {
-		return seconds, nil
-	}
+	totalSeconds := 0
 
-	// Handle mm:ss format
-	if match, _ := regexp.MatchString(`^\d+:\d{2}$`, duration); match {
+	switch {
+	case isNumeric(duration):
+		return calculateTimeToDuration([]string{duration}, 0, 1)
+
+	case isMinutesSeconds(duration):
 		parts := strings.Split(duration, ":")
-		minutes, _ := strconv.Atoi(parts[0])
-		seconds, _ := strconv.Atoi(parts[1])
-		return minutes*60 + seconds, nil
-	}
+		totalSeconds += calculateTimeToDuration(parts, 0, 60)
+		totalSeconds += calculateTimeToDuration(parts, 1, 1)
+		return totalSeconds
 
-	// Handle hh:mm:ss format
-	if match, _ := regexp.MatchString(`^\d+:\d{2}:\d{2}$`, duration); match {
+	case isHoursMinutesSeconds(duration):
 		parts := strings.Split(duration, ":")
-		hours, _ := strconv.Atoi(parts[0])
-		minutes, _ := strconv.Atoi(parts[1])
-		seconds, _ := strconv.Atoi(parts[2])
-		return hours*3600 + minutes*60 + seconds, nil
+		totalSeconds += calculateTimeToDuration(parts, 0, 3600)
+		totalSeconds += calculateTimeToDuration(parts, 1, 60)
+		totalSeconds += calculateTimeToDuration(parts, 2, 1)
+		return totalSeconds
+
+	default:
+		slog.Error(
+			"Failed to parse duration",
+			"duration",
+			duration,
+			"type",
+			reflect.TypeOf(duration),
+		)
+		return 0
 	}
+}
 
-	// Handle additional formats as needed
+func isNumeric(s string) bool {
+	_, err := strconv.Atoi(s)
+	return err == nil
+}
 
-	return 0, fmt.Errorf("unsupported duration format: %s", duration)
+func isMinutesSeconds(s string) bool {
+	// Match pattern like "3:45" or "12:30"
+	pattern := `^\d+:\d{2}$`
+	match, err := regexp.MatchString(pattern, s)
+	return err == nil && match
+}
+
+func isHoursMinutesSeconds(s string) bool {
+	// Match pattern like "1:23:45"
+	pattern := `^\d+:\d{2}:\d{2}$`
+	match, err := regexp.MatchString(pattern, s)
+	return err == nil && match
 }
 
 // Estimate vinyl playtime based on format information
