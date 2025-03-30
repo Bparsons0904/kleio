@@ -14,7 +14,7 @@ import Toast, { ToastType } from "../components/layout/Toast/Toast";
 
 export interface Payload {
   isSyncing: boolean;
-  lastSynced: string;
+  lastSync: string;
   releases: Release[];
   stylus: Stylus[];
 }
@@ -64,14 +64,15 @@ export function AppProvider(props: ParentProps) {
 
     const pollInterval = setInterval(async () => {
       try {
-        const response = await fetchApi<Payload>("collection/sync");
+        const response = await fetchApi("collection/sync");
 
         if (response.data?.status === "complete") {
           setIsSyncing(false);
           clearInterval(pollInterval);
           const result = await fetchApi("collection");
           if (result.data) {
-            setAuthPayload(result.data);
+            console.log("Fetched data from server:", result.data);
+            setKleioStore(result.data);
           }
         }
       } catch (error) {
@@ -86,9 +87,10 @@ export function AppProvider(props: ParentProps) {
     });
   });
 
-  const setAuthPayload = (payload: Payload) => {
+  const setKleioStore = (payload: Payload) => {
+    if (!payload) return;
     setIsSyncing(payload.isSyncing);
-    setLastSynced(payload.lastSynced);
+    setLastSynced(payload.lastSync);
     setReleases(payload.releases);
     setStyluses(payload.stylus);
   };
@@ -127,7 +129,7 @@ export function AppProvider(props: ParentProps) {
     setLastSynced,
     setIsSyncing,
 
-    setKleioStore: setAuthPayload,
+    setKleioStore,
 
     // Toast functions
     showToast,

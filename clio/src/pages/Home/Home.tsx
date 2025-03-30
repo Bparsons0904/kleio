@@ -2,10 +2,10 @@ import { Component } from "solid-js";
 import styles from "./Home.module.scss";
 import { refreshCollection } from "../../utils/api";
 import { useNavigate } from "@solidjs/router";
-// import { useAppContext } from "../../provider/Provider";
+import { useAppContext } from "../../provider/Provider";
 
 const Home: Component = () => {
-  // const { setKleioStore } = useAppContext();
+  const { setIsSyncing } = useAppContext();
   const navigate = useNavigate();
   const handleLogPlay = () => {
     navigate("/log");
@@ -20,10 +20,9 @@ const Home: Component = () => {
 
   const handleResync = async () => {
     try {
-      const releases = await refreshCollection();
-      if (releases) {
-        // TODO: Update state
-        // setKleioStore(releases.data);
+      const response = await refreshCollection();
+      if (response.status === 200) {
+        setIsSyncing(true);
       }
     } catch (error) {
       console.error("Error resyncing:", error);

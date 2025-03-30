@@ -8,7 +8,7 @@ import { useAppContext } from "./provider/Provider";
 const App: Component<RouteSectionProps<unknown>> = ({ children }) => {
   const navigate = useNavigate();
   const [auth] = createResource("auth", fetchApi);
-  const { setKleioStore: setAuthPayload } = useAppContext();
+  const { setKleioStore } = useAppContext();
 
   createEffect(() => {
     if (auth.state === "ready") {
@@ -17,13 +17,7 @@ const App: Component<RouteSectionProps<unknown>> = ({ children }) => {
         return;
       }
 
-      const data = auth().data;
-      setAuthPayload({
-        isSyncing: data.syncingData,
-        lastSynced: data.lastSync,
-        releases: data.releases,
-        stylus: data.stylus,
-      });
+      setKleioStore(auth().data);
     }
   });
   return (
