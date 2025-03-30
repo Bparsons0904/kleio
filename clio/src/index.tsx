@@ -1,6 +1,6 @@
 import { render } from "solid-js/web";
 import { Router, Route } from "@solidjs/router";
-
+import "solid-devtools";
 import Home from "./pages/Home/Home";
 import GetToken from "./components/GetToken/GetToken";
 import LogPlay from "./pages/LogPlay/LogPlay";
