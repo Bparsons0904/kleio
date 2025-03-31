@@ -57,7 +57,12 @@ const Home: Component = () => {
             <p>See statistics about your listening habits.</p>
           </div>
           <div class={styles.cardFooter}>
-            <button class={styles.button}>View Stats</button>
+            <button
+              class={styles.button}
+              on:click={() => navigate("/playHistory")}
+            >
+              View Stats
+            </button>
           </div>
         </div>
 

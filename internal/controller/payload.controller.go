@@ -3,15 +3,17 @@ package controller
 import (
 	"kleio/internal/database"
 	"log/slog"
+	"sort"
 	"time"
 )
 
 type Payload struct {
-	LastSync    time.Time          `json:"lastSync,omitzero"`
-	SyncingData bool               `json:"syncingData"`
-	Releases    []database.Release `json:"releases"`
-	Stylus      []database.Stylus  `json:"stylus"`
-	Token       string             `json:"token"`
+	LastSync    time.Time              `json:"lastSync,omitzero"`
+	SyncingData bool                   `json:"syncingData"`
+	Releases    []database.Release     `json:"releases"`
+	Stylus      []database.Stylus      `json:"stylus"`
+	PlayHistory []database.PlayHistory `json:"playHistory"`
+	Token       string                 `json:"token"`
 }
 
 func (p *Payload) GetLastSync(controller *Controller) error {
@@ -51,6 +53,8 @@ func (p *Payload) GetPayload(controller *Controller) (err error) {
 		return err
 	}
 
+	p.GetPlayHistory(controller)
+
 	p.Stylus, err = controller.DB.GetStyluses()
 	if err != nil {
 		slog.Error("Failed to get stylus", "error", err)
@@ -64,4 +68,19 @@ func (p *Payload) GetPayload(controller *Controller) (err error) {
 	}
 
 	return nil
+}
+
+func (p *Payload) GetPlayHistory(controller *Controller) {
+	var playHistory []database.PlayHistory
+	for _, release := range p.Releases {
+		for _, history := range release.PlayHistory {
+			history.Release = release
+			playHistory = append(playHistory, history)
+		}
+	}
+
+	sort.Slice(playHistory, func(i, j int) bool {
+		return playHistory[i].PlayedAt.After(playHistory[j].PlayedAt)
+	})
+	p.PlayHistory = playHistory
 }

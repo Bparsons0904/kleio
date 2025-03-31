@@ -8,7 +8,7 @@ import {
   useContext,
   Show,
 } from "solid-js";
-import { Folder, Release, Stylus } from "../types";
+import { Folder, PlayHistory, Release, Stylus } from "../types";
 import { fetchApi } from "../utils/api";
 import Toast, { ToastType } from "../components/layout/Toast/Toast";
 
@@ -17,6 +17,7 @@ export interface Payload {
   lastSync: string;
   releases: Release[];
   stylus: Stylus[];
+  playHistory: PlayHistory[];
 }
 
 interface ToastState {
@@ -29,12 +30,14 @@ type AppStore = {
   folders: () => Folder[];
   releases: () => Release[];
   styluses: () => Stylus[];
+  playHistory: () => PlayHistory[];
   lastSynced: () => string;
   isSyncing: () => boolean;
 
   setFolders: (value: Folder[]) => void;
   setReleases: (value: Release[]) => void;
   setStyluses: (value: Stylus[]) => void;
+  setPlayHistory: (value: PlayHistory[]) => void;
   setLastSynced: (value: string) => void;
   setIsSyncing: (value: boolean) => void;
 
@@ -55,6 +58,7 @@ export function AppProvider(props: ParentProps) {
   const [folders, setFolders] = createSignal<Folder[]>([]);
   const [releases, setReleases] = createSignal<Release[]>([]);
   const [styluses, setStyluses] = createSignal<Stylus[]>([]);
+  const [playHistory, setPlayHistory] = createSignal<PlayHistory[]>([]);
   const [lastSynced, setLastSynced] = createSignal("");
   const [isSyncing, setIsSyncing] = createSignal(false);
   const [toast, setToast] = createSignal<ToastState | null>(null);
@@ -93,6 +97,7 @@ export function AppProvider(props: ParentProps) {
     setLastSynced(payload.lastSync);
     setReleases(payload.releases);
     setStyluses(payload.stylus);
+    setPlayHistory(payload.playHistory);
   };
 
   // Toast functions
@@ -120,12 +125,14 @@ export function AppProvider(props: ParentProps) {
     folders,
     releases,
     styluses,
+    playHistory,
     lastSynced,
     isSyncing,
 
     setFolders,
     setReleases,
     setStyluses,
+    setPlayHistory,
     setLastSynced,
     setIsSyncing,
 
