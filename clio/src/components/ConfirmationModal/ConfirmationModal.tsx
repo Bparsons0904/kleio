@@ -9,7 +9,6 @@ export interface ConfirmationModalProps {
   cancelText?: string;
   onConfirm: () => void;
   onCancel: () => void;
-  isDestructive?: boolean;
 }
 
 const ConfirmationModal: Component<ConfirmationModalProps> = (props) => {
@@ -36,7 +35,7 @@ const ConfirmationModal: Component<ConfirmationModalProps> = (props) => {
               {cancelText}
             </button>
             <button
-              class={`${styles.confirmButton} ${props.isDestructive ? styles.destructive : ""}`}
+              class={`${styles.confirmButton} ${styles.destructive}`}
               onClick={props.onConfirm}
             >
               {confirmText}

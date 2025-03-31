@@ -1,8 +1,10 @@
 import { Component, createSignal, For, Show } from "solid-js";
 import { useAppContext } from "../../provider/Provider";
 import { Stylus } from "../../types";
-import { createStylus, deleteStylus, updateStylus } from "../../utils/api";
 import styles from "./StylusManager.module.scss";
+import { updateStylus } from "../../utils/mutations/put";
+import { createStylus } from "../../utils/mutations/post";
+import { deleteStylus } from "../../utils/mutations/delete";
 
 const StylusManager: Component = () => {
   const { styluses, setStyluses } = useAppContext();

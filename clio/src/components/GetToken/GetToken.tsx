@@ -1,8 +1,8 @@
 import styles from "./GetToken.module.scss";
-import { postApi } from "../../utils/api";
 import { Component, Show, createSignal } from "solid-js";
 import { useNavigate } from "@solidjs/router";
 import { useAppContext } from "../../provider/Provider";
+import { postApi } from "../../utils/mutations/post";
 
 const GetToken: Component = () => {
   const [token, setToken] = createSignal("");
@@ -10,7 +10,7 @@ const GetToken: Component = () => {
   const [isError, setIsError] = createSignal(false);
   const [errorMessage, setErrorMessage] = createSignal("");
   const navigate = useNavigate();
-  const { setKleioStore: setAuthPayload } = useAppContext();
+  const { setKleioStore } = useAppContext();
 
   const saveToken = async (tokenValue: string) => {
     try {
@@ -35,7 +35,6 @@ const GetToken: Component = () => {
     }
   };
 
-  // Handle form submission
   const handleSubmit = async (e: Event) => {
     e.preventDefault();
     if (!token().trim()) {
@@ -46,12 +45,7 @@ const GetToken: Component = () => {
 
     const result = await saveToken(token());
     if (result) {
-      setAuthPayload({
-        isSyncing: result.syncingData,
-        lastSynced: result.lastSync,
-        releases: result.releases,
-        stylus: result.stylus,
-      });
+      setKleioStore(result.data);
       navigate("/");
     }
   };

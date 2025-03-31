@@ -5,11 +5,13 @@ import RecordHistoryItem from "../RecordHistoryItem/RecordHistoryItem";
 import ConfirmationModal from "../ConfirmationModal/ConfirmationModal";
 import EditHistoryPanel from "../EditHistoryPanel/EditHistoryPanel";
 import {
-  deletePlayHistory,
   updatePlayHistory,
-  deleteCleaningHistory,
   updateCleaningHistory,
-} from "../../utils/api";
+} from "../../utils/mutations/put";
+import {
+  deletePlayHistory,
+  deleteCleaningHistory,
+} from "../../utils/mutations/delete";
 import { useAppContext } from "../../provider/Provider";
 
 interface RecordActionModalProps {
@@ -340,7 +342,6 @@ const RecordActionModal: Component<RecordActionModalProps> = (props) => {
         confirmText="Delete"
         onConfirm={confirmDelete}
         onCancel={() => setIsDeleteConfirmOpen(false)}
-        isDestructive={true}
       />
 
       {/* Edit panel */}
@@ -349,11 +350,6 @@ const RecordActionModal: Component<RecordActionModalProps> = (props) => {
           isOpen={isEditPanelOpen()}
           onClose={() => setIsEditPanelOpen(false)}
           editItem={editItem()}
-          // id={editItem()!.id}
-          // type={editItem()!.type}
-          // date={editItem()!.date}
-          // notes={editItem()!.notes}
-          // stylusId={editItem()!.stylusId}
           styluses={props.styluses}
           onSave={handleSaveEdit}
         />

@@ -2,8 +2,11 @@ import { Component, createSignal, createEffect, For, Show } from "solid-js";
 import { useAppContext } from "../../provider/Provider";
 import styles from "./LogPlay.module.scss";
 import { Release, Stylus } from "../../types";
-import { createPlayHistory, createCleaningHistory } from "../../utils/api";
 import RecordActionModal from "../../components/RecordActionModal/RecordActionModal";
+import {
+  createCleaningHistory,
+  createPlayHistory,
+} from "../../utils/mutations/post";
 
 const LogPlay: Component = () => {
   const {
