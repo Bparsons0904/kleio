@@ -16,7 +16,6 @@ import {
 import { Line } from "solid-chartjs";
 import { useAppContext } from "../../provider/Provider";
 import { useDateRange, GroupFrequency } from "../../provider/DateRangeContext";
-import ChartControls from "./ChartControls";
 import styles from "./PlayFrequencyChart.module.scss"; // Reusing styles
 import { PlayHistory } from "../../types";
 
@@ -52,7 +51,12 @@ interface ChartData {
   }[];
 }
 
-const PlayDurationChart: Component = () => {
+interface PlayDurationChartProps {
+  filter?: string;
+}
+
+const PlayDurationChart: Component<PlayDurationChartProps> = (props) => {
+  const filter = () => props.filter || "";
   const { playHistory, releases } = useAppContext();
   const { dateRange, groupFrequency } = useDateRange();
 
@@ -71,10 +75,6 @@ const PlayDurationChart: Component = () => {
     ],
   });
 
-  const [filter, setFilter] = createSignal("");
-  const [filterOptions, setFilterOptions] = createSignal<
-    { value: string; label: string }[]
-  >([]);
   const [isLoading, setIsLoading] = createSignal(true);
 
   // Chart options
@@ -151,30 +151,6 @@ const PlayDurationChart: Component = () => {
         genreSet.add(genre.name);
       });
     });
-
-    // Convert to array and sort alphabetically
-    const artistOptions = Array.from(artistSet)
-      .map((name) => ({
-        value: `artist:${name}`,
-        label: name,
-      }))
-      .sort((a, b) => a.label.localeCompare(b.label));
-
-    const genreOptions = Array.from(genreSet)
-      .map((name) => ({
-        value: `genre:${name}`,
-        label: name,
-      }))
-      .sort((a, b) => a.label.localeCompare(b.label));
-
-    // Combine options with separators
-    setFilterOptions([
-      { value: "", label: "All Records" },
-      { value: "HEADER:ARTISTS", label: "--- Artists ---" },
-      ...artistOptions,
-      { value: "HEADER:GENRES", label: "--- Genres ---" },
-      ...genreOptions,
-    ]);
 
     setIsLoading(false);
   });
@@ -381,36 +357,18 @@ const PlayDurationChart: Component = () => {
     return date.toLocaleDateString(undefined, options);
   };
 
-  // Handle filter change
-  const handleFilterChange = (newFilter: string) => {
-    if (newFilter.startsWith("HEADER:")) return;
-    setFilter(newFilter);
-  };
-
   return (
-    <div class={styles.chartContainer}>
-      <h3 class={styles.chartTitle}>Listening Time Over Time</h3>
-
-      <ChartControls
-        showFrequencyControls={true}
-        showFilters={true}
-        filterOptions={filterOptions()}
-        filterLabel="Filter by Artist/Genre:"
-        onFilterChange={handleFilterChange}
-      />
-
+    <div class={styles.chartWrapper}>
       <Show
         when={!isLoading()}
         fallback={<div class={styles.loading}>Loading chart data...</div>}
       >
-        <div class={styles.chartWrapper}>
-          <Line
-            data={chartData()}
-            options={chartOptions}
-            width={800}
-            height={400}
-          />
-        </div>
+        <Line
+          data={chartData()}
+          options={chartOptions}
+          width={800}
+          height={400}
+        />
       </Show>
     </div>
   );

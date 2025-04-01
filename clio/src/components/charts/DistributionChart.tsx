@@ -10,7 +10,7 @@ import {
   PieController,
   DoughnutController,
 } from "chart.js";
-import { Pie, Doughnut } from "solid-chartjs";
+import { Pie } from "solid-chartjs";
 import { useAppContext } from "../../provider/Provider";
 import { useDateRange } from "../../provider/DateRangeContext";
 import ChartControls from "./ChartControls";
@@ -28,7 +28,7 @@ Chart.register(
   DoughnutController,
 );
 
-type DistributionType = "artist" | "genre";
+type DistributionType = "artist" | "genre" | "release";
 
 interface DistributionDataItem {
   label: string;
@@ -307,14 +307,20 @@ const DistributionCharts: Component = () => {
   // Get appropriate labels for a play based on distribution type
   const getLabelsForPlay = (play, type: DistributionType): string[] => {
     if (type === "artist") {
-      // Return primary artists (excluding producers, etc.)
-      return play.release.artists
+      // Return only the first primary artist (excluding producers, etc.)
+      const mainArtists = play.release.artists
         .filter((a) => a.role !== "Producer")
         .map((a) => a.artist?.name || "Unknown")
         .filter(Boolean);
+
+      // Return just the first artist or "Unknown" if none
+      return mainArtists.length > 0 ? [mainArtists[0]] : ["Unknown"];
     } else if (type === "genre") {
       // Return genres
       return play.release.genres.map((g) => g.name);
+    } else if (type === "release") {
+      // Return the release/album title
+      return [play.release.title || "Unknown Album"];
     }
 
     return [];
@@ -346,9 +352,7 @@ const DistributionCharts: Component = () => {
 
   return (
     <div class={styles.chartsContainer}>
-      <h3 class={styles.chartTitle}>
-        {distributionType() === "artist" ? "Artists" : "Genres"} Distribution
-      </h3>
+      <h3 class={styles.chartTitle}>Distribution Analysis</h3>
 
       <div class={styles.controls}>
         <ChartControls showFrequencyControls={false} showFilters={false} />
@@ -363,6 +367,7 @@ const DistributionCharts: Component = () => {
             >
               <option value="genre">By Genre</option>
               <option value="artist">By Artist</option>
+              <option value="release">By Album</option>
             </select>
           </div>
 
@@ -415,7 +420,7 @@ const DistributionCharts: Component = () => {
               }
             >
               <div class={styles.pieChartContainer}>
-                <Doughnut
+                <Pie
                   data={durationChartData()}
                   options={durationChartOptions}
                 />

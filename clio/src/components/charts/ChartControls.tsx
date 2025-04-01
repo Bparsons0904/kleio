@@ -12,6 +12,7 @@ interface ChartControlsProps {
   onFilterChange?: (filter: string) => void;
   filterOptions?: { value: string; label: string }[];
   filterLabel?: string;
+  filterValue?: string;
 }
 
 const ChartControls: Component<ChartControlsProps> = (props) => {
@@ -27,7 +28,7 @@ const ChartControls: Component<ChartControlsProps> = (props) => {
   const [customStartDate, setCustomStartDate] = createSignal("");
   const [customEndDate, setCustomEndDate] = createSignal("");
   const [showCustomDate, setShowCustomDate] = createSignal(false);
-  const [selectedFilter, setSelectedFilter] = createSignal("");
+  const [internalSelectedFilter, setInternalSelectedFilter] = createSignal("");
 
   // Format date to YYYY-MM-DD for input type date
   const formatDateForInput = (date: Date) => {
@@ -72,11 +73,16 @@ const ChartControls: Component<ChartControlsProps> = (props) => {
 
   const handleFilterChange = (event: Event) => {
     const target = event.target as HTMLSelectElement;
-    setSelectedFilter(target.value);
+    setInternalSelectedFilter(target.value);
     if (props.onFilterChange) {
       props.onFilterChange(target.value);
     }
   };
+
+  const selectedFilter = () =>
+    props.filterValue !== undefined
+      ? props.filterValue
+      : internalSelectedFilter();
 
   return (
     <div class={styles.controlsContainer}>
@@ -85,7 +91,7 @@ const ChartControls: Component<ChartControlsProps> = (props) => {
         <select
           class={styles.select}
           value={timeFrame()}
-          onChange={handleTimeFrameChange}
+          onChange={handleTimeFrameChange} // Fixed to use the correct handler
         >
           <option value="7d">Last 7 Days</option>
           <option value="30d">Last 30 Days</option>

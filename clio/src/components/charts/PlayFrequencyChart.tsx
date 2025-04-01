@@ -12,7 +12,7 @@ import {
   LinearScale,
   TimeScale,
 } from "chart.js";
-import { Bar } from "solid-chartjs";
+import { Line } from "solid-chartjs";
 import { useAppContext } from "../../provider/Provider";
 import { useDateRange, GroupFrequency } from "../../provider/DateRangeContext";
 import ChartControls from "./ChartControls";
@@ -48,7 +48,18 @@ interface ChartData {
   }[];
 }
 
-const PlayFrequencyChart: Component = () => {
+interface PlayFrequencyChartProps {
+  filter?: string;
+}
+
+const PlayFrequencyChart: Component<PlayFrequencyChartProps> = (props) => {
+  const filter = () => props.filter || "";
+
+  // Handle filter change
+  const handleFilterChange = (newFilter: string) => {
+    if (newFilter.startsWith("HEADER:")) return;
+  };
+
   const { playHistory, releases } = useAppContext();
   const { dateRange, groupFrequency } = useDateRange();
 
@@ -65,7 +76,6 @@ const PlayFrequencyChart: Component = () => {
     ],
   });
 
-  const [filter, setFilter] = createSignal("");
   const [filterOptions, setFilterOptions] = createSignal<
     { value: string; label: string }[]
   >([]);
@@ -339,36 +349,18 @@ const PlayFrequencyChart: Component = () => {
     return date.toLocaleDateString(undefined, options);
   };
 
-  // Handle filter change
-  const handleFilterChange = (newFilter: string) => {
-    if (newFilter.startsWith("HEADER:")) return;
-    setFilter(newFilter);
-  };
-
   return (
-    <div class={styles.chartContainer}>
-      <h3 class={styles.chartTitle}>Records Played Over Time</h3>
-
-      <ChartControls
-        showFrequencyControls={true}
-        showFilters={true}
-        filterOptions={filterOptions()}
-        filterLabel="Filter by Artist/Genre:"
-        onFilterChange={handleFilterChange}
-      />
-
+    <div class={styles.chartWrapper}>
       <Show
         when={!isLoading()}
         fallback={<div class={styles.loading}>Loading chart data...</div>}
       >
-        <div class={styles.chartWrapper}>
-          <Bar
-            data={chartData()}
-            options={chartOptions}
-            width={800}
-            height={400}
-          />
-        </div>
+        <Line
+          data={chartData()}
+          options={chartOptions}
+          width={800}
+          height={400}
+        />
       </Show>
     </div>
   );
