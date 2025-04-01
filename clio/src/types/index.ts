@@ -75,6 +75,8 @@ export interface Release {
   createdAt: string;
   updatedAt: string;
   lastSynced: string;
+  playDuration: number;
+  playDurationEstimated: boolean;
 
   artists: ReleaseArtist[];
   labels: ReleaseLabel[];

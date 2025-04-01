@@ -1,4 +1,4 @@
-import { Component, createSignal, For, Show } from "solid-js";
+import { Component, createMemo, createSignal, For, Show } from "solid-js";
 import { useAppContext } from "../../provider/Provider";
 import { Stylus } from "../../types";
 import styles from "./StylusManager.module.scss";
@@ -7,7 +7,7 @@ import { createStylus } from "../../utils/mutations/post";
 import { deleteStylus } from "../../utils/mutations/delete";
 
 const StylusManager: Component = () => {
-  const { styluses, setStyluses } = useAppContext();
+  const { styluses, setStyluses, playHistory } = useAppContext();
   const [isAddingStylus, setIsAddingStylus] = createSignal(false);
   const [editingStylus, setEditingStylus] = createSignal<Stylus | null>(null);
   const [isLoading, setIsLoading] = createSignal(false);
@@ -174,6 +174,67 @@ const StylusManager: Component = () => {
     styluses().filter((s) => s.owned !== false && !s.active && !s.primary);
 
   const archivedStyluses = () => styluses().filter((s) => s.owned === false);
+  // Calculate total play time and remaining lifespan for each stylus
+  const stylusUsageData = createMemo(() => {
+    const usageMap = new Map<number, number>();
+
+    // Calculate total minutes played for each stylus
+    playHistory().forEach((play) => {
+      if (play.stylusId) {
+        // Get play duration in minutes (converting from seconds)
+        const durationMinutes = play.release.playDuration
+          ? Math.round(play.release.playDuration / 60)
+          : 40; // Default 40 minutes if no duration info
+
+        usageMap.set(
+          play.stylusId,
+          (usageMap.get(play.stylusId) || 0) + durationMinutes,
+        );
+      }
+    });
+
+    return usageMap;
+  });
+
+  // Function to format time (minutes to hours and minutes)
+  const formatPlayTime = (minutes: number): string => {
+    const hours = Math.floor(minutes / 60);
+    return `${hours} hours`;
+  };
+
+  // Calculate remaining lifespan for a stylus
+  const getRemainingLifespan = (
+    stylus: Stylus,
+  ): { hours: number; percent: number } => {
+    if (!stylus.expectedLifespan) {
+      return { hours: 0, percent: 100 }; // No lifespan set
+    }
+
+    // Get total minutes played
+    const minutesPlayed = stylusUsageData().get(stylus.id) || 0;
+
+    // Convert to hours
+    const hoursPlayed = minutesPlayed / 60;
+
+    // Calculate remaining hours
+    const remainingHours = Math.max(0, stylus.expectedLifespan - hoursPlayed);
+
+    // Calculate percentage remaining
+    const percentRemaining =
+      stylus.expectedLifespan > 0
+        ? Math.round((remainingHours / stylus.expectedLifespan) * 100)
+        : 100;
+
+    return { hours: remainingHours, percent: percentRemaining };
+  };
+
+  const getLifespanColor = (percent: number): string => {
+    if (percent >= 80) return "#10b981"; // Green
+    if (percent >= 60) return "#34d399"; // Light green
+    if (percent >= 40) return "#f59e0b"; // Orange/amber
+    if (percent >= 20) return "#f97316"; // Dark orange
+    return "#ef4444"; // Red
+  };
 
   return (
     <div class={styles.container}>
@@ -408,6 +469,28 @@ const StylusManager: Component = () => {
                         <strong>Purchased:</strong>{" "}
                         {new Date(stylus.purchaseDate!).toLocaleDateString()}
                       </p>
+                    </Show>
+                    <Show when={stylusUsageData().has(stylus.id)}>
+                      <p class={styles.stylusDetail}>
+                        <strong>Total Play Time:</strong>{" "}
+                        {formatPlayTime(stylusUsageData().get(stylus.id) || 0)}
+                      </p>
+                    </Show>
+
+                    <Show when={stylus.expectedLifespan}>
+                      <p class={styles.stylusDetail}>
+                        <strong>Remaining Lifespan:</strong>{" "}
+                        {formatPlayTime(
+                          getRemainingLifespan(stylus).hours * 60,
+                        )}{" "}
+                        ({getRemainingLifespan(stylus).percent}%)
+                      </p>
+                      <div class={styles.lifespanBar}>
+                        <div
+                          class={styles.lifespanFill}
+                          style={`height: 100%; width: ${getRemainingLifespan(stylus).percent}%; background-color: ${getLifespanColor(getRemainingLifespan(stylus).percent)}`}
+                        ></div>
+                      </div>
                     </Show>
                   </div>
 

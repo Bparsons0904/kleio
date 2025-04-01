@@ -402,6 +402,71 @@
   border-left: 4px solid #c53030;
 }
 
+.lifespanBar {
+  height: 6px;
+  width: 100%;
+  background-color: #f0f0f0;
+  border-radius: 3px;
+  margin: 0.5rem 0;
+  overflow: hidden;
+}
+
+.lifespanFill {
+  height: 100%;
+  background-color: #3273dc;
+  border-radius: 3px;
+  transition: width 0.3s ease;
+}
+
+// Add dynamic coloring based on remaining percentage
+.lifespanFill {
+  &[style*="width: 100%"],
+  &[style*="width: 9"],
+  &[style*="width: 8"] {
+    background-color: #3273dc; // Blue for 80-100%
+  }
+
+  &[style*="width: 7"],
+  &[style*="width: 6"] {
+    background-color: #10b981; // Green for 60-79%
+  }
+
+  &[style*="width: 5"],
+  &[style*="width: 4"] {
+    background-color: #f59e0b; // Orange for 40-59%
+  }
+
+  &[style*="width: 3"],
+  &[style*="width: 2"] {
+    background-color: #f97316; // Dark orange for 20-39%
+  }
+
+  &[style*="width: 1"],
+  &[style*="width: 0"] {
+    background-color: #ef4444; // Red for 0-19%
+  }
+}
+
+.lifespanHigh {
+  background-color: #3273dc; // Blue
+}
+
+.lifespanGood {
+  background-color: #10b981; // Green
+}
+
+.lifespanMedium {
+  background-color: #f59e0b; // Orange
+}
+
+.lifespanLow {
+  background-color: #f97316; // Dark orange
+}
+
+.lifespanCritical {
+  background-color: #ef4444; // Red
+}
+
 // Responsive adjustments
 @media (max-width: 768px) {
   .container {
