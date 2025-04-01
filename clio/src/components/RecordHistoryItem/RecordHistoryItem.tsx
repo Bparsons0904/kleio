@@ -10,7 +10,7 @@ import {
   deletePlayHistory,
   deleteCleaningHistory,
 } from "../../utils/mutations/delete";
-import { useAppContext } from "../../provider/Provider";
+import { Payload, useAppContext } from "../../provider/Provider";
 import ConfirmationModal from "../ConfirmationModal/ConfirmationModal";
 import { EditItem } from "../../types";
 
@@ -55,7 +55,9 @@ const RecordHistoryItem: Component<HistoryItemProps> = (props) => {
 
   const handleDelete = async () => {
     try {
-      let result;
+      let result:
+        | { success: boolean; data: Payload; error?: undefined }
+        | { success: boolean; error: Error; data?: undefined };
 
       if (props.item.type === "play") {
         result = await deletePlayHistory(props.item.id);

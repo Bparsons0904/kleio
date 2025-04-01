@@ -231,12 +231,15 @@ const RecordActionModal: Component<RecordActionModalProps> = (props) => {
           </div>
 
           <div class={styles.actionButtons}>
-            <button class={styles.playButton} onClick={handleLogPlay}></button>
-            <button class={styles.bothButton} onClick={handleLogBoth}></button>
-            <button
-              class={styles.cleaningButton}
-              onClick={handleLogCleaning}
-            ></button>
+            <button class={styles.playButton} onClick={handleLogPlay}>
+              Log Play
+            </button>
+            <button class={styles.bothButton} onClick={handleLogBoth}>
+              Log Both
+            </button>
+            <button class={styles.cleaningButton} onClick={handleLogCleaning}>
+              Log Cleaning
+            </button>
           </div>
 
           <div class={styles.historySection}>

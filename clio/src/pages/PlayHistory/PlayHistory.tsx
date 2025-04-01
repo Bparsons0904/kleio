@@ -5,12 +5,19 @@ import { useFormattedMediumDate } from "../../utils/dates";
 import { VsNote } from "solid-icons/vs";
 import { TbWashTemperature5 } from "solid-icons/tb";
 import { PlayHistory, Release } from "../../types";
+import RecordActionModal from "../../components/RecordActionModal/RecordActionModal";
 
 const PlayHistoryPage: Component = () => {
-  const { playHistory } = useAppContext();
+  const { playHistory, releases } = useAppContext();
   const [timeFilter, setTimeFilter] = createSignal("month");
   const [searchTerm, setSearchTerm] = createSignal("");
   const [groupBy, setGroupBy] = createSignal("date");
+
+  // Modal state
+  const [selectedRelease, setSelectedRelease] = createSignal<Release | null>(
+    null,
+  );
+  const [isModalOpen, setIsModalOpen] = createSignal(false);
 
   // Check if a cleaning was done on the same day as the play
   const hasCleaning = (release: Release, playDate: string) => {
@@ -104,6 +111,21 @@ const PlayHistoryPage: Component = () => {
     );
   });
 
+  // Handle item click to open modal
+  const handleItemClick = (play: PlayHistory) => {
+    // Find the full release object from the releases array
+    const fullRelease = releases().find((r) => r.id === play.release.id);
+    if (fullRelease) {
+      setSelectedRelease(fullRelease);
+      setIsModalOpen(true);
+    }
+  };
+
+  // Handle modal close
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+  };
+
   return (
     <div class={styles.container}>
       <h1 class={styles.title}>Play History</h1>
@@ -169,7 +191,10 @@ const PlayHistoryPage: Component = () => {
               <div style="display: flex; flex-wrap: wrap; gap: 1rem; width: 100%;">
                 <For each={plays}>
                   {(play) => (
-                    <div class={styles.playItem}>
+                    <div
+                      class={styles.playItem}
+                      onClick={() => handleItemClick(play)}
+                    >
                       <div class={styles.albumArt}>
                         {play.release.thumb ? (
                           <img
@@ -231,6 +256,15 @@ const PlayHistoryPage: Component = () => {
           )}
         </For>
       </div>
+
+      {/* Record Action Modal */}
+      <Show when={selectedRelease()}>
+        <RecordActionModal
+          isOpen={isModalOpen()}
+          onClose={handleCloseModal}
+          release={selectedRelease()!}
+        />
+      </Show>
     </div>
   );
 };

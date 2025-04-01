@@ -20,6 +20,7 @@ const App: Component<RouteSectionProps<unknown>> = ({ children }) => {
       setKleioStore(auth().data);
     }
   });
+
   return (
     <>
       <Navbar />
