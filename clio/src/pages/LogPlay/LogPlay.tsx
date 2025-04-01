@@ -4,9 +4,10 @@ import { useAppContext } from "../../provider/Provider";
 import styles from "./LogPlay.module.scss";
 import { Release } from "../../types";
 import RecordActionModal from "../../components/RecordActionModal/RecordActionModal";
+import { exportHistory } from "../../utils/mutations/export";
 
 const LogPlay: Component = () => {
-  const { releases } = useAppContext();
+  const { releases, showError } = useAppContext();
 
   const [filteredReleases, setFilteredReleases] = createSignal<Release[]>([]);
   const [searchTerm, setSearchTerm] = createSignal("");
@@ -63,6 +64,16 @@ const LogPlay: Component = () => {
       month: "short",
       day: "numeric",
     });
+  };
+
+  const handleExport = async () => {
+    try {
+      await exportHistory();
+      // No need for success notification since it's a direct download
+    } catch (error) {
+      console.error("Error exporting history:", error);
+      showError("Failed to export history. Please try again.");
+    }
   };
 
   return (
@@ -152,6 +163,11 @@ const LogPlay: Component = () => {
             </div>
           )}
         </div>
+      </div>
+      <div class={styles.exportSection}>
+        <button class={styles.exportButton} onClick={handleExport}>
+          Export Play & Cleaning History
+        </button>
       </div>
 
       {/* The modal */}

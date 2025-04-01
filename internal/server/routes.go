@@ -113,5 +113,6 @@ func (s *Server) RegisterRoutes() http.Handler {
 		}
 	})
 
+	mux.HandleFunc("/export/history", s.exportHistory)
 	return s.corsMiddleware(mux)
 }

@@ -150,3 +150,46 @@ func (s *Database) CountCleaningsByRelease() (map[int]int, error) {
 
 	return cleaningCounts, nil
 }
+
+func (s *Database) GetAllCleaningHistory() ([]CleaningHistory, error) {
+	query := `
+		SELECT 
+			ch.id, ch.release_id, ch.cleaned_at, ch.notes, ch.created_at, ch.updated_at
+		FROM cleaning_history ch
+		ORDER BY ch.cleaned_at DESC
+	`
+
+	rows, err := s.DB.Query(query)
+	if err != nil {
+		slog.Error("Failed to get all cleaning history", "error", err)
+		return nil, err
+	}
+	defer rows.Close()
+
+	var histories []CleaningHistory
+	for rows.Next() {
+		var history CleaningHistory
+
+		err := rows.Scan(
+			&history.ID,
+			&history.ReleaseID,
+			&history.CleanedAt,
+			&history.Notes,
+			&history.CreatedAt,
+			&history.UpdatedAt,
+		)
+		if err != nil {
+			slog.Error("Failed to scan cleaning history", "error", err)
+			return nil, err
+		}
+
+		histories = append(histories, history)
+	}
+
+	if err = rows.Err(); err != nil {
+		slog.Error("Error iterating cleaning history rows", "error", err)
+		return histories, err
+	}
+
+	return histories, nil
+}

@@ -392,3 +392,53 @@ func (s *Database) GetPlaysByTimeRange(start, end time.Time) ([]PlayHistory, err
 
 	return histories, nil
 }
+
+func (s *Database) GetAllPlayHistory() ([]PlayHistory, error) {
+	query := `
+		SELECT 
+			ph.id, ph.release_id, ph.stylus_id, ph.played_at, ph.notes, ph.created_at, ph.updated_at
+		FROM play_history ph
+		ORDER BY ph.played_at DESC
+	`
+
+	rows, err := s.DB.Query(query)
+	if err != nil {
+		slog.Error("Failed to get all play history", "error", err)
+		return nil, err
+	}
+	defer rows.Close()
+
+	var histories []PlayHistory
+	for rows.Next() {
+		var history PlayHistory
+		var stylusID sql.NullInt64
+
+		err := rows.Scan(
+			&history.ID,
+			&history.ReleaseID,
+			&stylusID,
+			&history.PlayedAt,
+			&history.Notes,
+			&history.CreatedAt,
+			&history.UpdatedAt,
+		)
+		if err != nil {
+			slog.Error("Failed to scan play history", "error", err)
+			return nil, err
+		}
+
+		if stylusID.Valid {
+			id := int(stylusID.Int64)
+			history.StylusID = &id
+		}
+
+		histories = append(histories, history)
+	}
+
+	if err = rows.Err(); err != nil {
+		slog.Error("Error iterating play history rows", "error", err)
+		return histories, err
+	}
+
+	return histories, nil
+}
