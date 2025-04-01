@@ -1,4 +1,4 @@
-// GetToken.module.scss
+@use "sass:color";
 
 .container {
   max-width: 700px;
@@ -50,7 +50,7 @@
 
   &:hover {
     text-decoration: underline;
-    color: darken(#3273dc, 10%);
+    color: color.scale(#3273dc, $lightness: -10%);
   }
 }
 
@@ -115,7 +115,7 @@
     opacity 0.2s;
 
   &:hover:not(:disabled) {
-    background-color: darken(#3273dc, 5%);
+    background-color: color.scale(#3273dc, $lightness: -5%);
   }
 
   &:focus {

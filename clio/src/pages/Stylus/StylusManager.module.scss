@@ -1,3 +1,5 @@
+@use "sass:color";
+
 .container {
   max-width: 1200px;
   margin: 0 auto;
@@ -35,7 +37,7 @@
   transition: background-color 0.2s;
 
   &:hover:not(:disabled) {
-    background-color: darken(#3273dc, 5%);
+    background-color: color.scale(#3273dc, $lightness: -5%);
   }
 
   &:disabled {
@@ -213,7 +215,7 @@
   transition: background-color 0.2s;
 
   &:hover:not(:disabled) {
-    background-color: darken(#3273dc, 5%);
+    background-color: color.scale(#3273dc, $lightness: -5%);
   }
 
   &:disabled {
@@ -342,7 +344,7 @@
   transition: background-color 0.2s;
 
   &:hover:not(:disabled) {
-    background-color: darken(#ebf8ff, 5%);
+    background-color: color.scale(#ebf8ff, $lightness: -5%);
   }
 
   &:disabled {
@@ -363,7 +365,7 @@
   transition: background-color 0.2s;
 
   &:hover:not(:disabled) {
-    background-color: darken(#fff5f5, 5%);
+    background-color: color.scale(#fff5f5, $lightness: -5%);
   }
 
   &:disabled {

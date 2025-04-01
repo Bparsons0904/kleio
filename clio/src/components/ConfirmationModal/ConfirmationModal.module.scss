@@ -1,3 +1,5 @@
+@use "sass:color";
+
 .modalOverlay {
   position: fixed;
   top: 0;
@@ -100,14 +102,14 @@
   color: white;
 
   &:hover {
-    background-color: darken(#3273dc, 5%);
+    background-color: color.scale(#3273dc, $lightness: -5%);
   }
 
   &.destructive {
     background-color: #e74c3c;
 
     &:hover {
-      background-color: darken(#e74c3c, 5%);
+      background-color: color.scale(#e74c3c, $lightness: -5%);
     }
   }
 }

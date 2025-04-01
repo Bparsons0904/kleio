@@ -1,4 +1,4 @@
-// Home.module.scss
+@use "sass:color";
 
 .container {
   max-width: 1200px;
@@ -88,7 +88,7 @@
   display: inline-block;
 
   &:hover {
-    background-color: darken(#3273dc, 5%);
+    background-color: color.scale(#3273dc, $lightness: -5%);
   }
 
   &:focus {

@@ -1,3 +1,5 @@
+@use "sass:color";
+
 .modalOverlay {
   position: fixed;
   top: 0;
@@ -236,7 +238,7 @@
   color: white;
 
   &:hover:not(:disabled) {
-    background-color: darken(#3273dc, 5%);
+    background-color: color.scale(#3273dc, $lightness: -5%);
   }
 
   &:focus {
@@ -249,7 +251,7 @@
   color: white;
 
   &:hover:not(:disabled) {
-    background-color: darken(#10b981, 5%);
+    background-color: color.scale(#10b981, $lightness: -5%);
   }
 
   &:focus {
@@ -262,7 +264,7 @@
   color: white;
 
   &:hover:not(:disabled) {
-    background-color: darken(#8c6dff, 5%);
+    background-color: color.scale(#8c6dff, $lightness: -5%);
   }
 
   &:focus {
