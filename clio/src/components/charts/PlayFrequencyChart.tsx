@@ -15,7 +15,6 @@ import {
 import { Line } from "solid-chartjs";
 import { useAppContext } from "../../provider/Provider";
 import { useDateRange, GroupFrequency } from "../../provider/DateRangeContext";
-import ChartControls from "./ChartControls";
 import styles from "./PlayFrequencyChart.module.scss";
 import { PlayHistory } from "../../types";
 
@@ -54,12 +53,6 @@ interface PlayFrequencyChartProps {
 
 const PlayFrequencyChart: Component<PlayFrequencyChartProps> = (props) => {
   const filter = () => props.filter || "";
-
-  // Handle filter change
-  const handleFilterChange = (newFilter: string) => {
-    if (newFilter.startsWith("HEADER:")) return;
-  };
-
   const { playHistory, releases } = useAppContext();
   const { dateRange, groupFrequency } = useDateRange();
 
@@ -76,9 +69,6 @@ const PlayFrequencyChart: Component<PlayFrequencyChartProps> = (props) => {
     ],
   });
 
-  const [filterOptions, setFilterOptions] = createSignal<
-    { value: string; label: string }[]
-  >([]);
   const [isLoading, setIsLoading] = createSignal(true);
 
   // Chart options
@@ -115,52 +105,7 @@ const PlayFrequencyChart: Component<PlayFrequencyChartProps> = (props) => {
     },
   };
 
-  // Generate filter options (artists and genres)
   onMount(() => {
-    // Generate artist options
-    const artistSet = new Set<string>();
-    const genreSet = new Set<string>();
-
-    releases().forEach((release) => {
-      // Add main artists (skip producers etc.)
-      release.artists
-        .filter((a) => a.role !== "Producer")
-        .forEach((a) => {
-          if (a.artist?.name) {
-            artistSet.add(a.artist.name);
-          }
-        });
-
-      // Add genres
-      release.genres.forEach((genre) => {
-        genreSet.add(genre.name);
-      });
-    });
-
-    // Convert to array and sort alphabetically
-    const artistOptions = Array.from(artistSet)
-      .map((name) => ({
-        value: `artist:${name}`,
-        label: name,
-      }))
-      .sort((a, b) => a.label.localeCompare(b.label));
-
-    const genreOptions = Array.from(genreSet)
-      .map((name) => ({
-        value: `genre:${name}`,
-        label: name,
-      }))
-      .sort((a, b) => a.label.localeCompare(b.label));
-
-    // Combine options with separators
-    setFilterOptions([
-      { value: "", label: "All Records" },
-      { value: "HEADER:ARTISTS", label: "--- Artists ---" },
-      ...artistOptions,
-      { value: "HEADER:GENRES", label: "--- Genres ---" },
-      ...genreOptions,
-    ]);
-
     setIsLoading(false);
   });
 
@@ -178,22 +123,49 @@ const PlayFrequencyChart: Component<PlayFrequencyChartProps> = (props) => {
       return playDate >= range.start && playDate <= range.end;
     });
 
-    // Apply additional filters (artist or genre)
+    // Apply additional filters (record, artist or genre)
     if (currentFilter && !currentFilter.startsWith("HEADER:")) {
       const [type, value] = currentFilter.split(":");
 
-      if (type === "artist") {
+      if (type === "record") {
+        // Filter by record ID
+        const recordId = parseInt(value);
+        filteredHistory = filteredHistory.filter(
+          (item) => item.releaseId === recordId,
+        );
+      } else if (type === "artist") {
+        // Filter by artist name
         filteredHistory = filteredHistory.filter((item) => {
           return item.release.artists.some(
             (a) => a.artist?.name === value && a.role !== "Producer",
           );
         });
       } else if (type === "genre") {
+        // Filter by genre name
         filteredHistory = filteredHistory.filter((item) => {
           return item.release.genres.some((g) => g.name === value);
         });
       }
     }
+
+    // Update chart title based on filter
+    let chartTitle = "Records Played Over Time";
+    if (currentFilter) {
+      const [type, value] = currentFilter.split(":");
+      if (type === "record") {
+        const record = releases().find((r) => r.id === parseInt(value));
+        if (record) {
+          chartTitle = `Play History: ${record.title}`;
+        }
+      } else if (type === "artist") {
+        chartTitle = `Records by ${value} Played Over Time`;
+      } else if (type === "genre") {
+        chartTitle = `${value} Records Played Over Time`;
+      }
+    }
+
+    // Update chart options with new title
+    chartOptions.plugins.title.text = chartTitle;
 
     // Group by frequency
     const groupedData = groupDataByFrequency(filteredHistory, frequency);

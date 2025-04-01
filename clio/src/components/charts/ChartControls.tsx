@@ -5,12 +5,15 @@ import {
   useDateRange,
 } from "../../provider/DateRangeContext";
 import styles from "./ChartControls.module.scss";
+import SearchableDropdown, {
+  DropdownOption,
+} from "../SearchableDropdown/SearchableDropdown";
 
 interface ChartControlsProps {
   showFrequencyControls?: boolean;
   showFilters?: boolean;
   onFilterChange?: (filter: string) => void;
-  filterOptions?: { value: string; label: string }[];
+  filterOptions?: DropdownOption[];
   filterLabel?: string;
   filterValue?: string;
 }
@@ -41,21 +44,17 @@ const ChartControls: Component<ChartControlsProps> = (props) => {
     setCustomEndDate(formatDateForInput(dateRange().end));
   });
 
-  const handleTimeFrameChange = (event: Event) => {
-    const target = event.target as HTMLSelectElement;
-    const value = target.value as TimeFrame;
-
+  const handleTimeFrameChange = (value: string) => {
     if (value === "custom") {
       setShowCustomDate(true);
     } else {
       setShowCustomDate(false);
-      setTimeFrame(value);
+      setTimeFrame(value as TimeFrame);
     }
   };
 
-  const handleFrequencyChange = (event: Event) => {
-    const target = event.target as HTMLSelectElement;
-    setGroupFrequency(target.value as GroupFrequency);
+  const handleFrequencyChange = (value: string) => {
+    setGroupFrequency(value as GroupFrequency);
   };
 
   const handleCustomDateSubmit = () => {
@@ -71,11 +70,10 @@ const ChartControls: Component<ChartControlsProps> = (props) => {
     }
   };
 
-  const handleFilterChange = (event: Event) => {
-    const target = event.target as HTMLSelectElement;
-    setInternalSelectedFilter(target.value);
+  const handleFilterChange = (value: string) => {
+    setInternalSelectedFilter(value);
     if (props.onFilterChange) {
-      props.onFilterChange(target.value);
+      props.onFilterChange(value);
     }
   };
 
@@ -84,22 +82,33 @@ const ChartControls: Component<ChartControlsProps> = (props) => {
       ? props.filterValue
       : internalSelectedFilter();
 
+  // Time frame options for dropdown
+  const timeFrameOptions = [
+    { value: "7d", label: "Last 7 Days" },
+    { value: "30d", label: "Last 30 Days" },
+    { value: "90d", label: "Last 90 Days" },
+    { value: "1y", label: "Last Year" },
+    { value: "all", label: "All Time" },
+    { value: "custom", label: "Custom Date Range" },
+  ];
+
+  // Frequency options for dropdown
+  const frequencyOptions = [
+    { value: "daily", label: "Daily" },
+    { value: "weekly", label: "Weekly" },
+    { value: "monthly", label: "Monthly" },
+  ];
+
   return (
     <div class={styles.controlsContainer}>
       <div class={styles.controlGroup}>
-        <label class={styles.label}>Time Period:</label>
-        <select
-          class={styles.select}
+        <SearchableDropdown
+          label="Time Period:"
+          options={timeFrameOptions}
           value={timeFrame()}
-          onChange={handleTimeFrameChange} // Fixed to use the correct handler
-        >
-          <option value="7d">Last 7 Days</option>
-          <option value="30d">Last 30 Days</option>
-          <option value="90d">Last 90 Days</option>
-          <option value="1y">Last Year</option>
-          <option value="all">All Time</option>
-          <option value="custom">Custom Date Range</option>
-        </select>
+          onChange={handleTimeFrameChange}
+          placeholder="Select time period"
+        />
       </div>
 
       <Show when={showCustomDate()}>
@@ -130,16 +139,13 @@ const ChartControls: Component<ChartControlsProps> = (props) => {
 
       <Show when={props.showFrequencyControls}>
         <div class={styles.controlGroup}>
-          <label class={styles.label}>Group By:</label>
-          <select
-            class={styles.select}
+          <SearchableDropdown
+            label="Group By:"
+            options={frequencyOptions}
             value={groupFrequency()}
             onChange={handleFrequencyChange}
-          >
-            <option value="daily">Daily</option>
-            <option value="weekly">Weekly</option>
-            <option value="monthly">Monthly</option>
-          </select>
+            placeholder="Select grouping"
+          />
         </div>
       </Show>
 
@@ -151,19 +157,14 @@ const ChartControls: Component<ChartControlsProps> = (props) => {
         }
       >
         <div class={styles.controlGroup}>
-          <label class={styles.label}>
-            {props.filterLabel || "Filter By:"}
-          </label>
-          <select
-            class={styles.select}
+          <SearchableDropdown
+            label={props.filterLabel || "Filter By:"}
+            options={props.filterOptions}
             value={selectedFilter()}
             onChange={handleFilterChange}
-          >
-            <option value="">All</option>
-            {props.filterOptions?.map((option) => (
-              <option value={option.value}>{option.label}</option>
-            ))}
-          </select>
+            placeholder="Select filter"
+            isSearchable
+          />
         </div>
       </Show>
     </div>

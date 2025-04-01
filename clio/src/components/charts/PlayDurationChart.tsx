@@ -16,7 +16,7 @@ import {
 import { Line } from "solid-chartjs";
 import { useAppContext } from "../../provider/Provider";
 import { useDateRange, GroupFrequency } from "../../provider/DateRangeContext";
-import styles from "./PlayFrequencyChart.module.scss"; // Reusing styles
+import styles from "./PlayDurationChart.module.scss";
 import { PlayHistory } from "../../types";
 
 // Register Chart.js components
@@ -130,28 +130,7 @@ const PlayDurationChart: Component<PlayDurationChartProps> = (props) => {
     },
   };
 
-  // Generate filter options (artists and genres)
   onMount(() => {
-    // Generate artist options
-    const artistSet = new Set<string>();
-    const genreSet = new Set<string>();
-
-    releases().forEach((release) => {
-      // Add main artists (skip producers etc.)
-      release.artists
-        .filter((a) => a.role !== "Producer")
-        .forEach((a) => {
-          if (a.artist?.name) {
-            artistSet.add(a.artist.name);
-          }
-        });
-
-      // Add genres
-      release.genres.forEach((genre) => {
-        genreSet.add(genre.name);
-      });
-    });
-
     setIsLoading(false);
   });
 
@@ -169,22 +148,49 @@ const PlayDurationChart: Component<PlayDurationChartProps> = (props) => {
       return playDate >= range.start && playDate <= range.end;
     });
 
-    // Apply additional filters (artist or genre)
+    // Apply additional filters (record, artist or genre)
     if (currentFilter && !currentFilter.startsWith("HEADER:")) {
       const [type, value] = currentFilter.split(":");
 
-      if (type === "artist") {
+      if (type === "record") {
+        // Filter by record ID
+        const recordId = parseInt(value);
+        filteredHistory = filteredHistory.filter(
+          (item) => item.releaseId === recordId,
+        );
+      } else if (type === "artist") {
+        // Filter by artist name
         filteredHistory = filteredHistory.filter((item) => {
           return item.release.artists.some(
             (a) => a.artist?.name === value && a.role !== "Producer",
           );
         });
       } else if (type === "genre") {
+        // Filter by genre name
         filteredHistory = filteredHistory.filter((item) => {
           return item.release.genres.some((g) => g.name === value);
         });
       }
     }
+
+    // Update chart title based on filter
+    let chartTitle = "Listening Time Over Time";
+    if (currentFilter) {
+      const [type, value] = currentFilter.split(":");
+      if (type === "record") {
+        const record = releases().find((r) => r.id === parseInt(value));
+        if (record) {
+          chartTitle = `Listening Time: ${record.title}`;
+        }
+      } else if (type === "artist") {
+        chartTitle = `Listening Time for ${value}`;
+      } else if (type === "genre") {
+        chartTitle = `Listening Time for ${value}`;
+      }
+    }
+
+    // Update chart options with new title
+    chartOptions.plugins.title.text = chartTitle;
 
     // Group by frequency
     const groupedData = groupDataByFrequency(filteredHistory, frequency);

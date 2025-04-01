@@ -1,4 +1,4 @@
-// src/components/charts/DistributionCharts.tsx
+// src/components/charts/DistributionChart.tsx
 import { Component, createEffect, createSignal, onMount, Show } from "solid-js";
 import {
   Chart,
@@ -16,6 +16,9 @@ import { useDateRange } from "../../provider/DateRangeContext";
 import ChartControls from "./ChartControls";
 import { PlayHistory } from "../../types";
 import styles from "./DistributionChart.module.scss";
+import SearchableDropdown, {
+  DropdownOption,
+} from "../SearchableDropdown/SearchableDropdown";
 
 // Register Chart.js components
 Chart.register(
@@ -338,16 +341,30 @@ const DistributionCharts: Component = () => {
     return 40; // Default to 40 minutes if no duration info available
   };
 
+  // Distribution type options for dropdown
+  const distributionTypeOptions: DropdownOption[] = [
+    { value: "genre", label: "By Genre" },
+    { value: "artist", label: "By Artist" },
+    { value: "release", label: "By Album" },
+  ];
+
+  // Top count options for dropdown
+  const topCountOptions: DropdownOption[] = [
+    { value: "5", label: "Top 5" },
+    { value: "10", label: "Top 10" },
+    { value: "15", label: "Top 15" },
+    { value: "20", label: "Top 20" },
+    { value: "50", label: "Top 50" },
+  ];
+
   // Handle distribution type change
-  const handleDistributionTypeChange = (event: Event) => {
-    const target = event.target as HTMLSelectElement;
-    setDistributionType(target.value as DistributionType);
+  const handleDistributionTypeChange = (value: string) => {
+    setDistributionType(value as DistributionType);
   };
 
   // Handle top count change
-  const handleTopCountChange = (event: Event) => {
-    const target = event.target as HTMLSelectElement;
-    setShowTopCount(parseInt(target.value, 10));
+  const handleTopCountChange = (value: string) => {
+    setShowTopCount(parseInt(value, 10));
   };
 
   return (
@@ -359,31 +376,23 @@ const DistributionCharts: Component = () => {
 
         <div class={styles.typeControls}>
           <div class={styles.controlGroup}>
-            <label class={styles.label}>Distribution Type:</label>
-            <select
-              class={styles.select}
+            <SearchableDropdown
+              label="Distribution Type:"
+              options={distributionTypeOptions}
               value={distributionType()}
               onChange={handleDistributionTypeChange}
-            >
-              <option value="genre">By Genre</option>
-              <option value="artist">By Artist</option>
-              <option value="release">By Album</option>
-            </select>
+              placeholder="Select distribution type"
+            />
           </div>
 
           <div class={styles.controlGroup}>
-            <label class={styles.label}>Show Top:</label>
-            <select
-              class={styles.select}
-              value={showTopCount()}
+            <SearchableDropdown
+              label="Show Top:"
+              options={topCountOptions}
+              value={showTopCount().toString()}
               onChange={handleTopCountChange}
-            >
-              <option value="5">5</option>
-              <option value="10">10</option>
-              <option value="15">15</option>
-              <option value="20">20</option>
-              <option value="50">50</option>
-            </select>
+              placeholder="Select count"
+            />
           </div>
         </div>
       </div>

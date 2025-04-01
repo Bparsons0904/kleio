@@ -1,28 +1,26 @@
-// In Analytics.tsx
+// src/pages/Analytics/Analytics.tsx
 import { Component, createSignal, createEffect } from "solid-js";
 import PlayFrequencyChart from "../../components/charts/PlayFrequencyChart";
-import {
-  DateRangeProvider,
-  useDateRange,
-} from "../../provider/DateRangeContext";
+import { DateRangeProvider } from "../../provider/DateRangeContext";
 import styles from "./Analytics.module.scss";
 import PlayDurationChart from "../../components/charts/PlayDurationChart";
 import DistributionCharts from "../../components/charts/DistributionChart";
 import ChartControls from "../../components/charts/ChartControls";
 import { useAppContext } from "../../provider/Provider";
+import { DropdownOption } from "../../components/SearchableDropdown/SearchableDropdown";
 
 const AnalyticsContent: Component = () => {
   const { releases } = useAppContext();
   const [filter, setFilter] = createSignal("");
-  const [filterOptions, setFilterOptions] = createSignal<
-    { value: string; label: string }[]
-  >([]);
+  const [filterOptions, setFilterOptions] = createSignal<DropdownOption[]>([]);
 
-  // Generate filter options (artists and genres)
+  // Generate filter options (artists, genres, and records)
   createEffect(() => {
-    // Generate artist options
+    // Using sets to avoid duplicates
     const artistSet = new Set<string>();
     const genreSet = new Set<string>();
+    // We'll use the records directly to maintain title/ID pairs
+    const recordOptions: DropdownOption[] = [];
 
     releases().forEach((release) => {
       // Add main artists (skip producers etc.)
@@ -38,9 +36,15 @@ const AnalyticsContent: Component = () => {
       release.genres.forEach((genre) => {
         genreSet.add(genre.name);
       });
+
+      // Add record titles
+      recordOptions.push({
+        value: `record:${release.id}`,
+        label: release.title,
+      });
     });
 
-    // Convert to array and sort alphabetically
+    // Convert sets to sorted arrays
     const artistOptions = Array.from(artistSet)
       .map((name) => ({
         value: `artist:${name}`,
@@ -55,12 +59,17 @@ const AnalyticsContent: Component = () => {
       }))
       .sort((a, b) => a.label.localeCompare(b.label));
 
-    // Combine options with separators
+    // Sort record options by title
+    recordOptions.sort((a, b) => a.label.localeCompare(b.label));
+
+    // Combine options with headers
     setFilterOptions([
       { value: "", label: "All Records" },
-      { value: "HEADER:ARTISTS", label: "--- Artists ---" },
+      { value: "HEADER:RECORDS", label: "--- Records ---", disabled: true },
+      ...recordOptions,
+      { value: "HEADER:ARTISTS", label: "--- Artists ---", disabled: true },
       ...artistOptions,
-      { value: "HEADER:GENRES", label: "--- Genres ---" },
+      { value: "HEADER:GENRES", label: "--- Genres ---", disabled: true },
       ...genreOptions,
     ]);
   });
@@ -76,7 +85,8 @@ const AnalyticsContent: Component = () => {
       <h2 class={styles.dashboardTitle}>Listening Analytics</h2>
       <p class={styles.dashboardDescription}>
         Visualize your vinyl listening habits with interactive charts. Use the
-        filters to explore your collection by time period, artist, or genre.
+        filters to explore your collection by time period, artist, genre, or
+        specific record.
       </p>
 
       {/* Shared controls for both time-based charts */}
@@ -87,7 +97,7 @@ const AnalyticsContent: Component = () => {
           filterOptions={filterOptions()}
           filterValue={filter()}
           onFilterChange={handleFilterChange}
-          filterLabel="Filter by Artist/Genre:"
+          filterLabel="Filter by Record/Artist/Genre:"
         />
       </div>
 

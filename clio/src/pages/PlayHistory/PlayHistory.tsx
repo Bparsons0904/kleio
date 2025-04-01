@@ -1,7 +1,7 @@
 import { Component, createMemo, createSignal, For, Show } from "solid-js";
 import { useAppContext } from "../../provider/Provider";
 import styles from "./PlayHistory.module.scss";
-import { useFormattedMediumDate } from "../../utils/dates";
+import { useFormattedShortDate } from "../../utils/dates";
 import { VsNote } from "solid-icons/vs";
 import { TbWashTemperature5 } from "solid-icons/tb";
 import { PlayHistory, Release } from "../../types";
@@ -183,7 +183,7 @@ const PlayHistoryPage: Component = () => {
               <Show when={groupName && groupBy() !== "none"}>
                 <div class={styles.groupHeader}>
                   {groupBy() === "date"
-                    ? useFormattedMediumDate(groupName)
+                    ? useFormattedShortDate(groupName)
                     : groupName}
                 </div>
               </Show>
@@ -218,10 +218,10 @@ const PlayHistoryPage: Component = () => {
 
                         <div class={styles.playInfoRow}>
                           <p class={styles.playDate}>
-                            Played: {useFormattedMediumDate(play.playedAt)}
+                            Played: {useFormattedShortDate(play.playedAt)}
                           </p>
 
-                          <Show when={play.stylus}>
+                          <Show when={play.stylus.name}>
                             <p class={styles.stylus}>
                               Stylus: {play.stylus.name}
                             </p>

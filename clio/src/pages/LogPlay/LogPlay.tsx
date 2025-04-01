@@ -1,10 +1,12 @@
-// src/pages/LogPlay/LogPlay.tsx
+// src/pages/LogPlay/LogPlay.tsx (updated)
 import { Component, createSignal, createEffect, For, Show } from "solid-js";
 import { useAppContext } from "../../provider/Provider";
 import styles from "./LogPlay.module.scss";
 import { Release } from "../../types";
 import RecordActionModal from "../../components/RecordActionModal/RecordActionModal";
 import { exportHistory } from "../../utils/mutations/export";
+import { RecordStatusIndicator } from "../../components/StatusIndicators/StatusIndicators";
+import { getLastPlayDate, getLastCleaningDate } from "../../utils/playStatus";
 
 const LogPlay: Component = () => {
   const { releases, showError } = useAppContext();
@@ -15,6 +17,7 @@ const LogPlay: Component = () => {
     null,
   );
   const [isModalOpen, setIsModalOpen] = createSignal(false);
+  const [showStatusDetails, setShowStatusDetails] = createSignal(false);
 
   // Filter releases based on search term
   createEffect(() => {
@@ -57,15 +60,6 @@ const LogPlay: Component = () => {
     // We keep the selected release so clicking the card again reopens the modal
   };
 
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    });
-  };
-
   const handleExport = async () => {
     try {
       await exportHistory();
@@ -99,6 +93,20 @@ const LogPlay: Component = () => {
           />
         </div>
 
+        {/* Status details toggle */}
+        <div class={styles.optionsSection}>
+          <label class={styles.toggleLabel}>
+            <input
+              type="checkbox"
+              checked={showStatusDetails()}
+              onChange={(e) => setShowStatusDetails(e.target.checked)}
+              class={styles.toggleInput}
+            />
+            <span class={styles.toggleSwitch}></span>
+            Show status details
+          </label>
+        </div>
+
         {/* Collection heading */}
         <h2 class={styles.sectionTitle}>Your Collection</h2>
 
@@ -116,47 +124,49 @@ const LogPlay: Component = () => {
                     class={`${styles.releaseCard} ${selectedRelease()?.id === release.id ? styles.selected : ""}`}
                     onClick={() => handleReleaseClick(release)}
                   >
-                    <div class={styles.releaseImageContainer}>
-                      {release.thumb ? (
-                        <img
-                          src={release.thumb}
-                          alt={release.title}
-                          class={styles.releaseImage}
+                    <div class={styles.releaseCardContainer}>
+                      <div class={styles.releaseImageContainer}>
+                        {release.thumb ? (
+                          <img
+                            src={release.thumb}
+                            alt={release.title}
+                            class={styles.releaseImage}
+                          />
+                        ) : (
+                          <div class={styles.noImage}>No Image</div>
+                        )}
+                        {release.year && (
+                          <div class={styles.releaseYear}>{release.year}</div>
+                        )}
+                      </div>
+                      <div class={styles.releaseInfo}>
+                        <h3 class={styles.releaseTitle}>{release.title}</h3>
+                        <p class={styles.releaseArtist}>
+                          {release.artists
+                            .filter((artist) => artist.role !== "Producer")
+                            .map((artist) => artist.artist?.name)
+                            .join(", ")}
+                        </p>
+                        <div class={styles.statusSection}>
+                          <RecordStatusIndicator
+                            playHistory={release.playHistory}
+                            cleaningHistory={release.cleaningHistory}
+                            showDetails={false}
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Details section that spans full width */}
+                    <Show when={showStatusDetails()}>
+                      <div class={styles.fullWidthDetails}>
+                        <RecordStatusIndicator
+                          playHistory={release.playHistory}
+                          cleaningHistory={release.cleaningHistory}
+                          showDetails={true}
                         />
-                      ) : (
-                        <div class={styles.noImage}>No Image</div>
-                      )}
-                      {release.year && (
-                        <div class={styles.releaseYear}>{release.year}</div>
-                      )}
-                    </div>
-                    <div class={styles.releaseInfo}>
-                      <h3 class={styles.releaseTitle}>{release.title}</h3>
-                      <p class={styles.releaseArtist}>
-                        {release.artists
-                          .filter((artist) => artist.role !== "Producer")
-                          .map((artist) => artist.artist?.name)
-                          .join(", ")}
-                      </p>
-                      {release.playHistory && release.playHistory.length > 0 ? (
-                        <p class={styles.lastPlayed}>
-                          Last played:{" "}
-                          {formatDate(release.playHistory[0].playedAt)}
-                        </p>
-                      ) : (
-                        <p class={styles.neverPlayed}>Never played</p>
-                      )}
-                      {/* Add last cleaned info */}
-                      {release.cleaningHistory &&
-                      release.cleaningHistory.length > 0 ? (
-                        <p class={styles.lastCleaned}>
-                          Last cleaned:{" "}
-                          {formatDate(release.cleaningHistory[0].cleanedAt)}
-                        </p>
-                      ) : (
-                        <p class={styles.neverCleaned}>Never cleaned</p>
-                      )}
-                    </div>
+                      </div>
+                    </Show>
                   </div>
                 )}
               </For>

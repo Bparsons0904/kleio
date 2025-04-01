@@ -107,6 +107,62 @@
   }
 }
 
+// Options section
+.optionsSection {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 1.5rem;
+}
+
+.toggleLabel {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  font-size: 0.9rem;
+  color: #555;
+}
+
+.toggleInput {
+  position: absolute;
+  opacity: 0;
+  height: 0;
+  width: 0;
+
+  &:checked + .toggleSwitch {
+    background-color: #3273dc;
+    &:before {
+      transform: translateX(1.2rem);
+    }
+  }
+
+  &:focus + .toggleSwitch {
+    box-shadow: 0 0 0 2px rgba(50, 115, 220, 0.25);
+  }
+}
+
+.toggleSwitch {
+  position: relative;
+  display: inline-block;
+  width: 2.4rem;
+  height: 1.2rem;
+  background-color: #ccc;
+  border-radius: 1.2rem;
+  transition: all 0.2s;
+
+  &:before {
+    position: absolute;
+    content: "";
+    height: 0.8rem;
+    width: 0.8rem;
+    left: 0.2rem;
+    bottom: 0.2rem;
+    background-color: white;
+    border-radius: 50%;
+    transition: all 0.2s;
+  }
+}
+
 // ROW 3: Collection header with title and button
 .collectionHeader {
   display: flex;
@@ -168,6 +224,7 @@
 
 .releaseCard {
   display: flex;
+  flex-direction: column;
   padding: 0.75rem;
   border: 1px solid #eee;
   border-radius: 4px;
@@ -186,61 +243,16 @@
     background-color: #ebf8ff;
     border-color: #3273dc;
   }
+
+  .releaseCardContainer {
+    display: flex;
+    flex-direction: row;
+  }
 }
 
-.releaseImageContainer {
-  width: 50px;
-  height: 50px;
-  flex-shrink: 0;
-  margin-right: 1rem;
+.cardRow {
   display: flex;
-  align-items: center;
-  justify-content: center;
-  background-color: #f8f9fa;
-  border-radius: 4px;
-  overflow: hidden;
-}
-
-.releaseImage {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.noImage {
-  font-size: 0.7rem;
-  color: #888;
-  text-align: center;
-}
-
-.releaseInfo {
-  flex-grow: 1;
-  min-width: 0; // Prevent text overflow
-}
-
-.releaseTitle {
-  font-size: 1rem;
-  font-weight: 600;
-  color: #333;
-  margin: 0 0 0.25rem 0;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.releaseArtist {
-  font-size: 0.875rem;
-  color: #666;
-  margin: 0 0 0.25rem 0;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.releaseYear {
-  font-size: 0.75rem;
-  color: #888;
-  margin: 0;
+  align-items: flex-start;
 }
 
 .releaseImageContainer {
@@ -278,8 +290,8 @@
 
 .releaseYear {
   position: absolute;
-  bottom: -30px;
-  font-size: 0.875rem;
+  bottom: -22px;
+  font-size: 0.75rem;
   font-weight: 500;
   color: #666;
   padding: 2px 4px;
@@ -287,14 +299,71 @@
   text-align: center;
 }
 
-.lastPlayed {
+.releaseInfo {
+  flex-grow: 1;
+  min-width: 0; // Prevent text overflow
+  display: flex;
+  flex-direction: column;
+}
+
+.releaseTitle {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #333;
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.releaseArtist {
   font-size: 0.875rem;
+  color: #666;
+  margin: 0 0 0.25rem 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.statusSection {
+  margin-top: 0.25rem;
+}
+
+.statusText {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  margin-top: 0.25rem;
+}
+
+.fullWidthDetails {
+  width: 100%;
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px dashed #eee;
+}
+
+.lastPlayed {
+  font-size: 0.75rem;
   color: #555;
   margin: 0;
 }
 
 .neverPlayed {
-  font-size: 0.875rem;
+  font-size: 0.75rem;
+  color: #888;
+  font-style: italic;
+  margin: 0;
+}
+
+.lastCleaned {
+  font-size: 0.75rem;
+  color: #10b981; // Green color for cleaning info
+  margin: 0;
+}
+
+.neverCleaned {
+  font-size: 0.75rem;
   color: #888;
   font-style: italic;
   margin: 0;
@@ -364,17 +433,39 @@
   }
 }
 
-.lastCleaned {
-  font-size: 0.75rem;
-  color: #10b981; // Green color for cleaning info
-  margin: 0.25rem 0 0 0;
+.exportSection {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 10;
 }
 
-.neverCleaned {
-  font-size: 0.75rem;
-  color: #888;
-  font-style: italic;
-  margin: 0.25rem 0 0 0;
+.exportButton {
+  padding: 0.75rem 1.5rem;
+  background-color: #6c5ce7; // Purple color for export
+  color: white;
+  font-weight: 500;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 1rem;
+  transition:
+    background-color 0.2s,
+    opacity 0.2s;
+
+  &:hover:not(:disabled) {
+    background-color: color.scale(#6c5ce7, $lightness: -5%);
+  }
+
+  &:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(108, 92, 231, 0.25);
+  }
+
+  &:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+  }
 }
 
 // Responsive adjustments
@@ -429,39 +520,5 @@
 
   .logPlayForm {
     padding: 1.5rem;
-  }
-}
-.exportSection {
-  position: fixed;
-  bottom: 20px;
-  right: 20px;
-  z-index: 10;
-}
-
-.exportButton {
-  padding: 0.75rem 1.5rem;
-  background-color: #6c5ce7; // Purple color for export
-  color: white;
-  font-weight: 500;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 1rem;
-  transition:
-    background-color 0.2s,
-    opacity 0.2s;
-
-  &:hover:not(:disabled) {
-    background-color: color.scale(#6c5ce7, $lightness: -5%);
-  }
-
-  &:focus {
-    outline: none;
-    box-shadow: 0 0 0 2px rgba(108, 92, 231, 0.25);
-  }
-
-  &:disabled {
-    opacity: 0.7;
-    cursor: not-allowed;
   }
 }
