@@ -127,13 +127,18 @@ const Home: Component = () => {
 
         <div class={styles.card}>
           <div class={styles.cardHeader}>
-            <h2>View Stats</h2>
+            <h2>View Analytics</h2>
           </div>
           <div class={styles.cardBody}>
             <p>Explore insights about your collection and listening habits.</p>
           </div>
           <div class={styles.cardFooter}>
-            <button class={styles.button}>View Insights</button>
+            <button
+              class={styles.button}
+              on:click={() => navigate("/analytics")}
+            >
+              View Insights
+            </button>
           </div>
         </div>
       </div>

@@ -9,6 +9,7 @@ import StylusManager from "./pages/Stylus/StylusManager";
 import { AppProvider } from "./provider/Provider";
 import "./styles/reset.scss";
 import PlayHistoryPage from "./pages/PlayHistory/PlayHistory";
+import Analytics from "./pages/Analytics/Analytics";
 
 render(
   () => (
@@ -19,6 +20,7 @@ render(
         <Route path="/log" component={LogPlay} />
         <Route path="/equipment" component={StylusManager} />
         <Route path="/playHistory" component={PlayHistoryPage} />
+        <Route path="/analytics" component={Analytics} />
       </Router>
     </AppProvider>
   ),
