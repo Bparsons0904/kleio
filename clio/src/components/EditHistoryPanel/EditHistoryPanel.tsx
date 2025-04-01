@@ -1,7 +1,13 @@
+// src/components/EditHistoryPanel/EditHistoryPanel.tsx
 import { Component, createEffect, createSignal, Show } from "solid-js";
 import styles from "./EditHistoryPanel.module.scss";
 import { Stylus } from "../../types";
 import { AiOutlineClose } from "solid-icons/ai";
+import {
+  updatePlayHistory,
+  updateCleaningHistory,
+} from "../../utils/mutations/put";
+import { useAppContext } from "../../provider/Provider";
 
 interface EditItem {
   id: number;
@@ -9,6 +15,7 @@ interface EditItem {
   date: string;
   notes?: string;
   stylusId?: number;
+  releaseId: number;
 }
 
 export interface EditHistoryPanelProps {
@@ -16,31 +23,17 @@ export interface EditHistoryPanelProps {
   onClose: () => void;
   editItem: EditItem | null;
   styluses: Stylus[];
-  onSave: (data: EditItem) => void;
 }
 
 const EditHistoryPanel: Component<EditHistoryPanelProps> = (props) => {
-  const [date, setDate] = createSignal(props.editItem.date.split("T")[0]);
-  const [notes, setNotes] = createSignal(props.editItem.notes || "");
-  const [stylusId, setStylusId] = createSignal(props.editItem.stylusId);
+  const { showSuccess, showError, setKleioStore } = useAppContext();
+
+  const [date, setDate] = createSignal(
+    props.editItem?.date.split("T")[0] || "",
+  );
+  const [notes, setNotes] = createSignal(props.editItem?.notes || "");
+  const [stylusId, setStylusId] = createSignal(props.editItem?.stylusId);
   const [isSubmitting, setIsSubmitting] = createSignal(false);
-
-  const handleSave = async () => {
-    setIsSubmitting(true);
-
-    try {
-      props.onSave({
-        id: props.editItem.id,
-        type: props.editItem.type,
-        date: new Date(date()).toISOString(),
-        notes: notes(),
-        ...(props.editItem.type === "play" && { stylusId: stylusId() }),
-      });
-    } finally {
-      setIsSubmitting(false);
-      props.onClose();
-    }
-  };
 
   createEffect(() => {
     if (props.editItem) {
@@ -50,6 +43,50 @@ const EditHistoryPanel: Component<EditHistoryPanelProps> = (props) => {
     }
   });
 
+  const handleSave = async () => {
+    if (!props.editItem) return;
+
+    setIsSubmitting(true);
+
+    try {
+      if (props.editItem.type === "play") {
+        const result = await updatePlayHistory(props.editItem.id, {
+          releaseId: props.editItem.releaseId,
+          playedAt: new Date(date()).toISOString(),
+          stylusId: stylusId(),
+          notes: notes(),
+        });
+
+        if (result.success) {
+          showSuccess("Play record updated successfully");
+          setKleioStore(result.data);
+          props.onClose();
+        } else {
+          throw new Error("Failed to update play record");
+        }
+      } else {
+        const result = await updateCleaningHistory(props.editItem.id, {
+          releaseId: props.editItem.releaseId,
+          cleanedAt: new Date(date()).toISOString(),
+          notes: notes(),
+        });
+
+        if (result.success) {
+          showSuccess("Cleaning record updated successfully");
+          setKleioStore(result.data);
+          props.onClose();
+        } else {
+          throw new Error("Failed to update cleaning record");
+        }
+      }
+    } catch (error) {
+      console.error("Error updating record:", error);
+      showError("Failed to update record");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <div class={`${styles.panelWrapper} ${props.isOpen ? styles.open : ""}`}>
       <div class={styles.overlay} onClick={props.onClose}></div>
@@ -57,7 +94,7 @@ const EditHistoryPanel: Component<EditHistoryPanelProps> = (props) => {
       <div class={styles.panel}>
         <div class={styles.panelHeader}>
           <h2 class={styles.panelTitle}>
-            Edit {props.editItem.type === "play" ? "Play" : "Cleaning"} Record
+            Edit {props.editItem?.type === "play" ? "Play" : "Cleaning"} Record
           </h2>
           <button class={styles.closeButton} onClick={props.onClose}>
             <AiOutlineClose size={20} />
@@ -78,7 +115,7 @@ const EditHistoryPanel: Component<EditHistoryPanelProps> = (props) => {
             />
           </div>
 
-          <Show when={props.editItem.type === "play"}>
+          <Show when={props.editItem?.type === "play"}>
             <div class={styles.formGroup}>
               <label class={styles.label} for="editStylus">
                 Stylus

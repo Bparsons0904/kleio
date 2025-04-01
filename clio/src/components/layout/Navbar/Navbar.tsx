@@ -1,5 +1,5 @@
 import { Component } from "solid-js";
-import "./Navbar.scss";
+import styles from "./Navbar.module.scss";
 import { useAppContext } from "../../../provider/Provider";
 import { useFormattedMediumDate } from "../../../utils/dates";
 
@@ -7,19 +7,19 @@ const Navbar: Component = () => {
   const { isSyncing, lastSynced } = useAppContext();
 
   return (
-    <nav class="navbar">
-      <div class="logo" onclick={() => (window.location.href = "/")}>
+    <nav class={styles.navbar}>
+      <div class={styles.logo} onclick={() => (window.location.href = "/")}>
         Kleio
       </div>
-      <div class="nav-links">
+      <div class={styles.navLinks}>
         {isSyncing() && (
-          <div class="sync-indicator">
-            <span class="sync-spinner"></span>
+          <div class={styles.syncIndicator}>
+            <span class={styles.syncSpinner}></span>
             <span>Syncing...</span>
           </div>
         )}
         {!isSyncing() && lastSynced() && (
-          <div class="last-sync">
+          <div class={styles.lastSync}>
             Last sync: {useFormattedMediumDate(lastSynced())}
           </div>
         )}

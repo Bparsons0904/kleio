@@ -1,21 +1,12 @@
+// src/pages/LogPlay/LogPlay.tsx
 import { Component, createSignal, createEffect, For, Show } from "solid-js";
 import { useAppContext } from "../../provider/Provider";
 import styles from "./LogPlay.module.scss";
-import { Release, Stylus } from "../../types";
+import { Release } from "../../types";
 import RecordActionModal from "../../components/RecordActionModal/RecordActionModal";
-import {
-  createCleaningHistory,
-  createPlayHistory,
-} from "../../utils/mutations/post";
 
 const LogPlay: Component = () => {
-  const {
-    releases,
-    styluses,
-    showSuccess,
-    showError,
-    setKleioStore: setAuthPayload,
-  } = useAppContext();
+  const { releases } = useAppContext();
 
   const [filteredReleases, setFilteredReleases] = createSignal<Release[]>([]);
   const [searchTerm, setSearchTerm] = createSignal("");
@@ -23,26 +14,6 @@ const LogPlay: Component = () => {
     null,
   );
   const [isModalOpen, setIsModalOpen] = createSignal(false);
-
-  // Form state for the modal
-  const [selectedDate, setSelectedDate] = createSignal(
-    new Date().toISOString().split("T")[0],
-  );
-  const [selectedStylus, setSelectedStylus] = createSignal<Stylus | null>(null);
-  const [notes, setNotes] = createSignal("");
-  const [isSubmittingPlay, setIsSubmittingPlay] = createSignal(false);
-  const [isSubmittingCleaning, setIsSubmittingCleaning] = createSignal(false);
-  const [isSubmittingBoth, setIsSubmittingBoth] = createSignal(false);
-
-  // Set primary stylus as the default selected stylus
-  createEffect(() => {
-    const primaryStylus = styluses()?.find(
-      (stylus) => stylus.primary && stylus.active,
-    );
-    if (primaryStylus) {
-      setSelectedStylus(primaryStylus);
-    }
-  });
 
   // Filter releases based on search term
   createEffect(() => {
@@ -63,6 +34,7 @@ const LogPlay: Component = () => {
     setFilteredReleases(filtered);
   });
 
+  // Make sure selected release is always up to date with the latest data
   createEffect(() => {
     if (selectedRelease()) {
       for (const release of releases()) {
@@ -82,114 +54,6 @@ const LogPlay: Component = () => {
   const handleCloseModal = () => {
     setIsModalOpen(false);
     // We keep the selected release so clicking the card again reopens the modal
-  };
-
-  const handleLogPlay = async () => {
-    if (!selectedRelease()) {
-      return;
-    }
-
-    try {
-      setIsSubmittingPlay(true);
-      const payload = {
-        releaseId: selectedRelease()!.id,
-        playedAt: new Date(selectedDate()).toISOString(),
-        stylusId: selectedStylus()?.id || null,
-        notes: notes(),
-      };
-
-      const response = await createPlayHistory(payload);
-
-      if (response.status === 201) {
-        showSuccess("Play logged successfully!");
-        setNotes("");
-        setAuthPayload(response.data);
-      } else {
-        throw new Error("Failed to log play");
-      }
-    } catch (error) {
-      console.error("Error logging play:", error);
-      showError("Failed to log play. Please try again.");
-    } finally {
-      setIsSubmittingPlay(false);
-    }
-  };
-
-  const handleLogCleaning = async () => {
-    if (!selectedRelease()) {
-      return;
-    }
-
-    try {
-      setIsSubmittingCleaning(true);
-      const payload = {
-        releaseId: selectedRelease()!.id,
-        cleanedAt: new Date(selectedDate()).toISOString(),
-        notes: notes(),
-      };
-
-      const response = await createCleaningHistory(payload);
-
-      if (response.status === 201) {
-        showSuccess("Cleaning logged successfully!");
-        setNotes("");
-        setAuthPayload(response.data);
-      } else {
-        throw new Error("Failed to log cleaning");
-      }
-    } catch (error) {
-      console.error("Error logging cleaning:", error);
-      showError("Failed to log cleaning. Please try again.");
-    } finally {
-      setIsSubmittingCleaning(false);
-    }
-  };
-
-  const handleLogBoth = async () => {
-    if (!selectedRelease()) {
-      return;
-    }
-
-    try {
-      setIsSubmittingBoth(true);
-
-      // Create cleaning payload
-      const cleaningPayload = {
-        releaseId: selectedRelease()!.id,
-        cleanedAt: new Date(selectedDate()).toISOString(),
-        notes: notes(),
-      };
-
-      // Create play payload
-      const playPayload = {
-        releaseId: selectedRelease()!.id,
-        playedAt: new Date(selectedDate()).toISOString(),
-        stylusId: selectedStylus()?.id || null,
-        notes: notes(),
-      };
-
-      // Log cleaning first
-      const cleaningResponse = await createCleaningHistory(cleaningPayload);
-      if (cleaningResponse.status !== 201) {
-        throw new Error("Failed to log cleaning");
-      }
-
-      // Then log play
-      const playResponse = await createPlayHistory(playPayload);
-      if (playResponse.status !== 201) {
-        throw new Error("Failed to log play");
-      }
-
-      showSuccess("Both cleaning and play logged successfully!");
-      setIsModalOpen(false);
-      setNotes("");
-      setAuthPayload(playResponse.data); // Use the latest response data
-    } catch (error) {
-      console.error("Error logging both:", error);
-      showError("Failed to log both activities. Please try again.");
-    } finally {
-      setIsSubmittingBoth(false);
-    }
   };
 
   const formatDate = (dateString: string) => {
@@ -296,19 +160,6 @@ const LogPlay: Component = () => {
           isOpen={isModalOpen()}
           onClose={handleCloseModal}
           release={selectedRelease()!}
-          date={selectedDate()}
-          setDate={setSelectedDate}
-          selectedStylus={selectedStylus()}
-          setSelectedStylus={setSelectedStylus}
-          styluses={styluses()}
-          notes={notes()}
-          setNotes={setNotes}
-          onLogPlay={handleLogPlay}
-          onLogCleaning={handleLogCleaning}
-          onLogBoth={handleLogBoth}
-          isSubmittingPlay={isSubmittingPlay()}
-          isSubmittingCleaning={isSubmittingCleaning()}
-          isSubmittingBoth={isSubmittingBoth()}
         />
       </Show>
     </div>

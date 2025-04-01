@@ -1,47 +1,36 @@
+// src/components/RecordActionModal/RecordActionModal.tsx
 import { Component, Show, createSignal } from "solid-js";
 import styles from "./RecordActionModal.module.scss";
 import { Release, Stylus } from "../../types";
 import RecordHistoryItem from "../RecordHistoryItem/RecordHistoryItem";
-import ConfirmationModal from "../ConfirmationModal/ConfirmationModal";
 import EditHistoryPanel from "../EditHistoryPanel/EditHistoryPanel";
 import {
-  updatePlayHistory,
-  updateCleaningHistory,
-} from "../../utils/mutations/put";
-import {
-  deletePlayHistory,
-  deleteCleaningHistory,
-} from "../../utils/mutations/delete";
+  createPlayHistory,
+  createCleaningHistory,
+  createPlayAndCleaning,
+} from "../../utils/mutations/post";
 import { useAppContext } from "../../provider/Provider";
 
 interface RecordActionModalProps {
   isOpen: boolean;
   onClose: () => void;
   release: Release;
-  date: string;
-  setDate: (date: string) => void;
-  selectedStylus: Stylus | null;
-  setSelectedStylus: (stylus: Stylus | null) => void;
-  styluses: Stylus[];
-  notes: string;
-  setNotes: (notes: string) => void;
-  onLogPlay: () => void;
-  onLogCleaning: () => void;
-  onLogBoth: () => void;
-  isSubmittingPlay: boolean;
-  isSubmittingCleaning: boolean;
-  isSubmittingBoth: boolean;
 }
 
 const RecordActionModal: Component<RecordActionModalProps> = (props) => {
-  const { showSuccess, showError, setKleioStore } = useAppContext();
+  const { styluses, showSuccess, showError, setKleioStore } = useAppContext();
 
-  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = createSignal(false);
-  const [deleteItemId, setDeleteItemId] = createSignal<number | null>(null);
-  const [deleteItemType, setDeleteItemType] = createSignal<
-    "play" | "cleaning" | null
-  >(null);
+  // State for the form
+  const [date, setDate] = createSignal(new Date().toISOString().split("T")[0]);
+  const [selectedStylus, setSelectedStylus] = createSignal<Stylus | null>(null);
+  const [notes, setNotes] = createSignal("");
 
+  // Loading states
+  const [isSubmittingPlay, setIsSubmittingPlay] = createSignal(false);
+  const [isSubmittingCleaning, setIsSubmittingCleaning] = createSignal(false);
+  const [isSubmittingBoth, setIsSubmittingBoth] = createSignal(false);
+
+  // Edit panel state
   const [isEditPanelOpen, setIsEditPanelOpen] = createSignal(false);
   const [editItem, setEditItem] = createSignal<{
     id: number;
@@ -49,26 +38,106 @@ const RecordActionModal: Component<RecordActionModalProps> = (props) => {
     date: string;
     notes?: string;
     stylusId?: number;
+    releaseId: number;
   } | null>(null);
 
   // Get only active styluses for the dropdown
   const activeStyluses = () => {
     return (
-      props.styluses?.filter((stylus) => stylus.active || stylus.primary) || []
+      styluses()?.filter((stylus) => stylus.active || stylus.primary) || []
     );
   };
 
-  // Format date helper
-  // const formatDisplayDate = (dateString: string) => {
-  //   const date = new Date(dateString);
-  //   return date.toLocaleDateString("en-US", {
-  //     year: "numeric",
-  //     month: "short",
-  //     day: "numeric",
-  //   });
-  // };
+  const handleLogPlay = async () => {
+    setIsSubmittingPlay(true);
 
-  const handleEdit = (id: number, type: "play" | "cleaning") => {
+    try {
+      const result = await createPlayHistory({
+        releaseId: props.release.id,
+        playedAt: new Date(date()).toISOString(),
+        stylusId: selectedStylus()?.id || null,
+        notes: notes(),
+      });
+
+      if (result.success) {
+        showSuccess("Play logged successfully!");
+        setNotes("");
+        setKleioStore(result.data);
+      } else {
+        throw new Error("Failed to log play");
+      }
+    } catch (error) {
+      console.error("Error logging play:", error);
+      showError("Failed to log play. Please try again.");
+    } finally {
+      setIsSubmittingPlay(false);
+    }
+  };
+
+  const handleLogCleaning = async () => {
+    setIsSubmittingCleaning(true);
+
+    try {
+      const result = await createCleaningHistory({
+        releaseId: props.release.id,
+        cleanedAt: new Date(date()).toISOString(),
+        notes: notes(),
+      });
+
+      if (result.success) {
+        showSuccess("Cleaning logged successfully!");
+        setNotes("");
+        setKleioStore(result.data);
+      } else {
+        throw new Error("Failed to log cleaning");
+      }
+    } catch (error) {
+      console.error("Error logging cleaning:", error);
+      showError("Failed to log cleaning. Please try again.");
+    } finally {
+      setIsSubmittingCleaning(false);
+    }
+  };
+
+  const handleLogBoth = async () => {
+    setIsSubmittingBoth(true);
+
+    try {
+      const result = await createPlayAndCleaning(
+        {
+          releaseId: props.release.id,
+          playedAt: new Date(date()).toISOString(),
+          stylusId: selectedStylus()?.id || null,
+          notes: notes(),
+        },
+        {
+          releaseId: props.release.id,
+          cleanedAt: new Date(date()).toISOString(),
+          notes: notes(),
+        },
+      );
+
+      if (result.success) {
+        showSuccess("Both cleaning and play logged successfully!");
+        setNotes("");
+        setKleioStore(result.data);
+      } else {
+        throw new Error("Failed to log both activities");
+      }
+    } catch (error) {
+      console.error("Error logging both activities:", error);
+      showError("Failed to log both activities. Please try again.");
+    } finally {
+      setIsSubmittingBoth(false);
+    }
+  };
+
+  const handleEdit = (
+    id: number,
+    type: "play" | "cleaning",
+    releaseId: number,
+    // stylusId?: number,
+  ) => {
     if (type === "play") {
       const playItem = props.release.playHistory.find((item) => item.id === id);
       if (playItem) {
@@ -78,6 +147,7 @@ const RecordActionModal: Component<RecordActionModalProps> = (props) => {
           date: playItem.playedAt,
           notes: playItem.notes,
           stylusId: playItem.stylusId,
+          releaseId: releaseId,
         });
         setIsEditPanelOpen(true);
       }
@@ -91,88 +161,10 @@ const RecordActionModal: Component<RecordActionModalProps> = (props) => {
           type,
           date: cleaningItem.cleanedAt,
           notes: cleaningItem.notes,
+          releaseId: releaseId,
         });
         setIsEditPanelOpen(true);
       }
-    }
-  };
-
-  const handleDelete = (id: number, type: "play" | "cleaning") => {
-    setDeleteItemId(id);
-    setDeleteItemType(type);
-    setIsDeleteConfirmOpen(true);
-  };
-
-  const confirmDelete = async () => {
-    if (!deleteItemId() || !deleteItemType()) return;
-
-    try {
-      if (deleteItemType() === "play") {
-        const response = await deletePlayHistory(deleteItemId()!);
-        if (response.status === 200) {
-          showSuccess("Play record deleted successfully");
-          if (response.data) {
-            setKleioStore(response.data);
-          }
-        }
-      } else {
-        const response = await deleteCleaningHistory(deleteItemId()!);
-        if (response.status === 200) {
-          showSuccess("Cleaning record deleted successfully");
-          if (response.data) {
-            setKleioStore(response.data);
-          }
-        }
-      }
-    } catch (error) {
-      console.error("Error deleting record:", error);
-      showError("Failed to delete record");
-    } finally {
-      setIsDeleteConfirmOpen(false);
-      setDeleteItemId(null);
-      setDeleteItemType(null);
-    }
-  };
-
-  const handleSaveEdit = async (data: {
-    id: number;
-    type: "play" | "cleaning";
-    date: string;
-    notes: string;
-    stylusId?: number;
-  }) => {
-    try {
-      if (data.type === "play") {
-        const response = await updatePlayHistory(data.id, {
-          releaseId: props.release.id,
-          playedAt: data.date,
-          stylusId: data.stylusId,
-          notes: data.notes,
-        });
-
-        if (response.status === 200) {
-          showSuccess("Play record updated successfully");
-          if (response.data) {
-            setKleioStore(response.data);
-          }
-        }
-      } else {
-        const response = await updateCleaningHistory(data.id, {
-          releaseId: props.release.id,
-          cleanedAt: data.date,
-          notes: data.notes,
-        });
-
-        if (response.status === 200) {
-          showSuccess("Cleaning record updated successfully");
-          if (response.data) {
-            setKleioStore(response.data);
-          }
-        }
-      }
-    } catch (error) {
-      console.error("Error updating record:", error);
-      showError("Failed to update record");
     }
   };
 
@@ -219,8 +211,8 @@ const RecordActionModal: Component<RecordActionModalProps> = (props) => {
                   type="date"
                   id="actionDate"
                   class={styles.dateInput}
-                  value={props.date}
-                  onInput={(e) => props.setDate(e.target.value)}
+                  value={date()}
+                  onInput={(e) => setDate(e.target.value)}
                 />
               </div>
 
@@ -231,11 +223,11 @@ const RecordActionModal: Component<RecordActionModalProps> = (props) => {
                 <select
                   id="stylusSelect"
                   class={styles.select}
-                  value={props.selectedStylus?.id || ""}
+                  value={selectedStylus()?.id || ""}
                   onChange={(e) => {
                     const id = parseInt(e.target.value);
-                    const stylus = props.styluses.find((s) => s.id === id);
-                    props.setSelectedStylus(stylus || null);
+                    const stylus = styluses().find((s) => s.id === id);
+                    setSelectedStylus(stylus || null);
                   }}
                 >
                   <option value="">None</option>
@@ -255,8 +247,8 @@ const RecordActionModal: Component<RecordActionModalProps> = (props) => {
               <textarea
                 id="notes"
                 class={styles.textarea}
-                value={props.notes}
-                onInput={(e) => props.setNotes(e.target.value)}
+                value={notes()}
+                onInput={(e) => setNotes(e.target.value)}
                 placeholder="Enter any notes about this play or cleaning..."
                 rows="3"
               />
@@ -266,24 +258,36 @@ const RecordActionModal: Component<RecordActionModalProps> = (props) => {
           <div class={styles.actionButtons}>
             <button
               class={styles.playButton}
-              onClick={props.onLogPlay}
-              disabled={props.isSubmittingPlay}
+              onClick={handleLogPlay}
+              disabled={
+                isSubmittingPlay() ||
+                isSubmittingBoth() ||
+                isSubmittingCleaning()
+              }
             >
-              {props.isSubmittingPlay ? "Logging..." : "Log Play"}
+              {isSubmittingPlay() ? "Logging..." : "Log Play"}
             </button>
             <button
               class={styles.bothButton}
-              onClick={props.onLogBoth}
-              disabled={props.isSubmittingBoth}
+              onClick={handleLogBoth}
+              disabled={
+                isSubmittingPlay() ||
+                isSubmittingBoth() ||
+                isSubmittingCleaning()
+              }
             >
-              {props.isSubmittingBoth ? "Logging..." : "Log Both"}
+              {isSubmittingBoth() ? "Logging..." : "Log Both"}
             </button>
             <button
               class={styles.cleaningButton}
-              onClick={props.onLogCleaning}
-              disabled={props.isSubmittingCleaning}
+              onClick={handleLogCleaning}
+              disabled={
+                isSubmittingPlay() ||
+                isSubmittingBoth() ||
+                isSubmittingCleaning()
+              }
             >
-              {props.isSubmittingCleaning ? "Logging..." : "Log Cleaning"}
+              {isSubmittingCleaning() ? "Logging..." : "Log Cleaning"}
             </button>
           </div>
 
@@ -295,6 +299,7 @@ const RecordActionModal: Component<RecordActionModalProps> = (props) => {
               {[
                 ...(props.release.playHistory || []).map((play) => ({
                   id: play.id,
+                  releaseId: props.release.id,
                   type: "play" as const,
                   date: new Date(play.playedAt),
                   notes: play.notes || "",
@@ -303,6 +308,7 @@ const RecordActionModal: Component<RecordActionModalProps> = (props) => {
                 })),
                 ...(props.release.cleaningHistory || []).map((cleaning) => ({
                   id: cleaning.id,
+                  releaseId: props.release.id,
                   type: "cleaning" as const,
                   date: new Date(cleaning.cleanedAt),
                   notes: cleaning.notes || "",
@@ -313,13 +319,15 @@ const RecordActionModal: Component<RecordActionModalProps> = (props) => {
                 .map((item) => (
                   <RecordHistoryItem
                     id={item.id}
+                    releaseId={item.releaseId}
                     type={item.type}
                     date={item.date.toISOString()}
                     notes={item.notes}
                     // @ts-expect-error Stylus doesn't exist on cleaning
                     stylus={item.stylus}
+                    // @ts-expect-error stylusId doesn't exist on cleaning
+                    stylusId={item.stylusId}
                     onEdit={handleEdit}
-                    onDelete={handleDelete}
                   />
                 ))}
 
@@ -334,24 +342,13 @@ const RecordActionModal: Component<RecordActionModalProps> = (props) => {
         </div>
       </div>
 
-      {/* Confirmation modal for delete */}
-      <ConfirmationModal
-        isOpen={isDeleteConfirmOpen()}
-        title="Confirm Delete"
-        message={`Are you sure you want to delete this ${deleteItemType() === "play" ? "play" : "cleaning"} record? This action cannot be undone.`}
-        confirmText="Delete"
-        onConfirm={confirmDelete}
-        onCancel={() => setIsDeleteConfirmOpen(false)}
-      />
-
       {/* Edit panel */}
       <Show when={editItem()}>
         <EditHistoryPanel
           isOpen={isEditPanelOpen()}
           onClose={() => setIsEditPanelOpen(false)}
           editItem={editItem()}
-          styluses={props.styluses}
-          onSave={handleSaveEdit}
+          styluses={styluses()}
         />
       </Show>
     </Show>
