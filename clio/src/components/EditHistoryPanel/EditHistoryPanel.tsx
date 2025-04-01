@@ -1,22 +1,13 @@
 // src/components/EditHistoryPanel/EditHistoryPanel.tsx
 import { Component, createEffect, createSignal, Show } from "solid-js";
 import styles from "./EditHistoryPanel.module.scss";
-import { Stylus } from "../../types";
+import { EditItem, Stylus } from "../../types";
 import { AiOutlineClose } from "solid-icons/ai";
 import {
   updatePlayHistory,
   updateCleaningHistory,
 } from "../../utils/mutations/put";
 import { useAppContext } from "../../provider/Provider";
-
-interface EditItem {
-  id: number;
-  type: "play" | "cleaning";
-  date: string;
-  notes?: string;
-  stylusId?: number;
-  releaseId: number;
-}
 
 export interface EditHistoryPanelProps {
   isOpen: boolean;
@@ -29,7 +20,7 @@ const EditHistoryPanel: Component<EditHistoryPanelProps> = (props) => {
   const { showSuccess, showError, setKleioStore } = useAppContext();
 
   const [date, setDate] = createSignal(
-    props.editItem?.date.split("T")[0] || "",
+    props.editItem?.date.toISOString().split("T")[0] || "",
   );
   const [notes, setNotes] = createSignal(props.editItem?.notes || "");
   const [stylusId, setStylusId] = createSignal(props.editItem?.stylusId);
@@ -37,7 +28,7 @@ const EditHistoryPanel: Component<EditHistoryPanelProps> = (props) => {
 
   createEffect(() => {
     if (props.editItem) {
-      setDate(props.editItem.date.split("T")[0]);
+      setDate(props.editItem.date.toISOString().split("T")[0]);
       setNotes(props.editItem.notes || "");
       setStylusId(props.editItem.stylusId);
     }

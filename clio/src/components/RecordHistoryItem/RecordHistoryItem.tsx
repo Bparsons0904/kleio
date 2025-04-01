@@ -1,4 +1,3 @@
-// src/components/RecordHistoryItem/RecordHistoryItem.tsx
 import { Component, Match, Show, Switch, createSignal } from "solid-js";
 import styles from "./RecordHistoryItem.module.scss";
 import NotesViewPanel from "../NotesViewPanel/NotesViewPanel";
@@ -13,15 +12,10 @@ import {
 } from "../../utils/mutations/delete";
 import { useAppContext } from "../../provider/Provider";
 import ConfirmationModal from "../ConfirmationModal/ConfirmationModal";
+import { EditItem } from "../../types";
 
 export interface HistoryItemProps {
-  id: number;
-  releaseId: number;
-  type: "play" | "cleaning";
-  date: string;
-  notes?: string;
-  stylus?: string;
-  stylusId?: number;
+  item: EditItem;
   onEdit: (
     id: number,
     type: "play" | "cleaning",
@@ -51,30 +45,35 @@ const RecordHistoryItem: Component<HistoryItemProps> = (props) => {
 
   const handleEdit = (e: Event) => {
     e.stopPropagation();
-    props.onEdit(props.id, props.type, props.releaseId, props.stylusId);
+    props.onEdit(
+      props.item.id,
+      props.item.type,
+      props.item.releaseId,
+      props.item.stylusId,
+    );
   };
 
   const handleDelete = async () => {
     try {
       let result;
 
-      if (props.type === "play") {
-        result = await deletePlayHistory(props.id);
+      if (props.item.type === "play") {
+        result = await deletePlayHistory(props.item.id);
       } else {
-        result = await deleteCleaningHistory(props.id);
+        result = await deleteCleaningHistory(props.item.id);
       }
 
       if (result.success) {
         showSuccess(
-          `${props.type === "play" ? "Play" : "Cleaning"} record deleted successfully`,
+          `${props.item.type === "play" ? "Play" : "Cleaning"} record deleted successfully`,
         );
         setKleioStore(result.data);
       } else {
-        throw new Error(`Failed to delete ${props.type} record`);
+        throw new Error(`Failed to delete ${props.item.type} record`);
       }
     } catch (error) {
       console.error("Error deleting record:", error);
-      showError(`Failed to delete ${props.type} record`);
+      showError(`Failed to delete ${props.item.type} record`);
     } finally {
       setIsDeleteConfirmOpen(false);
     }
@@ -83,19 +82,19 @@ const RecordHistoryItem: Component<HistoryItemProps> = (props) => {
   return (
     <>
       <div
-        class={`${styles.historyItem} ${props.type === "play" ? styles.playItem : styles.cleaningItem}`}
+        class={`${styles.historyItem} ${props.item.type === "play" ? styles.playItem : styles.cleaningItem}`}
       >
         <div class={styles.historyItemContent}>
           <div class={styles.historyItemHeader}>
             <div class={styles.typeAndNotes}>
               <span class={styles.historyItemType}>
                 <Switch>
-                  <Match when={props.type === "play"}>
+                  <Match when={props.item.type === "play"}>
                     <span class={styles.historyItems}>
                       <BsVinylFill size={18} /> Played
                     </span>
                   </Match>
-                  <Match when={props.type === "cleaning"}>
+                  <Match when={props.item.type === "cleaning"}>
                     <span class={styles.historyItems}>
                       <TbWashTemperature5 size={20} /> Cleaned
                     </span>
@@ -103,12 +102,12 @@ const RecordHistoryItem: Component<HistoryItemProps> = (props) => {
                 </Switch>
               </span>
 
-              <Show when={props.stylus}>
+              <Show when={props.item.stylus}>
                 <div class={styles.historyItemStylus}>
-                  Stylus: {props.stylus}
+                  Stylus: {props.item.stylus}
                 </div>
               </Show>
-              <Show when={props.notes}>
+              <Show when={props.item.notes}>
                 <button
                   class={styles.noteButton}
                   onClick={openNotesPanel}
@@ -140,7 +139,7 @@ const RecordHistoryItem: Component<HistoryItemProps> = (props) => {
                 </button>
               </div>
               <span class={styles.historyItemDate}>
-                {formatDate(props.date)}
+                {formatDate(props.item.date.toISOString())}
               </span>
             </div>
           </div>
@@ -148,14 +147,12 @@ const RecordHistoryItem: Component<HistoryItemProps> = (props) => {
       </div>
 
       {/* Notes Panel */}
-      <Show when={props.notes}>
+      <Show when={props.item.notes}>
         <NotesViewPanel
           isOpen={isNotesPanelOpen()}
           onClose={() => setIsNotesPanelOpen(false)}
-          notes={props.notes || ""}
-          title={`${props.type === "play" ? "Play" : "Cleaning"} Record Details`}
-          date={props.date}
-          stylus={props.stylus}
+          title={`${props.item.type === "play" ? "Play" : "Cleaning"} Record Details`}
+          item={props.item}
         />
       </Show>
 
@@ -163,7 +160,7 @@ const RecordHistoryItem: Component<HistoryItemProps> = (props) => {
       <ConfirmationModal
         isOpen={isDeleteConfirmOpen()}
         title="Confirm Delete"
-        message={`Are you sure you want to delete this ${props.type === "play" ? "play" : "cleaning"} record? This action cannot be undone.`}
+        message={`Are you sure you want to delete this ${props.item.type === "play" ? "play" : "cleaning"} record? This action cannot be undone.`}
         confirmText="Delete"
         onConfirm={handleDelete}
         onCancel={() => setIsDeleteConfirmOpen(false)}

@@ -1,7 +1,7 @@
 // src/components/RecordActionModal/RecordActionModal.tsx
 import { Component, Show, createSignal } from "solid-js";
 import styles from "./RecordActionModal.module.scss";
-import { Release, Stylus } from "../../types";
+import { EditItem, Release, Stylus } from "../../types";
 import RecordHistoryItem from "../RecordHistoryItem/RecordHistoryItem";
 import EditHistoryPanel from "../EditHistoryPanel/EditHistoryPanel";
 import {
@@ -20,26 +20,14 @@ interface RecordActionModalProps {
 const RecordActionModal: Component<RecordActionModalProps> = (props) => {
   const { styluses, showSuccess, showError, setKleioStore } = useAppContext();
 
-  // State for the form
   const [date, setDate] = createSignal(new Date().toISOString().split("T")[0]);
-  const [selectedStylus, setSelectedStylus] = createSignal<Stylus | null>(null);
+  const [selectedStylus, setSelectedStylus] = createSignal<Stylus | null>(
+    styluses()?.find((stylus) => stylus.primary),
+  );
   const [notes, setNotes] = createSignal("");
 
-  // Loading states
-  const [isSubmittingPlay, setIsSubmittingPlay] = createSignal(false);
-  const [isSubmittingCleaning, setIsSubmittingCleaning] = createSignal(false);
-  const [isSubmittingBoth, setIsSubmittingBoth] = createSignal(false);
-
-  // Edit panel state
   const [isEditPanelOpen, setIsEditPanelOpen] = createSignal(false);
-  const [editItem, setEditItem] = createSignal<{
-    id: number;
-    type: "play" | "cleaning";
-    date: string;
-    notes?: string;
-    stylusId?: number;
-    releaseId: number;
-  } | null>(null);
+  const [editItem, setEditItem] = createSignal<EditItem | null>(null);
 
   // Get only active styluses for the dropdown
   const activeStyluses = () => {
@@ -49,8 +37,6 @@ const RecordActionModal: Component<RecordActionModalProps> = (props) => {
   };
 
   const handleLogPlay = async () => {
-    setIsSubmittingPlay(true);
-
     try {
       const result = await createPlayHistory({
         releaseId: props.release.id,
@@ -69,14 +55,10 @@ const RecordActionModal: Component<RecordActionModalProps> = (props) => {
     } catch (error) {
       console.error("Error logging play:", error);
       showError("Failed to log play. Please try again.");
-    } finally {
-      setIsSubmittingPlay(false);
     }
   };
 
   const handleLogCleaning = async () => {
-    setIsSubmittingCleaning(true);
-
     try {
       const result = await createCleaningHistory({
         releaseId: props.release.id,
@@ -94,14 +76,10 @@ const RecordActionModal: Component<RecordActionModalProps> = (props) => {
     } catch (error) {
       console.error("Error logging cleaning:", error);
       showError("Failed to log cleaning. Please try again.");
-    } finally {
-      setIsSubmittingCleaning(false);
     }
   };
 
   const handleLogBoth = async () => {
-    setIsSubmittingBoth(true);
-
     try {
       const result = await createPlayAndCleaning(
         {
@@ -127,8 +105,6 @@ const RecordActionModal: Component<RecordActionModalProps> = (props) => {
     } catch (error) {
       console.error("Error logging both activities:", error);
       showError("Failed to log both activities. Please try again.");
-    } finally {
-      setIsSubmittingBoth(false);
     }
   };
 
@@ -136,7 +112,6 @@ const RecordActionModal: Component<RecordActionModalProps> = (props) => {
     id: number,
     type: "play" | "cleaning",
     releaseId: number,
-    // stylusId?: number,
   ) => {
     if (type === "play") {
       const playItem = props.release.playHistory.find((item) => item.id === id);
@@ -144,7 +119,7 @@ const RecordActionModal: Component<RecordActionModalProps> = (props) => {
         setEditItem({
           id,
           type,
-          date: playItem.playedAt,
+          date: new Date(playItem.playedAt),
           notes: playItem.notes,
           stylusId: playItem.stylusId,
           releaseId: releaseId,
@@ -159,7 +134,7 @@ const RecordActionModal: Component<RecordActionModalProps> = (props) => {
         setEditItem({
           id,
           type,
-          date: cleaningItem.cleanedAt,
+          date: new Date(cleaningItem.cleanedAt),
           notes: cleaningItem.notes,
           releaseId: releaseId,
         });
@@ -256,39 +231,12 @@ const RecordActionModal: Component<RecordActionModalProps> = (props) => {
           </div>
 
           <div class={styles.actionButtons}>
-            <button
-              class={styles.playButton}
-              onClick={handleLogPlay}
-              disabled={
-                isSubmittingPlay() ||
-                isSubmittingBoth() ||
-                isSubmittingCleaning()
-              }
-            >
-              {isSubmittingPlay() ? "Logging..." : "Log Play"}
-            </button>
-            <button
-              class={styles.bothButton}
-              onClick={handleLogBoth}
-              disabled={
-                isSubmittingPlay() ||
-                isSubmittingBoth() ||
-                isSubmittingCleaning()
-              }
-            >
-              {isSubmittingBoth() ? "Logging..." : "Log Both"}
-            </button>
+            <button class={styles.playButton} onClick={handleLogPlay}></button>
+            <button class={styles.bothButton} onClick={handleLogBoth}></button>
             <button
               class={styles.cleaningButton}
               onClick={handleLogCleaning}
-              disabled={
-                isSubmittingPlay() ||
-                isSubmittingBoth() ||
-                isSubmittingCleaning()
-              }
-            >
-              {isSubmittingCleaning() ? "Logging..." : "Log Cleaning"}
-            </button>
+            ></button>
           </div>
 
           <div class={styles.historySection}>
@@ -317,18 +265,7 @@ const RecordActionModal: Component<RecordActionModalProps> = (props) => {
                 .sort((a, b) => b.date.getTime() - a.date.getTime())
                 .slice(0, 10) // Show only the 10 most recent activities
                 .map((item) => (
-                  <RecordHistoryItem
-                    id={item.id}
-                    releaseId={item.releaseId}
-                    type={item.type}
-                    date={item.date.toISOString()}
-                    notes={item.notes}
-                    // @ts-expect-error Stylus doesn't exist on cleaning
-                    stylus={item.stylus}
-                    // @ts-expect-error stylusId doesn't exist on cleaning
-                    stylusId={item.stylusId}
-                    onEdit={handleEdit}
-                  />
+                  <RecordHistoryItem item={item} onEdit={handleEdit} />
                 ))}
 
               {!props.release.playHistory?.length &&

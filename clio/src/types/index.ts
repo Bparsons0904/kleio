@@ -121,3 +121,13 @@ export interface CleaningHistory {
   updatedAt: string;
   release?: Release;
 }
+
+export interface EditItem {
+  id: number;
+  type: "play" | "cleaning";
+  date: Date;
+  notes?: string;
+  stylus?: string;
+  stylusId?: number;
+  releaseId: number;
+}

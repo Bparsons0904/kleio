@@ -3,14 +3,13 @@ import styles from "./NotesViewPanel.module.scss";
 import { AiOutlineClose } from "solid-icons/ai";
 import { AiTwotoneCalendar } from "solid-icons/ai";
 import { ImHeadphones } from "solid-icons/im";
+import { EditItem } from "../../types";
 
 export interface NotesViewPanelProps {
   isOpen: boolean;
   onClose: () => void;
-  notes: string;
   title: string;
-  date: string;
-  stylus?: string;
+  item: EditItem;
 }
 
 const NotesViewPanel: Component<NotesViewPanelProps> = (props) => {
@@ -39,20 +38,20 @@ const NotesViewPanel: Component<NotesViewPanelProps> = (props) => {
           <div class={styles.metadata}>
             <div class={styles.metadataItem}>
               <AiTwotoneCalendar size={18} />
-              <span>{formatDate(props.date)}</span>
+              <span>{formatDate(props.item.date)}</span>
             </div>
 
-            <Show when={props.stylus}>
+            <Show when={props.item.stylus}>
               <div class={styles.metadataItem}>
                 <ImHeadphones size={18} />
-                <span>{props.stylus}</span>
+                <span>{props.item.stylus}</span>
               </div>
             </Show>
           </div>
 
           <div class={styles.notesSection}>
             <h3 class={styles.notesSectionTitle}>Notes</h3>
-            <div class={styles.notesContent}>{props.notes}</div>
+            <div class={styles.notesContent}>{props.item.notes}</div>
           </div>
         </div>
       </div>

@@ -4,15 +4,16 @@ import styles from "./PlayHistory.module.scss";
 import { useFormattedMediumDate } from "../../utils/dates";
 import { VsNote } from "solid-icons/vs";
 import { TbWashTemperature5 } from "solid-icons/tb";
+import { PlayHistory, Release } from "../../types";
 
-const PlayHistory: Component = () => {
+const PlayHistoryPage: Component = () => {
   const { playHistory } = useAppContext();
-  const [timeFilter, setTimeFilter] = createSignal("all");
+  const [timeFilter, setTimeFilter] = createSignal("month");
   const [searchTerm, setSearchTerm] = createSignal("");
-  const [groupBy, setGroupBy] = createSignal("none");
+  const [groupBy, setGroupBy] = createSignal("date");
 
   // Check if a cleaning was done on the same day as the play
-  const hasCleaning = (release, playDate) => {
+  const hasCleaning = (release: Release, playDate: string) => {
     if (!release.cleaningHistory || release.cleaningHistory.length === 0) {
       return false;
     }
@@ -76,7 +77,7 @@ const PlayHistory: Component = () => {
     if (groupBy() === "none") return { "": history };
 
     const grouped = history.reduce((acc, play) => {
-      let key;
+      let key: string;
       if (groupBy() === "date") {
         // Group by day
         key = new Date(play.playedAt).toISOString().split("T")[0];
@@ -155,7 +156,7 @@ const PlayHistory: Component = () => {
 
       <div class={styles.historyList}>
         <For each={Object.entries(groupedHistory())}>
-          {([groupName, plays]: [string, any[]]) => (
+          {([groupName, plays]: [string, PlayHistory[]]) => (
             <>
               <Show when={groupName && groupBy() !== "none"}>
                 <div class={styles.groupHeader}>
@@ -234,4 +235,4 @@ const PlayHistory: Component = () => {
   );
 };
 
-export default PlayHistory;
+export default PlayHistoryPage;
