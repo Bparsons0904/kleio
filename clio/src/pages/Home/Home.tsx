@@ -3,9 +3,10 @@ import styles from "./Home.module.scss";
 import { refreshCollection } from "../../utils/api";
 import { useNavigate } from "@solidjs/router";
 import { useAppContext } from "../../provider/Provider";
+import { exportHistory } from "../../utils/mutations/export";
 
 const Home: Component = () => {
-  const { setIsSyncing } = useAppContext();
+  const { setIsSyncing, showError } = useAppContext();
   const navigate = useNavigate();
   const handleLogPlay = () => {
     navigate("/log");
@@ -26,6 +27,16 @@ const Home: Component = () => {
       }
     } catch (error) {
       console.error("Error resyncing:", error);
+    }
+  };
+
+  const handleExport = async () => {
+    try {
+      await exportHistory();
+      // No need for success notification since it's a direct download
+    } catch (error) {
+      console.error("Error exporting history:", error);
+      showError("Failed to export history. Please try again.");
     }
   };
 
@@ -141,6 +152,12 @@ const Home: Component = () => {
             </button>
           </div>
         </div>
+      </div>
+
+      <div class={styles.exportSection}>
+        <button class={styles.exportButton} onClick={handleExport}>
+          Export Play & Cleaning History
+        </button>
       </div>
     </div>
   );

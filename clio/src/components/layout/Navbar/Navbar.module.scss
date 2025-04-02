@@ -1,6 +1,6 @@
 .navbar {
-  display: flex;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: 20% 1fr 20%;
   align-items: center;
   background-color: #333;
   color: white;
@@ -16,6 +16,7 @@
 
   .navLinks {
     display: flex;
+    justify-content: center;
     gap: 1rem;
 
     a {
@@ -53,6 +54,8 @@
   }
 
   .lastSync {
+    display: flex;
+    justify-content: center;
     font-size: 1rem;
     color: rgba(255, 255, 255, 0.8);
     font-weight: 600;

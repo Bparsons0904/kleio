@@ -1,15 +1,14 @@
-// src/pages/LogPlay/LogPlay.tsx (updated)
+// src/pages/LogPlay/LogPlay.tsx (modified)
 import { Component, createSignal, createEffect, For, Show } from "solid-js";
 import { useAppContext } from "../../provider/Provider";
 import styles from "./LogPlay.module.scss";
 import { Release } from "../../types";
 import RecordActionModal from "../../components/RecordActionModal/RecordActionModal";
-import { exportHistory } from "../../utils/mutations/export";
 import { RecordStatusIndicator } from "../../components/StatusIndicators/StatusIndicators";
-import { getLastPlayDate, getLastCleaningDate } from "../../utils/playStatus";
+import { getLastPlayDate } from "../../utils/playStatus";
 
 const LogPlay: Component = () => {
-  const { releases, showError } = useAppContext();
+  const { releases } = useAppContext();
 
   const [filteredReleases, setFilteredReleases] = createSignal<Release[]>([]);
   const [searchTerm, setSearchTerm] = createSignal("");
@@ -18,37 +17,120 @@ const LogPlay: Component = () => {
   );
   const [isModalOpen, setIsModalOpen] = createSignal(false);
   const [showStatusDetails, setShowStatusDetails] = createSignal(false);
+  const [sortBy, setSortBy] = createSignal("artist"); // Default sort by album title
 
-  // Filter releases based on search term
+  // Filter releases based on search term and sort them
   createEffect(() => {
     const term = searchTerm().toLowerCase();
-    if (!term) {
-      setFilteredReleases(releases?.());
-      return;
+    let filtered = [...releases()];
+
+    // Apply search filter
+    if (term) {
+      filtered = filtered.filter(
+        (release) =>
+          release.title.toLowerCase().includes(term) ||
+          release.artists.some((artist) =>
+            artist.artist?.name.toLowerCase().includes(term),
+          ),
+      );
     }
 
-    const filtered = releases().filter(
-      (release) =>
-        release.title.toLowerCase().includes(term) ||
-        release.artists.some((artist) =>
-          artist.artist?.name.toLowerCase().includes(term),
-        ),
-    );
+    // Apply sorting
+    filtered = sortReleases(filtered, sortBy());
 
     setFilteredReleases(filtered);
   });
 
-  // Make sure selected release is always up to date with the latest data
-  createEffect(() => {
-    if (selectedRelease()) {
-      for (const release of releases()) {
-        if (release.id === selectedRelease().id) {
-          setSelectedRelease(release);
-          break;
-        }
-      }
+  // Sort releases based on selected sort option
+  const sortReleases = (releases: Release[], sortOption: string): Release[] => {
+    switch (sortOption) {
+      case "lastPlayed":
+        // Sort by last played date (most recent first)
+        return [...releases].sort((a, b) => {
+          const dateA = getLastPlayDate(a.playHistory);
+          const dateB = getLastPlayDate(b.playHistory);
+
+          // If both have play history
+          if (dateA && dateB) return dateB.getTime() - dateA.getTime();
+          // If only A has play history
+          if (dateA && !dateB) return -1;
+          // If only B has play history
+          if (!dateA && dateB) return 1;
+          // If neither has play history, sort by title
+          return a.title.localeCompare(b.title);
+        });
+
+      case "recentlyPlayed":
+        // Show only recently played records (last 30 days) sorted by date
+        return [...releases]
+          .filter((release) => {
+            const lastPlayed = getLastPlayDate(release.playHistory);
+            if (!lastPlayed) return false;
+
+            const thirtyDaysAgo = new Date();
+            thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+            return lastPlayed >= thirtyDaysAgo;
+          })
+          .sort((a, b) => {
+            const dateA = getLastPlayDate(a.playHistory)!;
+            const dateB = getLastPlayDate(b.playHistory)!;
+            return dateB.getTime() - dateA.getTime();
+          });
+
+      case "genre":
+        // Sort by primary genre
+        return [...releases].sort((a, b) => {
+          const genreA = a.genres[0]?.name || "Unknown";
+          const genreB = b.genres[0]?.name || "Unknown";
+          return genreA.localeCompare(genreB);
+        });
+
+      case "artist":
+        // Sort by primary artist
+        return [...releases].sort((a, b) => {
+          const artistA =
+            a.artists.find((a) => a.role !== "Producer")?.artist?.name ||
+            "Unknown";
+          const artistB =
+            b.artists.find((a) => a.role !== "Producer")?.artist?.name ||
+            "Unknown";
+          return artistA.localeCompare(artistB);
+        });
+
+      case "album":
+        // Sort by album title
+        return [...releases].sort((a, b) => a.title.localeCompare(b.title));
+
+      case "year":
+        // Sort by release year (newest first)
+        return [...releases].sort((a, b) => {
+          const yearA = a.year || 0;
+          const yearB = b.year || 0;
+          return yearB - yearA;
+        });
+
+      case "recentlyAdded":
+        // Sort by date added to collection (using createdAt date)
+        return [...releases].sort((a, b) => {
+          const dateA = new Date(a.createdAt).getTime();
+          const dateB = new Date(b.createdAt).getTime();
+          return dateB - dateA;
+        });
+
+      case "playCount":
+        // Sort by number of plays (most played first)
+        return [...releases].sort((a, b) => {
+          const countA = a.playHistory?.length || 0;
+          const countB = b.playHistory?.length || 0;
+          return countB - countA;
+        });
+
+      default:
+        // Default sort by title
+        return [...releases].sort((a, b) => a.title.localeCompare(b.title));
     }
-  });
+  };
 
   const handleReleaseClick = (release: Release) => {
     setSelectedRelease(release);
@@ -60,16 +142,6 @@ const LogPlay: Component = () => {
     // We keep the selected release so clicking the card again reopens the modal
   };
 
-  const handleExport = async () => {
-    try {
-      await exportHistory();
-      // No need for success notification since it's a direct download
-    } catch (error) {
-      console.error("Error exporting history:", error);
-      showError("Failed to export history. Please try again.");
-    }
-  };
-
   return (
     <div class={styles.container}>
       <h1 class={styles.title}>Log Play & Cleaning</h1>
@@ -78,19 +150,42 @@ const LogPlay: Component = () => {
       </p>
 
       <div class={styles.logForm}>
-        {/* Search input */}
-        <div class={styles.searchSection}>
-          <label class={styles.label} for="releaseSearch">
-            Search Your Collection
-          </label>
-          <input
-            type="text"
-            id="releaseSearch"
-            class={styles.searchInput}
-            value={searchTerm()}
-            onInput={(e) => setSearchTerm(e.target.value)}
-            placeholder="Search by title or artist..."
-          />
+        {/* Search and sorting controls */}
+        <div class={styles.controlsRow}>
+          <div class={styles.searchSection}>
+            <label class={styles.label} for="releaseSearch">
+              Search Your Collection
+            </label>
+            <input
+              type="text"
+              id="releaseSearch"
+              class={styles.searchInput}
+              value={searchTerm()}
+              onInput={(e) => setSearchTerm(e.target.value)}
+              placeholder="Search by title or artist..."
+            />
+          </div>
+
+          <div class={styles.sortSection}>
+            <label class={styles.label} for="sortOptions">
+              Sort By
+            </label>
+            <select
+              id="sortOptions"
+              class={styles.select}
+              value={sortBy()}
+              onInput={(e) => setSortBy(e.target.value)}
+            >
+              <option value="album">Album (A-Z)</option>
+              <option value="artist">Artist (A-Z)</option>
+              <option value="genre">Genre (A-Z)</option>
+              <option value="lastPlayed">Last Played</option>
+              <option value="recentlyPlayed">Recently Played (30 days)</option>
+              <option value="year">Release Year (newest first)</option>
+              <option value="recentlyAdded">Recently Added</option>
+              <option value="playCount">Most Played</option>
+            </select>
+          </div>
         </div>
 
         {/* Status details toggle */}
@@ -114,7 +209,7 @@ const LogPlay: Component = () => {
         <div class={styles.releasesSection}>
           {filteredReleases().length === 0 ? (
             <p class={styles.noResults}>
-              No releases found. Try a different search term.
+              No releases found. Try a different search term or sort option.
             </p>
           ) : (
             <div class={styles.releasesList}>
@@ -147,6 +242,7 @@ const LogPlay: Component = () => {
                             .map((artist) => artist.artist?.name)
                             .join(", ")}
                         </p>
+
                         <div class={styles.statusSection}>
                           <RecordStatusIndicator
                             playHistory={release.playHistory}
@@ -173,11 +269,6 @@ const LogPlay: Component = () => {
             </div>
           )}
         </div>
-      </div>
-      <div class={styles.exportSection}>
-        <button class={styles.exportButton} onClick={handleExport}>
-          Export Play & Cleaning History
-        </button>
       </div>
 
       {/* The modal */}

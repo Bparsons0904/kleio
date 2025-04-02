@@ -1,7 +1,7 @@
 import { Component } from "solid-js";
 import styles from "./Navbar.module.scss";
 import { useAppContext } from "../../../provider/Provider";
-import { useFormattedMediumDate } from "../../../utils/dates";
+import { useFormattedShortDate } from "../../../utils/dates";
 import { useNavigate, useLocation } from "@solidjs/router";
 
 const Navbar: Component = () => {
@@ -56,15 +56,6 @@ const Navbar: Component = () => {
         >
           Analytics
         </a>
-        <a
-          class={`${styles.navLink} ${isActive("/equipment")}`}
-          onclick={(e) => {
-            e.preventDefault();
-            navigate("/equipment");
-          }}
-        >
-          Equipment
-        </a>
       </div>
 
       <div class={styles.syncStatus}>
@@ -76,7 +67,7 @@ const Navbar: Component = () => {
         )}
         {!isSyncing() && lastSynced() && (
           <div class={styles.lastSync}>
-            Last sync: {useFormattedMediumDate(lastSynced())}
+            Last sync: {useFormattedShortDate(lastSynced())}
           </div>
         )}
       </div>
