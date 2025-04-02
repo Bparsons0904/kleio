@@ -22,13 +22,13 @@ const Navbar: Component = () => {
 
       <div class={styles.navLinks}>
         <a
-          class={`${styles.navLink} ${isActive("/")}`}
+          class={`${styles.navLink} ${isActive("/log")}`}
           onclick={(e) => {
             e.preventDefault();
-            navigate("/");
+            navigate("/log");
           }}
         >
-          Home
+          Log
         </a>
         <a
           class={`${styles.navLink} ${isActive("/collection")}`}
@@ -38,15 +38,6 @@ const Navbar: Component = () => {
           }}
         >
           Collection
-        </a>
-        <a
-          class={`${styles.navLink} ${isActive("/log")}`}
-          onclick={(e) => {
-            e.preventDefault();
-            navigate("/log");
-          }}
-        >
-          Log Play
         </a>
         <a
           class={`${styles.navLink} ${isActive("/playHistory")}`}
