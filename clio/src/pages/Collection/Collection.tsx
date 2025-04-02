@@ -7,6 +7,7 @@ import RecordActionModal from "../../components/RecordActionModal/RecordActionMo
 import { AiOutlineSearch } from "solid-icons/ai";
 import { BiRegularFilterAlt } from "solid-icons/bi";
 import { BsGrid, BsGrid3x3Gap } from "solid-icons/bs";
+import { fuzzySearchReleases } from "../../utils/fuzzy";
 
 const Collection: Component = () => {
   const { releases } = useAppContext();
@@ -38,25 +39,18 @@ const Collection: Component = () => {
 
   // Filter releases based on search term, genres, and sort them
   createEffect(() => {
-    const term = searchTerm().toLowerCase();
     let filtered = releases();
 
-    // Apply search filter
-    if (term) {
-      filtered = filtered.filter(
-        (release) =>
-          release.title.toLowerCase().includes(term) ||
-          release.artists.some((artist) =>
-            artist.artist?.name.toLowerCase().includes(term),
-          ),
-      );
-    }
-
-    // Apply genre filter
+    // Apply genre filter first if any genres are selected
     if (genreFilter().length > 0) {
       filtered = filtered.filter((release) =>
         release.genres.some((genre) => genreFilter().includes(genre.name)),
       );
+    }
+
+    // Apply fuzzy search if search term is provided
+    if (searchTerm()) {
+      filtered = fuzzySearchReleases(filtered, searchTerm());
     }
 
     // Apply sorting

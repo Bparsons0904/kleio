@@ -1,5 +1,5 @@
 // src/components/layout/Navbar/Navbar.tsx
-import { Component } from "solid-js";
+import { Component, createEffect } from "solid-js";
 import styles from "./Navbar.module.scss";
 import { useAppContext } from "../../../provider/Provider";
 import { useFormattedShortDate } from "../../../utils/dates";
@@ -13,6 +13,15 @@ const Navbar: Component = () => {
   const isActive = (path: string) => {
     return location.pathname === path ? styles.active : "";
   };
+
+  // Add a small effect to make sure body has proper padding when navbar changes
+  createEffect(() => {
+    const navbar = document.querySelector(`.${styles.navbar}`);
+    if (navbar) {
+      const navbarHeight = navbar.clientHeight;
+      document.body.style.paddingTop = `${navbarHeight}px`;
+    }
+  });
 
   return (
     <nav class={styles.navbar}>
@@ -30,6 +39,7 @@ const Navbar: Component = () => {
         >
           Log
         </a>
+
         <a
           class={`${styles.navLink} ${isActive("/collection")}`}
           onclick={(e) => {
@@ -39,6 +49,7 @@ const Navbar: Component = () => {
         >
           Collection
         </a>
+
         <a
           class={`${styles.navLink} ${isActive("/playHistory")}`}
           onclick={(e) => {
@@ -48,6 +59,7 @@ const Navbar: Component = () => {
         >
           History
         </a>
+
         <a
           class={`${styles.navLink} ${isActive("/analytics")}`}
           onclick={(e) => {

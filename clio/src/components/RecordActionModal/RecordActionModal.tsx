@@ -266,7 +266,7 @@ const RecordActionModal: Component<RecordActionModalProps> = (props) => {
                 })),
               ]
                 .sort((a, b) => b.date.getTime() - a.date.getTime())
-                .slice(0, 10) // Show only the 10 most recent activities
+                // .slice(0, 10) // Show only the 10 most recent activities
                 .map((item) => (
                   <RecordHistoryItem item={item} onEdit={handleEdit} />
                 ))}

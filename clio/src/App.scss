@@ -17,3 +17,24 @@ main {
   padding: 20px;
   height: 100vh;
 }
+
+/* Hide scrollbars for all elements while maintaining scroll functionality */
+* {
+  -ms-overflow-style: none; /* Internet Explorer and Edge */
+  scrollbar-width: none; /* Firefox */
+}
+
+/* Hide scrollbars for Webkit browsers (Chrome, Safari, etc) */
+*::-webkit-scrollbar {
+  display: none;
+}
+
+/* Alternatively, for a more targeted approach, you can apply these styles to specific containers */
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
