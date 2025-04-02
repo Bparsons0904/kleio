@@ -86,6 +86,18 @@ export interface Release {
   notes: ReleaseNote[];
   playHistory: PlayHistory[];
   cleaningHistory: CleaningHistory[];
+  tracks: Track[];
+}
+
+export interface Track {
+  id: number;
+  releaseId: number;
+  position: string;
+  title: string;
+  durationText: string;
+  durationSeconds: number;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface Stylus {

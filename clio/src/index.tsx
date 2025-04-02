@@ -10,6 +10,7 @@ import { AppProvider } from "./provider/Provider";
 import "./styles/reset.scss";
 import PlayHistoryPage from "./pages/PlayHistory/PlayHistory";
 import Analytics from "./pages/Analytics/Analytics";
+import Collection from "./pages/Collection/Collection";
 
 render(
   () => (
@@ -21,6 +22,7 @@ render(
         <Route path="/equipment" component={StylusManager} />
         <Route path="/playHistory" component={PlayHistoryPage} />
         <Route path="/analytics" component={Analytics} />
+        <Route path="/collection" component={Collection} />
       </Router>
     </AppProvider>
   ),

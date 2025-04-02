@@ -1,3 +1,4 @@
+// src/components/layout/Navbar/Navbar.tsx
 import { Component } from "solid-js";
 import styles from "./Navbar.module.scss";
 import { useAppContext } from "../../../provider/Provider";
@@ -28,6 +29,15 @@ const Navbar: Component = () => {
           }}
         >
           Home
+        </a>
+        <a
+          class={`${styles.navLink} ${isActive("/collection")}`}
+          onclick={(e) => {
+            e.preventDefault();
+            navigate("/collection");
+          }}
+        >
+          Collection
         </a>
         <a
           class={`${styles.navLink} ${isActive("/log")}`}

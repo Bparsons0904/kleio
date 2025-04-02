@@ -13,163 +13,181 @@ import (
 func (s *Database) GetAllReleases() ([]Release, error) {
 	// Query to get all releases with their related data as JSON
 	query := `
-	SELECT 
-		r.id,
-		r.instance_id,
-		r.folder_id,
-		r.rating,
-		r.title,
-		r.year,
-		r.resource_url,
-		r.thumb,
-		r.cover_image,
-		r.created_at,
-		r.updated_at,
-		
-		-- Artists (JSON array)
-		(
-			SELECT json_group_array(
-				json_object(
-					'artist_id', a.id,
-					'name', a.name,
-					'resource_url', a.resource_url,
-					'join_relation', ra.join_relation,
-					'anv', ra.anv,
-					'tracks', ra.tracks,
-					'role', ra.role
-				)
-			)
-			FROM release_artists ra
-			JOIN artists a ON ra.artist_id = a.id
-			WHERE ra.release_id = r.id
-		) AS artists,
-		
-		-- Labels (JSON array)
-		(
-			SELECT json_group_array(
-				json_object(
-					'label_id', l.id,
-					'name', l.name,
-					'resource_url', l.resource_url,
-					'entity_type', l.entity_type,
-					'catno', rl.catno
-				)
-			)
-			FROM release_labels rl
-			JOIN labels l ON rl.label_id = l.id
-			WHERE rl.release_id = r.id
-		) AS labels,
-		
-		-- Formats with descriptions (JSON array)
-		(
-			SELECT json_group_array(
-				json_object(
-					'format_id', f.id,
-					'name', f.name,
-					'qty', f.qty,
-					'descriptions', (
-						SELECT json_group_array(fd.description)
-						FROM format_descriptions fd
-						WHERE fd.format_id = f.id
-					)
-				)
-			)
-			FROM formats f
-			WHERE f.release_id = r.id
-		) AS formats,
-		
-		-- Genres (JSON array)
-		(
-			SELECT json_group_array(
-				json_object(
-					'id', g.id,
-					'name', g.name
-				)
-			)
-			FROM release_genres rg
-			JOIN genres g ON rg.genre_id = g.id
-			WHERE rg.release_id = r.id
-		) AS genres,
-		
-		-- Styles (JSON array)
-		(
-			SELECT json_group_array(
-				json_object(
-					'id', s.id,
-					'name', s.name
-				)
-			)
-			FROM release_styles rs
-			JOIN styles s ON rs.style_id = s.id
-			WHERE rs.release_id = r.id
-		) AS styles,
-		
-		-- Notes (JSON array)
-		(
-			SELECT json_group_array(
-				json_object(
-					'field_id', rn.field_id,
-					'value', rn.value
-				)
-			)
-			FROM release_notes rn
-			WHERE rn.release_id = r.id
-		) AS notes,
-		
-		-- Play History (JSON array)
-		(
-			SELECT json_group_array(
-				json_object(
-					'id', ph.id,
-					'release_id', ph.release_id,
-					'stylus_id', ph.stylus_id,
-					'played_at', ph.played_at,
-					'created_at', ph.created_at,
-					'updated_at', ph.updated_at,
-					'notes', ph.notes,
-					'stylus', CASE WHEN ph.stylus_id IS NOT NULL THEN (
-						SELECT json_object(
-							'id', s.id,
-							'name', s.name,
-							'manufacturer', s.manufacturer,
-							'expected_lifespan_hours', s.expected_lifespan_hours,
-							'purchase_date', s.purchase_date,
-							'active', s.active,
-							'primary_stylus', s.primary_stylus,
-							'created_at', s.created_at,
-							'updated_at', s.updated_at,
-							'owned', s.owned,
-							'base_model', s.base_model
-						)
-						FROM styluses s
-						WHERE s.id = ph.stylus_id
-					) ELSE NULL END
-				)
-			)
-			FROM play_history ph
-			WHERE ph.release_id = r.id
-			ORDER BY ph.played_at DESC
-		) AS play_history,
-		
-		-- Cleaning History (JSON array)
-		(
-			SELECT json_group_array(
-				json_object(
-					'id', ch.id,
-					'release_id', ch.release_id,
-					'cleaned_at', ch.cleaned_at,
-					'notes', ch.notes,
-					'created_at', ch.created_at,
-					'updated_at', ch.updated_at
-				)
-			)
-			FROM cleaning_history ch
-			WHERE ch.release_id = r.id
-			ORDER BY ch.cleaned_at DESC
-		) AS cleaning_history
-	FROM releases r
-	ORDER BY r.title`
-
+SELECT 
+    r.id,
+    r.instance_id,
+    r.folder_id,
+    r.rating,
+    r.title,
+    r.year,
+    r.resource_url,
+    r.thumb,
+    r.cover_image,
+    r.play_duration,
+    r.play_duration_estimated,
+    r.created_at,
+    r.updated_at,
+    
+    -- Artists (JSON array)
+    (
+        SELECT json_group_array(
+            json_object(
+                'artist_id', a.id,
+                'name', a.name,
+                'resource_url', a.resource_url,
+                'join_relation', ra.join_relation,
+                'anv', ra.anv,
+                'tracks', ra.tracks,
+                'role', ra.role
+            )
+        )
+        FROM release_artists ra
+        JOIN artists a ON ra.artist_id = a.id
+        WHERE ra.release_id = r.id
+    ) AS artists,
+    
+    -- Labels (JSON array)
+    (
+        SELECT json_group_array(
+            json_object(
+                'label_id', l.id,
+                'name', l.name,
+                'resource_url', l.resource_url,
+                'entity_type', l.entity_type,
+                'catno', rl.catno
+            )
+        )
+        FROM release_labels rl
+        JOIN labels l ON rl.label_id = l.id
+        WHERE rl.release_id = r.id
+    ) AS labels,
+    
+    -- Formats with descriptions (JSON array)
+    (
+        SELECT json_group_array(
+            json_object(
+                'format_id', f.id,
+                'name', f.name,
+                'qty', f.qty,
+                'descriptions', (
+                    SELECT json_group_array(fd.description)
+                    FROM format_descriptions fd
+                    WHERE fd.format_id = f.id
+                )
+            )
+        )
+        FROM formats f
+        WHERE f.release_id = r.id
+    ) AS formats,
+    
+    -- Genres (JSON array)
+    (
+        SELECT json_group_array(
+            json_object(
+                'id', g.id,
+                'name', g.name
+            )
+        )
+        FROM release_genres rg
+        JOIN genres g ON rg.genre_id = g.id
+        WHERE rg.release_id = r.id
+    ) AS genres,
+    
+    -- Styles (JSON array)
+    (
+        SELECT json_group_array(
+            json_object(
+                'id', s.id,
+                'name', s.name
+            )
+        )
+        FROM release_styles rs
+        JOIN styles s ON rs.style_id = s.id
+        WHERE rs.release_id = r.id
+    ) AS styles,
+    
+    -- Notes (JSON array)
+    (
+        SELECT json_group_array(
+            json_object(
+                'field_id', rn.field_id,
+                'value', rn.value
+            )
+        )
+        FROM release_notes rn
+        WHERE rn.release_id = r.id
+    ) AS notes,
+    
+    -- Tracks (JSON array)
+    (
+        SELECT json_group_array(
+            json_object(
+                'id', t.id,
+                'release_id', t.release_id,
+                'position', t.position,
+                'title', t.title,
+                'duration_text', t.duration_text,
+                'duration_seconds', t.duration_seconds
+            )
+        )
+        FROM tracks t
+        WHERE t.release_id = r.id
+        ORDER BY t.id
+    ) AS tracks,
+    
+    -- Play History (JSON array)
+    (
+        SELECT json_group_array(
+            json_object(
+                'id', ph.id,
+                'release_id', ph.release_id,
+                'stylus_id', ph.stylus_id,
+                'played_at', ph.played_at,
+                'created_at', ph.created_at,
+                'updated_at', ph.updated_at,
+                'notes', ph.notes,
+                'stylus', CASE WHEN ph.stylus_id IS NOT NULL THEN (
+                    SELECT json_object(
+                        'id', s.id,
+                        'name', s.name,
+                        'manufacturer', s.manufacturer,
+                        'expected_lifespan_hours', s.expected_lifespan_hours,
+                        'purchase_date', s.purchase_date,
+                        'active', s.active,
+                        'primary_stylus', s.primary_stylus,
+                        'created_at', s.created_at,
+                        'updated_at', s.updated_at,
+                        'owned', s.owned,
+                        'base_model', s.base_model
+                    )
+                    FROM styluses s
+                    WHERE s.id = ph.stylus_id
+                ) ELSE NULL END
+            )
+        )
+        FROM play_history ph
+        WHERE ph.release_id = r.id
+        ORDER BY ph.played_at DESC
+    ) AS play_history,
+    
+    -- Cleaning History (JSON array)
+    (
+        SELECT json_group_array(
+            json_object(
+                'id', ch.id,
+                'release_id', ch.release_id,
+                'cleaned_at', ch.cleaned_at,
+                'notes', ch.notes,
+                'created_at', ch.created_at,
+                'updated_at', ch.updated_at
+            )
+        )
+        FROM cleaning_history ch
+        WHERE ch.release_id = r.id
+        ORDER BY ch.cleaned_at DESC
+    ) AS cleaning_history
+FROM releases r
+ORDER BY r.title`
 	// Execute the query
 	rows, err := s.DB.Query(query)
 	if err != nil {
@@ -183,8 +201,9 @@ func (s *Database) GetAllReleases() ([]Release, error) {
 	// Process each row
 	for rows.Next() {
 		var release Release
-		var artistsJSON, labelsJSON, formatsJSON, genresJSON, stylesJSON, notesJSON, playHistoryJSON, cleaningHistoryJSON []byte
+		var artistsJSON, labelsJSON, formatsJSON, genresJSON, stylesJSON, tracksJSON, notesJSON, playHistoryJSON, cleaningHistoryJSON []byte
 
+		// Scan the row into our variables
 		// Scan the row into our variables
 		err := rows.Scan(
 			&release.ID,
@@ -196,6 +215,8 @@ func (s *Database) GetAllReleases() ([]Release, error) {
 			&release.ResourceURL,
 			&release.Thumb,
 			&release.CoverImage,
+			&release.PlayDuration,
+			&release.PlayDurationEstimated,
 			&release.CreatedAt,
 			&release.UpdatedAt,
 			&artistsJSON,
@@ -204,6 +225,7 @@ func (s *Database) GetAllReleases() ([]Release, error) {
 			&genresJSON,
 			&stylesJSON,
 			&notesJSON,
+			&tracksJSON,
 			&playHistoryJSON,
 			&cleaningHistoryJSON,
 		)
@@ -455,6 +477,31 @@ func (s *Database) GetAllReleases() ([]Release, error) {
 
 				// Add to release's cleaning history
 				release.CleaningHistory = append(release.CleaningHistory, cleaningHistory)
+			}
+		}
+
+		var tracksData []struct {
+			ID              int    `json:"id"`
+			ReleaseID       int    `json:"release_id"`
+			Position        string `json:"position"`
+			Title           string `json:"title"`
+			DurationText    string `json:"duration_text"`
+			DurationSeconds int    `json:"duration_seconds"`
+		}
+
+		if err := json.Unmarshal(tracksJSON, &tracksData); err == nil {
+			for _, t := range tracksData {
+				track := Track{
+					ID:              t.ID,
+					ReleaseID:       t.ReleaseID,
+					Position:        t.Position,
+					Title:           t.Title,
+					DurationText:    t.DurationText,
+					DurationSeconds: t.DurationSeconds,
+					CreatedAt:       time.Time{}, // These won't be populated since we're not selecting them
+					UpdatedAt:       time.Time{}, // These won't be populated since we're not selecting them
+				}
+				release.Tracks = append(release.Tracks, track)
 			}
 		}
 

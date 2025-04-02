@@ -85,7 +85,12 @@ const Home: Component = () => {
             <p>Browse and search through your vinyl collection.</p>
           </div>
           <div class={styles.cardFooter}>
-            <button class={styles.button}>View Collection</button>
+            <button
+              class={styles.button}
+              on:click={() => navigate("/collection")}
+            >
+              View Collection
+            </button>
           </div>
         </div>
 
