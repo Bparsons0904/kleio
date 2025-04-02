@@ -1,4 +1,3 @@
-// src/provider/Provider.tsx (modified)
 import {
   createContext,
   createEffect,
@@ -18,6 +17,7 @@ export interface Payload {
   releases: Release[];
   stylus: Stylus[];
   playHistory: PlayHistory[];
+  folders: Folder[];
 }
 
 interface ToastState {
@@ -33,6 +33,7 @@ type AppStore = {
   playHistory: () => PlayHistory[];
   lastSynced: () => string;
   isSyncing: () => boolean;
+  selectedFolderId: () => number;
 
   setFolders: (value: Folder[]) => void;
   setReleases: (value: Release[]) => void;
@@ -40,10 +41,10 @@ type AppStore = {
   setPlayHistory: (value: PlayHistory[]) => void;
   setLastSynced: (value: string) => void;
   setIsSyncing: (value: boolean) => void;
+  setSelectedFolderId: (value: number) => void;
 
   setKleioStore: (payload: Payload) => void;
 
-  // Toast functions
   showToast: (message: string, type: ToastType, duration?: number) => void;
   showSuccess: (message: string, duration?: number) => void;
   showError: (message: string, duration?: number) => void;
@@ -54,14 +55,35 @@ type AppStore = {
 const defaultStore: Partial<AppStore> = {};
 export const AppContext = createContext<AppStore>(defaultStore as AppStore);
 
+const loadSelectedFolderId = (): number => {
+  const savedId = localStorage.getItem("selectedFolderId");
+  return savedId ? parseInt(savedId, 10) : 0; // Default to folder ID 0 (All)
+};
+
 export function AppProvider(props: ParentProps) {
   const [folders, setFolders] = createSignal<Folder[]>([]);
   const [releases, setReleases] = createSignal<Release[]>([]);
+  const [rawReleases, setRawReleases] = createSignal<Release[]>([]);
   const [styluses, setStyluses] = createSignal<Stylus[]>([]);
   const [playHistory, setPlayHistory] = createSignal<PlayHistory[]>([]);
   const [lastSynced, setLastSynced] = createSignal("");
   const [isSyncing, setIsSyncing] = createSignal(false);
   const [toast, setToast] = createSignal<ToastState | null>(null);
+  const [selectedFolderId, setSelectedFolderId] = createSignal(
+    loadSelectedFolderId(),
+  );
+
+  const filterReleases = () => {
+    const folderId = selectedFolderId();
+    if (folderId === 0) {
+      return rawReleases();
+    }
+    return rawReleases().filter((release) => release.folderId === folderId);
+  };
+
+  createEffect(() => {
+    localStorage.setItem("selectedFolderId", selectedFolderId().toString());
+  });
 
   createEffect(() => {
     if (!isSyncing()) return;
@@ -95,9 +117,11 @@ export function AppProvider(props: ParentProps) {
     if (!payload) return;
     setIsSyncing(payload.isSyncing);
     setLastSynced(payload.lastSync);
-    setReleases(payload.releases);
+    setRawReleases(payload.releases);
     setStyluses(payload.stylus);
     setPlayHistory(payload.playHistory);
+    setFolders(payload.folders);
+    setReleases(filterReleases());
   };
 
   // Toast functions
@@ -128,6 +152,7 @@ export function AppProvider(props: ParentProps) {
     playHistory,
     lastSynced,
     isSyncing,
+    selectedFolderId,
 
     setFolders,
     setReleases,
@@ -135,6 +160,7 @@ export function AppProvider(props: ParentProps) {
     setPlayHistory,
     setLastSynced,
     setIsSyncing,
+    setSelectedFolderId,
 
     setKleioStore,
 

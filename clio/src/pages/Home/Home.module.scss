@@ -132,7 +132,13 @@
   }
 }
 
-// Responsive adjustments
+.folderSelectorSection {
+  position: fixed;
+  bottom: 20px;
+  left: 20px;
+  z-index: 10;
+}
+
 @media (max-width: 768px) {
   .cardGrid {
     grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));

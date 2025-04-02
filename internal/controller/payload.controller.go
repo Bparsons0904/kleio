@@ -13,6 +13,7 @@ type Payload struct {
 	Releases    []database.Release     `json:"releases"`
 	Stylus      []database.Stylus      `json:"stylus"`
 	PlayHistory []database.PlayHistory `json:"playHistory"`
+	Folders     []database.Folder      `json:"folders"`
 	Token       string                 `json:"token"`
 }
 
@@ -64,6 +65,22 @@ func (p *Payload) GetPayload(controller *Controller) (err error) {
 	err = p.GetLastSync(controller)
 	if err != nil {
 		slog.Error("Failed to get last sync", "error", err)
+		return err
+	}
+
+	err = p.GetFolders(controller)
+	if err != nil {
+		slog.Error("Failed to get folders", "error", err)
+		return err
+	}
+
+	return nil
+}
+
+func (p *Payload) GetFolders(controller *Controller) (err error) {
+	p.Folders, err = controller.DB.GetFolders()
+	if err != nil {
+		slog.Error("Failed to get folders", "error", err)
 		return err
 	}
 

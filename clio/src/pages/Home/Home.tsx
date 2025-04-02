@@ -1,18 +1,18 @@
+// src/pages/Home/Home.tsx (Modified)
 import { Component } from "solid-js";
 import styles from "./Home.module.scss";
 import { refreshCollection } from "../../utils/api";
 import { useNavigate } from "@solidjs/router";
 import { useAppContext } from "../../provider/Provider";
 import { exportHistory } from "../../utils/mutations/export";
+import FolderSelector from "../../components/FolderSelector/FolderSelector";
 
 const Home: Component = () => {
   const { setIsSyncing, showError } = useAppContext();
   const navigate = useNavigate();
+
   const handleLogPlay = () => {
     navigate("/log");
-
-    // e.preventDefault();
-    // await updateCollection();
   };
 
   const handleManageStyluses = () => {
@@ -108,25 +108,6 @@ const Home: Component = () => {
           </div>
         </div>
 
-        {/* <div class={styles.card}> */}
-        {/*   <div class={styles.cardHeader}> */}
-        {/*     <h2>Go to Discogs</h2> */}
-        {/*   </div> */}
-        {/*   <div class={styles.cardBody}> */}
-        {/*     <p>Visit your Discogs profile to manage your collection.</p> */}
-        {/*   </div> */}
-        {/*   <div class={styles.cardFooter}> */}
-        {/*     <a */}
-        {/*       href="https://www.discogs.com/user/collection" */}
-        {/*       target="_blank" */}
-        {/*       rel="noopener noreferrer" */}
-        {/*       class={styles.button} */}
-        {/*     > */}
-        {/*       Open Discogs */}
-        {/*     </a> */}
-        {/*   </div> */}
-        {/* </div> */}
-
         <div class={styles.card}>
           <div class={styles.cardHeader}>
             <h2>Refresh Collection</h2>
@@ -159,6 +140,10 @@ const Home: Component = () => {
         </div>
       </div>
 
+      <div class={styles.folderSelectorSection}>
+        <FolderSelector />
+      </div>
+
       <div class={styles.exportSection}>
         <button class={styles.exportButton} onClick={handleExport}>
           Export Play & Cleaning History
@@ -169,35 +154,3 @@ const Home: Component = () => {
 };
 
 export default Home;
-
-// const refreshCollection = async () => {
-//   try {
-//     // Use your existing API client to save the token
-//     //
-//     const response = await refreshCollection();
-//
-//     if (response().status !== 200) {
-//       throw new Error("Failed to save token");
-//     }
-//
-//     return response().data;
-//   } catch (error) {
-//     console.error("Error saving token:", error);
-//     return;
-//   }
-// };
-
-// const updateCollection = async () => {
-//   try {
-//     const response = await postApi("discogs/collection", {});
-//
-//     if (response.status !== 200) {
-//       throw new Error("Failed to save token");
-//     }
-//
-//     return true;
-//   } catch (error) {
-//     console.error("Error saving token:", error);
-//     return false;
-//   }
-// };
