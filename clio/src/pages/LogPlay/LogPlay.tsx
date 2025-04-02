@@ -6,9 +6,14 @@ import { Release } from "../../types";
 import RecordActionModal from "../../components/RecordActionModal/RecordActionModal";
 import { RecordStatusIndicator } from "../../components/StatusIndicators/StatusIndicators";
 import { getLastPlayDate } from "../../utils/playStatus";
+import {
+  createPlayHistory,
+  createCleaningHistory,
+} from "../../utils/mutations/post";
 
 const LogPlay: Component = () => {
-  const { releases } = useAppContext();
+  const { releases, styluses, showSuccess, showError, setKleioStore } =
+    useAppContext();
 
   const [filteredReleases, setFilteredReleases] = createSignal<Release[]>([]);
   const [searchTerm, setSearchTerm] = createSignal("");
@@ -142,6 +147,47 @@ const LogPlay: Component = () => {
     // We keep the selected release so clicking the card again reopens the modal
   };
 
+  const handleQuickPlay = async (release: Release) => {
+    const primaryStylus = styluses().find((stylus) => stylus.primary);
+
+    try {
+      const result = await createPlayHistory({
+        releaseId: release.id,
+        playedAt: new Date().toISOString(),
+        stylusId: primaryStylus?.id,
+      });
+
+      if (result.success) {
+        showSuccess(`Logged play for "${release.title}"`);
+        setKleioStore(result.data);
+      } else {
+        throw new Error("Failed to log play");
+      }
+    } catch (error) {
+      console.error("Error quick logging play:", error);
+      showError("Failed to log play. Please try again.");
+    }
+  };
+
+  const handleQuickCleaning = async (release: Release) => {
+    try {
+      const result = await createCleaningHistory({
+        releaseId: release.id,
+        cleanedAt: new Date().toISOString(),
+      });
+
+      if (result.success) {
+        showSuccess(`Logged cleaning for "${release.title}"`);
+        setKleioStore(result.data);
+      } else {
+        throw new Error("Failed to log cleaning");
+      }
+    } catch (error) {
+      console.error("Error quick logging cleaning:", error);
+      showError("Failed to log cleaning. Please try again.");
+    }
+  };
+
   return (
     <div class={styles.container}>
       <h1 class={styles.title}>Log Play & Cleaning</h1>
@@ -248,6 +294,8 @@ const LogPlay: Component = () => {
                             playHistory={release.playHistory}
                             cleaningHistory={release.cleaningHistory}
                             showDetails={false}
+                            onPlayClick={() => handleQuickPlay(release)}
+                            onCleanClick={() => handleQuickCleaning(release)}
                           />
                         </div>
                       </div>

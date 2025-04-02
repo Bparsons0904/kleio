@@ -18,6 +18,8 @@ export interface StatusIndicatorProps {
   playHistory?: { playedAt: string }[];
   cleaningHistory?: { cleanedAt: string }[];
   showDetails?: boolean;
+  onPlayClick?: () => void;
+  onCleanClick?: () => void;
 }
 
 export const RecordStatusIndicator: Component<StatusIndicatorProps> = (
@@ -51,11 +53,13 @@ export const RecordStatusIndicator: Component<StatusIndicatorProps> = (
           <PlayStatusIndicator
             score={playRecencyScore()}
             lastPlayed={lastPlayDate()}
+            onClick={props.onPlayClick}
           />
           <CleaningStatusIndicator
             score={cleanlinessScore()}
             lastCleaned={lastCleanDate()}
             playsSinceCleaning={playsSinceCleaning()}
+            onClick={props.onCleanClick}
           />
         </div>
       </Show>
@@ -87,6 +91,7 @@ interface PlayStatusProps {
   score: number;
   lastPlayed: Date | null;
   showDetails?: boolean;
+  onClick?: () => void;
 }
 
 const PlayStatusIndicator: Component<PlayStatusProps> = (props) => {
@@ -98,9 +103,21 @@ const PlayStatusIndicator: Component<PlayStatusProps> = (props) => {
   const color = () => getColorWithOpacity(getPlayRecencyColor(props.score));
   const text = () => getPlayRecencyText(props.lastPlayed);
 
+  const handleClick = (e: MouseEvent) => {
+    if (props.onClick) {
+      e.stopPropagation(); // Prevent event from bubbling to parent card
+      props.onClick();
+    }
+  };
+
   return (
     <div class={styles.indicator}>
-      <div class={styles.iconContainer} style={{ "background-color": color() }}>
+      <div
+        class={`${styles.iconContainer} ${props.onClick ? styles.clickable : ""}`}
+        style={{ "background-color": color() }}
+        onClick={handleClick}
+        title="Click to log a play"
+      >
         <ImHeadphones size={15} color="white" />
       </div>
       <span class={styles.tooltipText}>{text()}</span>
@@ -113,20 +130,32 @@ interface CleaningStatusProps {
   lastCleaned: Date | null;
   playsSinceCleaning: number;
   showDetails?: boolean;
+  onClick?: () => void;
 }
 
 const CleaningStatusIndicator: Component<CleaningStatusProps> = (props) => {
-  // More muted colors by adding opacity
   const getColorWithOpacity = (colorHex: string): string => {
-    return colorHex + "CC"; // Add 80% opacity (CC in hex)
+    return colorHex + "CC";
   };
 
   const color = () => getColorWithOpacity(getCleanlinessColor(props.score));
   const text = () => getCleanlinessText(props.score);
 
+  const handleClick = (e: MouseEvent) => {
+    if (props.onClick) {
+      e.stopPropagation(); // Prevent event from bubbling to parent card
+      props.onClick();
+    }
+  };
+
   return (
     <div class={styles.indicator}>
-      <div class={styles.iconContainer} style={{ "background-color": color() }}>
+      <div
+        class={`${styles.iconContainer} ${props.onClick ? styles.clickable : ""}`}
+        style={{ "background-color": color() }}
+        onClick={handleClick}
+        title="Click to log a cleaning"
+      >
         <TbWashTemperature5 size={20} color="white" />
       </div>
       <span class={styles.tooltipText}>{text()}</span>

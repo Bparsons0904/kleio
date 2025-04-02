@@ -73,12 +73,12 @@ export function AppProvider(props: ParentProps) {
     loadSelectedFolderId(),
   );
 
-  const filterReleases = () => {
+  const filterReleases = (rawReleases: Release[]) => {
     const folderId = selectedFolderId();
     if (folderId === 0) {
-      return rawReleases();
+      return rawReleases;
     }
-    return rawReleases().filter((release) => release.folderId === folderId);
+    return rawReleases.filter((release) => release.folderId === folderId);
   };
 
   createEffect(() => {
@@ -121,10 +121,9 @@ export function AppProvider(props: ParentProps) {
     setStyluses(payload.stylus);
     setPlayHistory(payload.playHistory);
     setFolders(payload.folders);
-    setReleases(filterReleases());
+    setReleases(filterReleases(payload.releases));
   };
 
-  // Toast functions
   const showToast = (message: string, type: ToastType, duration?: number) => {
     setToast({ message, type, duration });
   };
@@ -134,7 +133,7 @@ export function AppProvider(props: ParentProps) {
   };
 
   const showError = (message: string, duration?: number) => {
-    showToast(message, "error", duration || 5000); // Longer duration for errors
+    showToast(message, "error", duration || 5000);
   };
 
   const showInfo = (message: string, duration?: number) => {
