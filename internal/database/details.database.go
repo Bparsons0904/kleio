@@ -2,6 +2,7 @@ package database
 
 import (
 	"fmt"
+	"log/slog"
 )
 
 func (s *Database) SaveTracks(
@@ -34,11 +35,18 @@ func (s *Database) UpdateReleaseWithDetails(
 	releaseID int,
 	totalDuration int,
 	estimated bool,
+	dateAdded string,
 ) error {
+	slog.Info("UpdateReleaseWithDetails", "dateAdded", dateAdded)
+	if dateAdded == "" {
+		slog.Error("UpdateReleaseWithDetails: Date added is empty")
+		return fmt.Errorf("date added is empty")
+	}
 	_, err := s.DB.Exec(
-		"UPDATE releases SET play_duration = ?, play_duration_estimated = ? WHERE id = ?",
+		"UPDATE releases SET play_duration = ?, play_duration_estimated = ?, date_added = ? WHERE id = ?",
 		totalDuration,
 		estimated,
+		dateAdded,
 		releaseID,
 	)
 	if err != nil {
