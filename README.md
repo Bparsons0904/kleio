@@ -1,53 +1,152 @@
-# Project kleio
+# Kleio - Vinyl Record Collection Manager
 
-One Paragraph of project description goes here
+![Kleio Logo](https://via.placeholder.com/150x150?text=Kleio)
+
+Kleio is a self-hosted vinyl record collection manager that seamlessly integrates with your Discogs account to provide enhanced tracking of your vinyl collection, plays, and cleaning history.
+
+## Features
+
+- **Discogs Integration**: Synchronizes with your Discogs account to import your vinyl collection
+- **Play Tracking**: Log when you play your records, which stylus was used, and add notes
+- **Cleaning Tracking**: Keep track of when you clean your records
+- **Stylus Management**: Manage your styli including tracking wear and estimating remaining lifespan
+- **Analytics**: View insights about your listening habits with interactive charts
+- **Collection Browser**: Browse and search your collection with cover art
+- **Responsive Design**: Works on desktop and mobile devices
 
 ## Getting Started
 
-These instructions will get you a copy of the project up and running on your local machine for development and testing purposes. See deployment for notes on how to deploy the project on a live system.
+### Docker (Recommended)
 
-## MakeFile
+The easiest way to get started with Kleio is using Docker:
 
-Run build make command with tests
 ```bash
-make all
+# Pull the latest image
+docker pull deadstyle/kleio
+
+# Run with automatic restart and persistent storage
+docker run -d --restart unless-stopped -p 38080:38080 -v kleio_data:/data/db --name kleio deadstyle/kleio
 ```
 
-Build the application
-```bash
-make build
+Then visit `http://localhost:38080` in your browser.
+
+### Docker Compose
+
+Alternatively, you can use Docker Compose:
+
+1. Create a `docker-compose.yml` file:
+
+```yaml
+services:
+  app:
+    image: deadstyle/kleio
+    ports:
+      - "38080:38080"
+    environment:
+      - APP_ENV=production
+    volumes:
+      - kleio_data:/data/db
+    restart: unless-stopped
+
+volumes:
+  kleio_data:
+    driver: local
 ```
 
-Run the application
+2. Run with Docker Compose:
+
 ```bash
-make run
-```
-Create DB container
-```bash
-make docker-run
+docker-compose up -d
 ```
 
-Shutdown DB Container
+### Manual Build
+
+If you prefer to build from source:
+
+1. Clone the repository:
+
 ```bash
-make docker-down
+git clone https://github.com/bparsons0904/kleio.git
+cd kleio
 ```
 
-DB Integrations Test:
+2. Build the frontend:
+
 ```bash
-make itest
+cd clio
+npm install
+npm run build
+cd ..
 ```
 
-Live reload the application:
+3. Build the backend:
+
 ```bash
-make watch
+go mod download
+go build -o kleio cmd/api/main.go
 ```
 
-Run the test suite:
+4. Run the application:
+
 ```bash
-make test
+./kleio
 ```
 
-Clean up binary from the last build:
-```bash
-make clean
-```
+## Configuration
+
+### Discogs Integration
+
+Kleio requires a Discogs API token to access your collection:
+
+1. Go to your [Discogs Developer Settings](https://www.discogs.com/settings/developers)
+2. Generate a personal access token
+3. Enter this token in the Kleio interface when prompted
+
+## Usage
+
+### Recording Plays
+
+1. Navigate to the "Log" section
+2. Select a record from your collection
+3. Choose which stylus was used (optional)
+4. Add notes (optional)
+5. Click "Log Play"
+
+### Recording Cleaning
+
+1. Navigate to the "Log" section
+2. Select a record from your collection
+3. Add notes (optional)
+4. Click "Log Cleaning"
+
+### Managing Styli
+
+1. Navigate to the "Equipment" section
+2. Add or edit your styli
+3. Track usage and expected lifespan
+
+### Viewing Analytics
+
+1. Navigate to the "Analytics" section
+2. View play frequency, duration, and genre distribution charts
+3. Filter by various time periods
+
+## Tech Stack
+
+- **Backend**: Go with SQLite database
+- **Frontend**: SolidJS with SCSS
+- **Containerization**: Docker
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## Acknowledgements
+
+- [Discogs API](https://www.discogs.com/developers) for providing access to collection data
+- [SolidJS](https://www.solidjs.com/) for the reactive UI framework
+- [Chart.js](https://www.chartjs.org/) for beautiful analytics visualizations
