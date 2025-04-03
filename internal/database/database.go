@@ -7,7 +7,6 @@ import (
 	"log/slog"
 	"os"
 	"path/filepath"
-	"runtime"
 	"sort"
 
 	_ "github.com/mattn/go-sqlite3"
@@ -98,25 +97,13 @@ func (s *Database) GetDB() *sql.DB {
 }
 
 func getDBPath() string {
-	var basePath string
-
-	switch runtime.GOOS {
-	case "darwin":
-		// macOS
-		homeDir, _ := os.UserHomeDir()
-		basePath = filepath.Join(homeDir, "Library", "Application Support", "kleio")
-	case "windows":
-		// Windows
-		homeDir, _ := os.UserHomeDir()
-		basePath = filepath.Join(homeDir, "AppData", "Local", "kleio")
-	default:
-		// Linux (including PopOS) and others
-		homeDir, _ := os.UserHomeDir()
-		basePath = filepath.Join(homeDir, ".local", "share", "kleio")
+	if os.Getenv("APP_ENV") == "production" {
+		return "/data/db/kleio.db"
 	}
 
-	// Ensure directory exists
-	os.MkdirAll(basePath, 0755)
+	if os.Getenv("APP_ENV") == "development" {
+		return "kleio.db"
+	}
 
-	return filepath.Join(basePath, "kleio.db")
+	return "sqlite.db"
 }

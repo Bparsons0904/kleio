@@ -3,15 +3,14 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-      target: prod
-    restart: unless-stopped
     ports:
-      - ${PORT}:${PORT}
+      - "38080:38080"
     environment:
-      APP_ENV: ${APP_ENV}
-      PORT: ${PORT}
-      BLUEPRINT_DB_URL: ${BLUEPRINT_DB_URL}
+      - APP_ENV=production
     volumes:
-      - sqlite_bp:/app/db
+      - kleio_data:/data/db
+    restart: unless-stopped
+
 volumes:
-  sqlite_bp:
+  kleio_data:
+    driver: local

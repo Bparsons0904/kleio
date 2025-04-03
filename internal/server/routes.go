@@ -118,7 +118,7 @@ func (s *Server) RegisterRoutes() http.Handler {
 	mux.HandleFunc("/export/history", s.exportHistory)
 
 	// Setup static file server for SPA
-	distDir := "./clio/dist"
+	distDir := "./dist"
 	fileServer := http.FileServer(http.Dir(distDir))
 
 	// Create a special handler for SPA routing
