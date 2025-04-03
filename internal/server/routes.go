@@ -11,15 +11,18 @@ import (
 func (s *Server) RegisterRoutes() http.Handler {
 	mux := http.NewServeMux()
 
-	// Auth and Collection routes
-	mux.HandleFunc("/auth", s.getAuth)
-	mux.HandleFunc("/auth/token", s.SaveToken)
-	mux.HandleFunc("/collection", s.getCollection)
-	mux.HandleFunc("/collection/sync", s.checkSync)
-	mux.HandleFunc("/collection/resync", s.updateCollection)
-	mux.HandleFunc("/discogs/collection/refresh", s.updateCollection)
+	// create api base path
+	apiMux := http.NewServeMux()
 
-	mux.HandleFunc("/styluses", func(w http.ResponseWriter, r *http.Request) {
+	// Auth and Collection routes
+	apiMux.HandleFunc("/auth", s.getAuth)
+	apiMux.HandleFunc("/auth/token", s.SaveToken)
+	apiMux.HandleFunc("/collection", s.getCollection)
+	apiMux.HandleFunc("/collection/sync", s.checkSync)
+	apiMux.HandleFunc("/collection/resync", s.updateCollection)
+	apiMux.HandleFunc("/discogs/collection/refresh", s.updateCollection)
+
+	apiMux.HandleFunc("/styluses", func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodPost:
 			s.createStylus(w, r)
@@ -29,7 +32,7 @@ func (s *Server) RegisterRoutes() http.Handler {
 		}
 	})
 
-	mux.HandleFunc("/styluses/", func(w http.ResponseWriter, r *http.Request) {
+	apiMux.HandleFunc("/styluses/", func(w http.ResponseWriter, r *http.Request) {
 		path := strings.TrimPrefix(r.URL.Path, "/styluses/")
 		if path == "" {
 			http.Error(w, "Missing stylus ID", http.StatusBadRequest)
@@ -47,7 +50,7 @@ func (s *Server) RegisterRoutes() http.Handler {
 	})
 
 	// Play history routes
-	mux.HandleFunc("/plays", func(w http.ResponseWriter, r *http.Request) {
+	apiMux.HandleFunc("/plays", func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodPost:
 			s.createPlayHistory(w, r)
@@ -56,11 +59,11 @@ func (s *Server) RegisterRoutes() http.Handler {
 		}
 	})
 
-	mux.HandleFunc("/plays/counts", s.getPlayCounts)
-	mux.HandleFunc("/plays/recent", s.getRecentPlays)
-	mux.HandleFunc("/plays/range", s.getPlaysByTimeRange)
+	apiMux.HandleFunc("/plays/counts", s.getPlayCounts)
+	apiMux.HandleFunc("/plays/recent", s.getRecentPlays)
+	apiMux.HandleFunc("/plays/range", s.getPlaysByTimeRange)
 
-	mux.HandleFunc("/plays/", func(w http.ResponseWriter, r *http.Request) {
+	apiMux.HandleFunc("/plays/", func(w http.ResponseWriter, r *http.Request) {
 		// Skip if it's one of the special routes
 		path := r.URL.Path
 		if path == "/plays/" ||
@@ -83,7 +86,7 @@ func (s *Server) RegisterRoutes() http.Handler {
 	})
 
 	// Cleaning history routes
-	mux.HandleFunc("/cleanings", func(w http.ResponseWriter, r *http.Request) {
+	apiMux.HandleFunc("/cleanings", func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodPost:
 			s.createCleaningHistory(w, r)
@@ -92,10 +95,10 @@ func (s *Server) RegisterRoutes() http.Handler {
 		}
 	})
 
-	mux.HandleFunc("/cleanings/counts", s.getCleaningCountsByRelease)
-	mux.HandleFunc("/cleanings/range", s.getCleaningsByTimeRange)
+	apiMux.HandleFunc("/cleanings/counts", s.getCleaningCountsByRelease)
+	apiMux.HandleFunc("/cleanings/range", s.getCleaningsByTimeRange)
 
-	mux.HandleFunc("/cleanings/", func(w http.ResponseWriter, r *http.Request) {
+	apiMux.HandleFunc("/cleanings/", func(w http.ResponseWriter, r *http.Request) {
 		// Skip if it's one of the special routes
 		path := r.URL.Path
 		if path == "/cleanings/" ||
@@ -115,8 +118,9 @@ func (s *Server) RegisterRoutes() http.Handler {
 		}
 	})
 
-	mux.HandleFunc("/export/history", s.exportHistory)
+	apiMux.HandleFunc("/export/history", s.exportHistory)
 
+	mux.Handle("/api/", http.StripPrefix("/api", s.corsMiddleware(apiMux)))
 	// Setup static file server for SPA
 	distDir := "./clio/dist"
 	fileServer := http.FileServer(http.Dir(distDir))
