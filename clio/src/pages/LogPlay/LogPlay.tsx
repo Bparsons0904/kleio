@@ -1,4 +1,3 @@
-// src/pages/LogPlay/LogPlay.tsx (modified)
 import { Component, createSignal, createEffect, For, Show } from "solid-js";
 import { useAppContext } from "../../provider/Provider";
 import styles from "./LogPlay.module.scss";
@@ -10,6 +9,7 @@ import {
   createPlayHistory,
   createCleaningHistory,
 } from "../../utils/mutations/post";
+import { fuzzySearchReleases } from "../../utils/fuzzy";
 
 const LogPlay: Component = () => {
   const { releases, styluses, showSuccess, showError, setKleioStore } =
@@ -26,21 +26,14 @@ const LogPlay: Component = () => {
 
   // Filter releases based on search term and sort them
   createEffect(() => {
-    const term = searchTerm().toLowerCase();
     let filtered = [...releases()];
 
-    // Apply search filter
-    if (term) {
-      filtered = filtered.filter(
-        (release) =>
-          release.title.toLowerCase().includes(term) ||
-          release.artists.some((artist) =>
-            artist.artist?.name.toLowerCase().includes(term),
-          ),
-      );
+    // Apply fuzzy search if there's a search term
+    if (searchTerm()) {
+      filtered = fuzzySearchReleases(filtered, searchTerm());
     }
 
-    // Apply sorting
+    // Apply sorting after search
     filtered = sortReleases(filtered, sortBy());
 
     setFilteredReleases(filtered);

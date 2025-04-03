@@ -6,6 +6,7 @@ import { VsNote } from "solid-icons/vs";
 import { TbWashTemperature5 } from "solid-icons/tb";
 import { PlayHistory, Release } from "../../types";
 import RecordActionModal from "../../components/RecordActionModal/RecordActionModal";
+import { createFuseInstance } from "../../utils/fuzzy";
 
 const PlayHistoryPage: Component = () => {
   const { playHistory, releases } = useAppContext();
@@ -63,16 +64,26 @@ const PlayHistoryPage: Component = () => {
     const filterDate = getFilteredDate();
     filtered = filtered.filter((play) => new Date(play.playedAt) >= filterDate);
 
-    // Filter by search term
-    if (searchTerm()) {
-      const term = searchTerm().toLowerCase();
-      filtered = filtered.filter(
-        (play) =>
-          play.release.title.toLowerCase().includes(term) ||
-          play.release.artists.some((artist) =>
-            artist.artist?.name.toLowerCase().includes(term),
-          ),
-      );
+    // Filter by search term using Fuse.js if search term is present
+    if (searchTerm().trim()) {
+      // Create Fuse instance for fuzzy searching within play history using our utility
+      const fuse = createFuseInstance(filtered, {
+        keys: [
+          // Search in release title
+          { name: "release.title", weight: 2 },
+          // Search in artist name
+          { name: "release.artists.artist.name", weight: 1.5 },
+          // Search in stylus name
+          { name: "stylus.name", weight: 1 },
+          // Search in notes
+          { name: "notes", weight: 0.5 },
+        ],
+        threshold: 0.4, // Lower means more strict matching
+        ignoreLocation: true, // Helpful for searching in longer text like notes
+      });
+
+      const searchResults = fuse.search(searchTerm());
+      filtered = searchResults.map((result) => result.item);
     }
 
     return filtered;
@@ -163,7 +174,7 @@ const PlayHistoryPage: Component = () => {
           <input
             type="text"
             class={styles.searchInput}
-            placeholder="Search by artist or album..."
+            placeholder="Search by artist, album, stylus or notes..."
             value={searchTerm()}
             onInput={(e) => setSearchTerm(e.target.value)}
           />
@@ -221,7 +232,7 @@ const PlayHistoryPage: Component = () => {
                             Played: {useFormattedShortDate(play.playedAt)}
                           </p>
 
-                          <Show when={play.stylus.name}>
+                          <Show when={play.stylus?.name}>
                             <p class={styles.stylus}>
                               Stylus: {play.stylus.name}
                             </p>
