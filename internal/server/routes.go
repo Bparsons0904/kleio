@@ -3,6 +3,8 @@ package server
 import (
 	"log/slog"
 	"net/http"
+	"os"
+	"path/filepath"
 	"strings"
 )
 
@@ -114,5 +116,37 @@ func (s *Server) RegisterRoutes() http.Handler {
 	})
 
 	mux.HandleFunc("/export/history", s.exportHistory)
+
+	// Setup static file server for SPA
+	distDir := "./clio/dist"
+	fileServer := http.FileServer(http.Dir(distDir))
+
+	// Create a special handler for SPA routing
+	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		// First check if the path is an API endpoint
+		if strings.HasPrefix(r.URL.Path, "/auth") ||
+			strings.HasPrefix(r.URL.Path, "/collection") ||
+			strings.HasPrefix(r.URL.Path, "/styluses") ||
+			strings.HasPrefix(r.URL.Path, "/plays") ||
+			strings.HasPrefix(r.URL.Path, "/cleanings") ||
+			strings.HasPrefix(r.URL.Path, "/export") {
+			http.NotFound(w, r)
+			return
+		}
+
+		// Check if this is a request for a static file
+		path := filepath.Join(distDir, r.URL.Path)
+		_, err := os.Stat(path)
+		if err == nil {
+			// File exists, serve it directly
+			fileServer.ServeHTTP(w, r)
+			return
+		}
+
+		// For all other paths, serve index.html to support client-side routing
+		indexPath := filepath.Join(distDir, "index.html")
+		http.ServeFile(w, r, indexPath)
+	})
+
 	return s.corsMiddleware(mux)
 }
