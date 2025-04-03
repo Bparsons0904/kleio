@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log/slog"
+	"regexp"
 	"sort"
 	"strconv"
 	"time"
@@ -713,9 +714,7 @@ func saveLabels(tx *sql.Tx, release DiscogsRelease,
 	return nil
 }
 
-// saveArtists handles inserting or updating artists and their relationship to releases
-func saveArtists(tx *sql.Tx, release DiscogsRelease,
-) error {
+func saveArtists(tx *sql.Tx, release DiscogsRelease) error {
 	// Prepare statement for artist upsert
 	artistStmt, err := tx.Prepare(`
 		INSERT INTO artists (id, name, resource_url)
@@ -743,12 +742,18 @@ func saveArtists(tx *sql.Tx, release DiscogsRelease,
 	}
 	defer relArtistStmt.Close()
 
+	// Compile the regex to match " (n)" pattern at the end of artist names
+	duplicatePattern := regexp.MustCompile(` \([0-9]+\)$`)
+
 	// Process each artist
 	for _, artist := range release.BasicInfo.Artists {
-		// Insert or update the artist
+		// Clean the artist name by removing the duplicate numbering if present
+		cleanedName := duplicatePattern.ReplaceAllString(artist.Name, "")
+
+		// Insert or update the artist with the cleaned name
 		_, err = artistStmt.Exec(
 			artist.ID,
-			artist.Name,
+			cleanedName, // Using the cleaned name here
 			artist.ResourceURL,
 		)
 		if err != nil {
@@ -768,7 +773,6 @@ func saveArtists(tx *sql.Tx, release DiscogsRelease,
 			return fmt.Errorf("failed to execute release_artists statement: %w", err)
 		}
 	}
-
 	return nil
 }
 

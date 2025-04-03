@@ -91,14 +91,6 @@ const Collection: Component = () => {
           return yearB - yearA;
         });
 
-      case "recentlyAdded":
-        // Sort by date added to collection (using createdAt date)
-        return [...releasesToSort].sort((a, b) => {
-          const dateA = new Date(a.createdAt).getTime();
-          const dateB = new Date(b.createdAt).getTime();
-          return dateB - dateA;
-        });
-
       default:
         // Default sort by title
         return [...releasesToSort].sort((a, b) =>
@@ -164,7 +156,6 @@ const Collection: Component = () => {
               <option value="album">Album (A-Z)</option>
               <option value="artist">Artist (A-Z)</option>
               <option value="year">Year (newest first)</option>
-              <option value="recentlyAdded">Recently Added</option>
             </select>
           </div>
 

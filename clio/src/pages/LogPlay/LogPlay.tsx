@@ -108,14 +108,6 @@ const LogPlay: Component = () => {
           return yearB - yearA;
         });
 
-      case "recentlyAdded":
-        // Sort by date added to collection (using createdAt date)
-        return [...releases].sort((a, b) => {
-          const dateA = new Date(a.createdAt).getTime();
-          const dateB = new Date(b.createdAt).getTime();
-          return dateB - dateA;
-        });
-
       case "playCount":
         // Sort by number of plays (most played first)
         return [...releases].sort((a, b) => {
@@ -221,7 +213,6 @@ const LogPlay: Component = () => {
               <option value="lastPlayed">Last Played</option>
               <option value="recentlyPlayed">Recently Played (30 days)</option>
               <option value="year">Release Year (newest first)</option>
-              <option value="recentlyAdded">Recently Added</option>
               <option value="playCount">Most Played</option>
             </select>
           </div>
