@@ -23,5 +23,7 @@ COPY --from=backend-builder /app/main .
 COPY --from=backend-builder /app/internal/database/migrations/ /app/internal/database/migrations/
 COPY --from=backend-builder /app/clio/dist /app/clio/dist
 RUN mkdir -p /data/db
+
+ENV APP_ENV=production
 EXPOSE 38080
 CMD ["./main"]
