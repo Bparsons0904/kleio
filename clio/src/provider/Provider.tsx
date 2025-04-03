@@ -117,11 +117,11 @@ export function AppProvider(props: ParentProps) {
     if (!payload) return;
     setIsSyncing(payload.isSyncing);
     setLastSynced(payload.lastSync);
-    setRawReleases(payload.releases);
-    setStyluses(payload.stylus);
-    setPlayHistory(payload.playHistory);
-    setFolders(payload.folders);
-    setReleases(filterReleases(payload.releases));
+    setRawReleases(payload.releases ?? []);
+    setStyluses(payload.stylus ?? []);
+    setPlayHistory(payload.playHistory ?? []);
+    setFolders(payload.folders ?? []);
+    setReleases(filterReleases(payload.releases ?? []));
   };
 
   const showToast = (message: string, type: ToastType, duration?: number) => {

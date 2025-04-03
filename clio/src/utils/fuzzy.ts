@@ -1,5 +1,5 @@
 import Fuse from "fuse.js";
-import { Release } from "../types";
+import { PlayHistory, Release } from "../types";
 
 // Default options for Fuse.js
 const defaultOptions = {
@@ -74,4 +74,56 @@ export const customSearchReleases = (
 
   // Apply fuzzy search on the filtered releases
   return fuzzySearchReleases(filteredReleases, searchTerm);
+};
+
+/**
+ * Create a new Fuse instance for fuzzy searching play history
+ * @param playHistory The array of play history to search within
+ * @param options Custom Fuse.js options to override defaults
+ * @returns A configured Fuse instance
+ */
+export const createPlayHistoryFuseInstance = (
+  playHistory: PlayHistory[],
+  options = {},
+) => {
+  const defaultOptions = {
+    keys: [
+      { name: "release.title", weight: 2 },
+      { name: "release.artists.artist.name", weight: 1.5 },
+      { name: "stylus.name", weight: 1 },
+      { name: "notes", weight: 0.5 },
+    ],
+    isCaseSensitive: false,
+    includeScore: true,
+    shouldSort: true,
+    threshold: 0.4,
+    distance: 100,
+    minMatchCharLength: 2,
+    ignoreLocation: true,
+  };
+
+  return new Fuse(playHistory, { ...defaultOptions, ...options });
+};
+
+/**
+ * Perform a fuzzy search on play history
+ * @param playHistory The array of play history to search within
+ * @param searchTerm The search term to look for
+ * @param options Custom Fuse.js options to override defaults
+ * @returns Filtered array of play history that match the search term
+ */
+export const fuzzySearchPlayHistory = (
+  playHistory: PlayHistory[],
+  searchTerm: string,
+  options = {},
+): PlayHistory[] => {
+  if (!searchTerm.trim()) {
+    return playHistory;
+  }
+
+  const fuse = createPlayHistoryFuseInstance(playHistory, options);
+  const results = fuse.search(searchTerm);
+
+  // Return just the items (not the score)
+  return results.map((result) => result.item);
 };
