@@ -1,5 +1,5 @@
 // src/components/RecordActionModal/RecordActionModal.tsx
-import { Component, Show, createEffect, createSignal } from "solid-js";
+import { Component, Show, createSignal } from "solid-js";
 import styles from "./RecordActionModal.module.scss";
 import { EditItem, Release, Stylus } from "../../types";
 import RecordHistoryItem from "../RecordHistoryItem/RecordHistoryItem";
@@ -10,6 +10,7 @@ import {
   createPlayAndCleaning,
 } from "../../utils/mutations/post";
 import { useAppContext } from "../../provider/Provider";
+import { formatDateForInput } from "../../utils/dates";
 
 interface RecordActionModalProps {
   isOpen: boolean;
@@ -20,7 +21,7 @@ interface RecordActionModalProps {
 const RecordActionModal: Component<RecordActionModalProps> = (props) => {
   const { styluses, showSuccess, showError, setKleioStore } = useAppContext();
 
-  const [date, setDate] = createSignal(new Date().toISOString().split("T")[0]);
+  const [date, setDate] = createSignal(formatDateForInput(new Date()));
   const [selectedStylus, setSelectedStylus] = createSignal<Stylus | null>(
     styluses()?.find((stylus) => stylus.primary),
   );
@@ -40,7 +41,9 @@ const RecordActionModal: Component<RecordActionModalProps> = (props) => {
     try {
       const result = await createPlayHistory({
         releaseId: props.release.id,
-        playedAt: new Date(date()).toISOString(),
+        playedAt: new Date(
+          `${date()}T${new Date().toTimeString().slice(0, 8)}`,
+        ).toISOString(),
         stylusId: selectedStylus()?.id || null,
         notes: notes(),
       });
@@ -62,7 +65,9 @@ const RecordActionModal: Component<RecordActionModalProps> = (props) => {
     try {
       const result = await createCleaningHistory({
         releaseId: props.release.id,
-        cleanedAt: new Date(date()).toISOString(),
+        cleanedAt: new Date(
+          `${date()}T${new Date().toTimeString().slice(0, 8)}`,
+        ).toISOString(),
         notes: notes(),
       });
 
@@ -207,7 +212,10 @@ const RecordActionModal: Component<RecordActionModalProps> = (props) => {
                 >
                   <option value="">None</option>
                   {activeStyluses().map((stylus) => (
-                    <option value={stylus.id}>
+                    <option
+                      value={stylus.id}
+                      selected={stylus.id === selectedStylus()?.id}
+                    >
                       {stylus.name} {stylus.primary ? "(Primary)" : ""}
                     </option>
                   ))}
