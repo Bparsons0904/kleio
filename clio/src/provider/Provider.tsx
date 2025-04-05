@@ -63,7 +63,6 @@ const loadSelectedFolderId = (): number => {
 export function AppProvider(props: ParentProps) {
   const [folders, setFolders] = createSignal<Folder[]>([]);
   const [releases, setReleases] = createSignal<Release[]>([]);
-  const [rawReleases, setRawReleases] = createSignal<Release[]>([]);
   const [styluses, setStyluses] = createSignal<Stylus[]>([]);
   const [playHistory, setPlayHistory] = createSignal<PlayHistory[]>([]);
   const [lastSynced, setLastSynced] = createSignal("");
@@ -117,7 +116,6 @@ export function AppProvider(props: ParentProps) {
     if (!payload) return;
     setIsSyncing(payload.isSyncing);
     setLastSynced(payload.lastSync);
-    setRawReleases(payload.releases ?? []);
     setStyluses(payload.stylus ?? []);
     setPlayHistory(payload.playHistory ?? []);
     setFolders(payload.folders ?? []);

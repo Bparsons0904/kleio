@@ -4,9 +4,10 @@ import styles from "./Navbar.module.scss";
 import { useAppContext } from "../../../provider/Provider";
 import { useFormattedShortDate } from "../../../utils/dates";
 import { useNavigate, useLocation } from "@solidjs/router";
+import { refreshCollection } from "../../../utils/api";
 
 const Navbar: Component = () => {
-  const { isSyncing, lastSynced } = useAppContext();
+  const { isSyncing, lastSynced, setIsSyncing } = useAppContext();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -22,6 +23,17 @@ const Navbar: Component = () => {
       document.body.style.paddingTop = `${navbarHeight}px`;
     }
   });
+
+  const handleResync = async () => {
+    try {
+      const response = await refreshCollection();
+      if (response.status === 200) {
+        setIsSyncing(true);
+      }
+    } catch (error) {
+      console.error("Error resyncing:", error);
+    }
+  };
 
   return (
     <nav class={styles.navbar}>
@@ -79,7 +91,7 @@ const Navbar: Component = () => {
           </div>
         )}
         {!isSyncing() && lastSynced() && (
-          <div class={styles.lastSync}>
+          <div class={styles.lastSync} on:click={handleResync}>
             Last sync: {useFormattedShortDate(lastSynced())}
           </div>
         )}
