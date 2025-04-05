@@ -13,6 +13,7 @@ import {
 import { Payload, useAppContext } from "../../provider/Provider";
 import ConfirmationModal from "../ConfirmationModal/ConfirmationModal";
 import { EditItem } from "../../types";
+import { useFormattedShortDate } from "../../utils/dates";
 
 export interface HistoryItemProps {
   item: EditItem;
@@ -28,15 +29,6 @@ const RecordHistoryItem: Component<HistoryItemProps> = (props) => {
   const { showSuccess, showError, setKleioStore } = useAppContext();
   const [isNotesPanelOpen, setIsNotesPanelOpen] = createSignal(false);
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = createSignal(false);
-
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    });
-  };
 
   const openNotesPanel = (e: Event) => {
     e.stopPropagation();
@@ -141,7 +133,7 @@ const RecordHistoryItem: Component<HistoryItemProps> = (props) => {
                 </button>
               </div>
               <span class={styles.historyItemDate}>
-                {formatDate(props.item.date.toISOString())}
+                {useFormattedShortDate(props.item.date.toISOString())}
               </span>
             </div>
           </div>
