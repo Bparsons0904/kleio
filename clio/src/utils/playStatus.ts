@@ -29,12 +29,11 @@ export function getCleanlinessScore(
  * @returns Hex color code
  */
 export function getCleanlinessColor(score: number): string {
-  // Mid-way between original bright colors and muted colors
-  if (score < 20) return "#35a173"; // Green (between #2f855a and #3cb371)
-  if (score < 40) return "#59c48c"; // Light green (between #48bb78 and #66cdaa)
-  if (score < 60) return "#edc969"; // Yellow (between #ecc94b and #f0e68c)
-  if (score < 80) return "#ef9c58"; // Orange (between #ed8936 and #ffa07a)
-  return "#e9493e"; // Red (between #e53e3e and #e9967a)
+  if (score < 20) return "#35a173"; // Dark green
+  if (score < 40) return "#59c48c"; // Medium green
+  if (score < 60) return "#80d6aa"; // Light green
+  if (score < 80) return "#f59e0b"; // Amber/yellow warning color
+  return "#e9493e"; // Red for danger
 }
 
 /**
@@ -67,8 +66,8 @@ export function getPlayRecencyColor(score: number): string {
   // Mid-way between original bright colors and muted colors
   if (score >= 80) return "#35a173"; // Green (between #2f855a and #3cb371)
   if (score >= 60) return "#59c48c"; // Light green (between #48bb78 and #66cdaa)
-  if (score >= 40) return "#edc969"; // Yellow (between #ecc94b and #f0e68c)
-  if (score >= 20) return "#ef9c58"; // Orange (between #ed8936 and #ffa07a)
+  if (score >= 40) return "#80d6aa"; // Yellow (between #ecc94b and #f0e68c)
+  if (score >= 20) return "#f59e0b"; // Orange (between #ed8936 and #ffa07a)
   return "#e9493e"; // Red (between #e53e3e and #e9967a)
 }
 
