@@ -25,5 +25,6 @@ COPY --from=backend-builder /app/clio/dist /app/clio/dist
 RUN mkdir -p /data/db
 
 ENV APP_ENV=production
+ENV APP_PORT=38080
 EXPOSE 38080
 CMD ["./main"]
