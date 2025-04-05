@@ -39,6 +39,15 @@ const LogPlay: Component = () => {
     setFilteredReleases(filtered);
   });
 
+  createEffect(() => {
+    if (selectedRelease()) {
+      const release = releases().find(
+        (release) => release.id === selectedRelease()?.id,
+      );
+      setSelectedRelease(release);
+    }
+  });
+
   // Sort releases based on selected sort option
   const sortReleases = (releases: Release[], sortOption: string): Release[] => {
     switch (sortOption) {

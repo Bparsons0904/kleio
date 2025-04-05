@@ -1,5 +1,5 @@
 // src/components/RecordActionModal/RecordActionModal.tsx
-import { Component, Show, createSignal } from "solid-js";
+import { Component, Show, createEffect, createSignal } from "solid-js";
 import styles from "./RecordActionModal.module.scss";
 import { EditItem, Release, Stylus } from "../../types";
 import RecordHistoryItem from "../RecordHistoryItem/RecordHistoryItem";
