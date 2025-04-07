@@ -1,3 +1,4 @@
+// src/App.scss (modified)
 * {
   box-sizing: border-box;
   margin: 0;
@@ -16,6 +17,11 @@ main {
   margin: 0 auto;
   padding: 20px;
   height: 100vh;
+}
+
+/* Updated to account for both navbars */
+body {
+  padding-top: 140px; /* Main navbar + sub navbar */
 }
 
 /* Hide scrollbars for all elements while maintaining scroll functionality */

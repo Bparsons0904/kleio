@@ -19,8 +19,8 @@ const Navbar: Component = () => {
   createEffect(() => {
     const navbar = document.querySelector(`.${styles.navbar}`);
     if (navbar) {
-      const navbarHeight = navbar.clientHeight;
-      document.body.style.paddingTop = `${navbarHeight}px`;
+      // const navbarHeight = navbar.clientHeight;
+      // document.body.style.paddingTop = `${navbarHeight}px`;
     }
   });
 

@@ -4,6 +4,7 @@ import Navbar from "./components/layout/Navbar/Navbar";
 import { fetchApi } from "./utils/api";
 import { RouteSectionProps, useNavigate } from "@solidjs/router";
 import { useAppContext } from "./provider/Provider";
+import SubNavbar from "./components/layout/SubNavbar/SubNavbar";
 
 const App: Component<RouteSectionProps<unknown>> = ({ children }) => {
   const navigate = useNavigate();
@@ -24,6 +25,7 @@ const App: Component<RouteSectionProps<unknown>> = ({ children }) => {
   return (
     <>
       <Navbar />
+      <SubNavbar />
       {children}
     </>
   );
