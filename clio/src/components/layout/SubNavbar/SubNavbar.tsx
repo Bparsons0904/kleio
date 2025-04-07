@@ -195,41 +195,50 @@ const SubNavbar: Component = () => {
       <div class={styles.container}>
         {/* Record of the day section */}
         <div class={styles.recordOfTheDay}>
-          <div class={styles.rotdLabel}>Record of the Day:</div>
           <Show
             when={recordOfTheDay()}
             fallback={<span class={styles.noRecord}>Loading...</span>}
           >
-            <div class={styles.rotdInfo}>
-              <div class={styles.rotdDetails}>
-                <span class={styles.rotdTitle}>{recordOfTheDay()?.title}</span>
-                <span class={styles.rotdArtist}>
-                  {recordOfTheDay()
-                    ?.artists.filter((artist) => artist.role !== "Producer")
-                    .map((artist) => artist.artist?.name)
-                    .join(", ")}
-                </span>
-              </div>
-              <Show when={!recordOfTheDayPlayed()}>
-                <button
-                  class={styles.playButton}
-                  onClick={() => handleLogPlay(recordOfTheDay())}
-                  title="Log play for record of the day"
-                >
-                  <BsVinylFill size={16} />
-                  Play
-                </button>
-              </Show>
-              <Show when={recordOfTheDayPlayed()}>
-                <div
-                  class={styles.playedBadge}
-                  title="You've played this record today"
-                >
-                  <BsVinylFill size={16} />
-                  Played Today
+            <div class={styles.rotdAlbumCover} title="Record of the Day">
+              {recordOfTheDay()?.thumb ? (
+                <img
+                  src={recordOfTheDay()?.thumb}
+                  alt={recordOfTheDay()?.title}
+                />
+              ) : (
+                <div class={styles.noImage}>
+                  <BsVinylFill size={24} />
                 </div>
-              </Show>
+              )}
             </div>
+
+            <div class={styles.rotdDetails}>
+              <span class={styles.rotdTitle}>{recordOfTheDay()?.title}</span>
+              <span class={styles.rotdArtist}>
+                {recordOfTheDay()
+                  ?.artists.filter((artist) => artist.role !== "Producer")
+                  .map((artist) => artist.artist?.name)
+                  .join(", ")}
+              </span>
+            </div>
+
+            <Show when={!recordOfTheDayPlayed()}>
+              <button
+                class={styles.playButton}
+                onClick={() => handleLogPlay(recordOfTheDay())}
+                title="Log play for record of the day"
+              >
+                Play
+              </button>
+            </Show>
+            <Show when={recordOfTheDayPlayed()}>
+              <div
+                class={styles.playedBadge}
+                title="You've played this record today"
+              >
+                Played
+              </div>
+            </Show>
           </Show>
         </div>
 
