@@ -9,7 +9,7 @@ Kleio is a self-hosted vinyl record collection manager that seamlessly integrate
 - **Discogs Integration**: Synchronizes with your Discogs account to import your vinyl collection
 - **Play Tracking**: Log when you play your records, which stylus was used, and add notes
 - **Cleaning Tracking**: Keep track of when you clean your records
-- **Stylus Management**: Manage your styli including tracking wear and estimating remaining lifespan
+- **Stylus Management**: Manage your stylus including tracking wear and estimating remaining lifespan
 - **Analytics**: View insights about your listening habits with interactive charts
 - **Collection Browser**: Browse and search your collection with cover art
 - **Responsive Design**: Works on desktop and mobile devices
@@ -126,10 +126,10 @@ Kleio requires a Discogs API token to access your collection:
 3. Add notes (optional)
 4. Click "Log Cleaning"
 
-### Managing Styli
+### Managing Stylus
 
 1. Navigate to the "Equipment" section
-2. Add or edit your styli
+2. Add or edit your stylus
 3. Track usage and expected lifespan
 
 ### Viewing Analytics
