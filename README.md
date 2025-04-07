@@ -1,6 +1,6 @@
 # Kleio - Vinyl Record Collection Manager
 
-![Kleio Logo](https://via.placeholder.com/150x150?text=Kleio)
+![Kleio Logo](assets/images/kleio-logo.svg)
 
 Kleio is a self-hosted vinyl record collection manager that seamlessly integrates with your Discogs account to provide enhanced tracking of your vinyl collection, plays, and cleaning history.
 
@@ -13,6 +13,13 @@ Kleio is a self-hosted vinyl record collection manager that seamlessly integrate
 - **Analytics**: View insights about your listening habits with interactive charts
 - **Collection Browser**: Browse and search your collection with cover art
 - **Responsive Design**: Works on desktop and mobile devices
+
+## Images
+
+![Kleio Log Screenshot](assets/images/log.png)
+![Kleio Collection Screenshot](assets/images/collection.png)
+![Kleio History Screenshot](assets/images/history.png)
+![Kleio Analytics Screenshot](assets/images/analytics.png)
 
 ## Getting Started
 
@@ -39,15 +46,15 @@ Alternatively, you can use Docker Compose:
 ```yaml
 services:
   app:
-    image: deadstyle/kleio
+    image: deadstyle/kleio:latest
     ports:
       - "38080:38080"
     environment:
       - APP_ENV=production
+      - APP_PORT=38080
     volumes:
       - kleio_data:/data/db
     restart: unless-stopped
-
 volumes:
   kleio_data:
     driver: local

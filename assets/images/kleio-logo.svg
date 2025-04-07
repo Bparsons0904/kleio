@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg viewBox="0 0 600 400" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background gradient -->
+  <defs>
+    <linearGradient id="bg-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#2c2c2c" />
+      <stop offset="100%" stop-color="#1a1a1a" />
+    </linearGradient>
+    
+    <!-- Record grooves pattern -->
+    <pattern id="record-grooves" patternUnits="userSpaceOnUse" width="6" height="6" patternTransform="rotate(45)">
+      <circle cx="3" cy="3" r="0.5" fill="none" stroke="rgba(255,255,255,0.07)" stroke-width="0.5" />
+    </pattern>
+    
+    <!-- Reflection gradient -->
+    <linearGradient id="reflection-gradient" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="rgba(255,255,255,0.3)" />
+      <stop offset="100%" stop-color="rgba(255,255,255,0)" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Main background -->
+  <rect width="600" height="400" fill="url(#bg-gradient)" />
+  
+  <!-- Record background with grooves -->
+  <g transform="translate(150, 200)">
+    <!-- Main record -->
+    <circle cx="0" cy="0" r="150" fill="#111111" />
+    <circle cx="0" cy="0" r="150" fill="url(#record-grooves)" />
+    
+    <!-- Record grooves -->
+    <circle cx="0" cy="0" r="140" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="1" />
+    <circle cx="0" cy="0" r="130" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="1" />
+    <circle cx="0" cy="0" r="120" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="1" />
+    <circle cx="0" cy="0" r="110" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="1" />
+    <circle cx="0" cy="0" r="100" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="1" />
+    <circle cx="0" cy="0" r="90" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="1" />
+    <circle cx="0" cy="0" r="80" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="1" />
+    <circle cx="0" cy="0" r="70" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="1" />
+    <circle cx="0" cy="0" r="60" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="1" />
+    <circle cx="0" cy="0" r="50" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="1" />
+    
+    <!-- Record label -->
+    <circle cx="0" cy="0" r="45" fill="#3273dc" />
+    <circle cx="0" cy="0" r="15" fill="#111111" />
+    
+    <!-- Subtle label designs -->
+    <circle cx="0" cy="0" r="35" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="1" stroke-dasharray="3,2" />
+    <circle cx="0" cy="0" r="25" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="1" stroke-dasharray="2,2" />
+    
+    <!-- Light reflection -->
+    <path d="M-120,-120 Q-60,-150 0,-120 Q60,-90 120,-120 A150,150 0 0,0 -120,-120" fill="url(#reflection-gradient)" opacity="0.15" />
+  </g>
+  
+  <!-- Digital elements overlay -->
+  <g transform="translate(380, 200)">
+    <!-- Stylized database/collection icon -->
+    <rect x="-70" y="-70" width="140" height="140" rx="10" fill="#3273dc" opacity="0.9" />
+    
+    <!-- Database lines -->
+    <rect x="-50" y="-50" width="100" height="20" rx="5" fill="white" opacity="0.8" />
+    <rect x="-50" y="-20" width="100" height="20" rx="5" fill="white" opacity="0.7" />
+    <rect x="-50" y="10" width="100" height="20" rx="5" fill="white" opacity="0.6" />
+    <rect x="-50" y="40" width="70" height="20" rx="5" fill="white" opacity="0.5" />
+    
+    <!-- Connecting elements -->
+    <path d="M-70,0 L-150,0" stroke="#3273dc" stroke-width="6" stroke-dasharray="5,5" />
+    <circle cx="-150" cy="0" r="6" fill="#3273dc" />
+  </g>
+  
+  <!-- Logo text -->
+  <g transform="translate(300, 320)">
+    <text x="0" y="0" font-family="Arial, sans-serif" font-size="48" font-weight="bold" text-anchor="middle" fill="white">KLEIO</text>
+    <text x="0" y="25" font-family="Arial, sans-serif" font-size="16" text-anchor="middle" fill="#3273dc">VINYL COLLECTION MANAGER</text>
+  </g>
+  
+  <!-- Subtle Greek-inspired decorative element (for the Kleio name, which refers to the Greek muse of history) -->
+  <g transform="translate(300, 350)" opacity="0.6">
+    <path d="M-100,0 L100,0" stroke="#3273dc" stroke-width="2" />
+    <path d="M-80,10 L80,10" stroke="#3273dc" stroke-width="1" />
+    <path d="M-60,-10 L60,-10" stroke="#3273dc" stroke-width="1" />
+  </g>
+</svg>
