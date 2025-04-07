@@ -20,7 +20,6 @@ export function useFormattedMediumDate(date: string) {
     console.error("Error formatting date:", error);
     return "Error formatting date";
   }
-  // });
 }
 
 export function useFormattedShortDate(date: string) {
@@ -32,7 +31,7 @@ export function useFormattedShortDate(date: string) {
       return "Invalid date";
     }
 
-    return dateObj.toLocaleString("en-US", {
+    return dateObj.toLocaleDateString("en-US", {
       month: "short",
       day: "numeric",
       year: "numeric",
@@ -41,8 +40,8 @@ export function useFormattedShortDate(date: string) {
     console.error("Error formatting date:", error);
     return "Error formatting date";
   }
-  // });
 }
+
 export const formatDateForInput = (date: Date): string => {
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, "0");

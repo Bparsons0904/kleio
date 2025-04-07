@@ -127,17 +127,6 @@ func (s *Server) RegisterRoutes() http.Handler {
 
 	// Create a special handler for SPA routing
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		// First check if the path is an API endpoint
-		if strings.HasPrefix(r.URL.Path, "/auth") ||
-			strings.HasPrefix(r.URL.Path, "/collection") ||
-			strings.HasPrefix(r.URL.Path, "/styluses") ||
-			strings.HasPrefix(r.URL.Path, "/plays") ||
-			strings.HasPrefix(r.URL.Path, "/cleanings") ||
-			strings.HasPrefix(r.URL.Path, "/export") {
-			http.NotFound(w, r)
-			return
-		}
-
 		// Check if this is a request for a static file
 		path := filepath.Join(distDir, r.URL.Path)
 		_, err := os.Stat(path)
