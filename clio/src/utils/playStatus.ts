@@ -17,7 +17,8 @@ export function getCleanlinessScore(
   const timeScore = Math.min(100, (timeElapsed / sixMonthsInMs) * 100);
 
   // Play-based calculation (percentage of 5 plays)
-  const playScore = Math.min(100, (playsSinceCleaning / 5) * 100);
+  // Modified to ensure that exactly 4 plays is less than 80%
+  const playScore = Math.min(100, (playsSinceCleaning / 5.01) * 100);
 
   // Return the higher score (worse case)
   return Math.max(timeScore, playScore);
@@ -115,9 +116,17 @@ export function countPlaysSinceCleaning(
 ): number {
   if (!lastCleanedDate) return playHistory.length; // If never cleaned, count all plays
 
+  // Get the exact timestamp of the last cleaning
+  const lastCleanedTime = lastCleanedDate.getTime();
+
   return playHistory.filter((play) => {
     const playDate = new Date(play.playedAt);
-    return playDate.getTime() > lastCleanedDate.getTime();
+    const playTime = playDate.getTime();
+
+    // Add a small epsilon (1 millisecond) to the cleaning time
+    // This ensures that plays logged at exactly the same time as cleaning
+    // are not counted toward the "plays since cleaning" total
+    return playTime > lastCleanedTime + 1;
   }).length;
 }
 

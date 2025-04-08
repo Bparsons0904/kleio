@@ -39,11 +39,14 @@ const RecordActionModal: Component<RecordActionModalProps> = (props) => {
 
   const handleLogPlay = async () => {
     try {
+      // Use the date from date picker, but add current time
+      const playDateTime = new Date(
+        `${date()}T${new Date().toTimeString().slice(0, 8)}`,
+      );
+
       const result = await createPlayHistory({
         releaseId: props.release.id,
-        playedAt: new Date(
-          `${date()}T${new Date().toTimeString().slice(0, 8)}`,
-        ).toISOString(),
+        playedAt: playDateTime.toISOString(),
         stylusId: selectedStylus()?.id || null,
         notes: notes(),
       });
@@ -63,11 +66,14 @@ const RecordActionModal: Component<RecordActionModalProps> = (props) => {
 
   const handleLogCleaning = async () => {
     try {
+      // Use the date from date picker, but add current time
+      const cleaningDateTime = new Date(
+        `${date()}T${new Date().toTimeString().slice(0, 8)}`,
+      );
+
       const result = await createCleaningHistory({
         releaseId: props.release.id,
-        cleanedAt: new Date(
-          `${date()}T${new Date().toTimeString().slice(0, 8)}`,
-        ).toISOString(),
+        cleanedAt: cleaningDateTime.toISOString(),
         notes: notes(),
       });
 
@@ -86,16 +92,28 @@ const RecordActionModal: Component<RecordActionModalProps> = (props) => {
 
   const handleLogBoth = async () => {
     try {
+      // Create base datetime with date from picker and current time
+      const baseDateTime = new Date(
+        `${date()}T${new Date().toTimeString().slice(0, 8)}`,
+      );
+
+      // Create cleaning timestamp (done first)
+      const cleaningTimestamp = baseDateTime.toISOString();
+
+      // Create play timestamp 1 second later
+      baseDateTime.setSeconds(baseDateTime.getSeconds() + 1);
+      const playTimestamp = baseDateTime.toISOString();
+
       const result = await createPlayAndCleaning(
         {
           releaseId: props.release.id,
-          playedAt: new Date(date()).toISOString(),
+          playedAt: playTimestamp,
           stylusId: selectedStylus()?.id || null,
           notes: notes(),
         },
         {
           releaseId: props.release.id,
-          cleanedAt: new Date(date()).toISOString(),
+          cleanedAt: cleaningTimestamp,
           notes: notes(),
         },
       );
