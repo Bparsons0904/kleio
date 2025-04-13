@@ -45,6 +45,7 @@ const SubNavbar: Component = () => {
     // Store in localStorage
     localStorage.setItem("recordOfTheDay", record.id.toString());
     localStorage.setItem("recordOfTheDayDate", new Date().toLocaleDateString());
+    localStorage.setItem("recordOfTheDayPlayed", "false");
 
     setRecordOfTheDay(record);
   };

@@ -167,8 +167,7 @@ const StylusManager: Component = () => {
   };
 
   // Filter styluses based on owned/active status
-  const activeStyluses = () =>
-    styluses().filter((s) => s.owned !== false && (s.active || s.primary));
+  const activeStyluses = () => styluses().filter((s) => s.active);
 
   const inactiveStyluses = () =>
     styluses().filter((s) => s.owned !== false && !s.active && !s.primary);
