@@ -62,10 +62,10 @@ const Home: Component = () => {
 
         <div class={styles.card}>
           <div class={styles.cardHeader}>
-            <h2>View Play Time</h2>
+            <h2>View Play History</h2>
           </div>
           <div class={styles.cardBody}>
-            <p>See statistics about your listening habits.</p>
+            <p>View your play history</p>
           </div>
           <div class={styles.cardFooter}>
             <button
@@ -96,14 +96,14 @@ const Home: Component = () => {
 
         <div class={styles.card}>
           <div class={styles.cardHeader}>
-            <h2>View Equipment</h2>
+            <h2>View Styluses</h2>
           </div>
           <div class={styles.cardBody}>
-            <p>View, Edit and add equipment to your profile.</p>
+            <p>View, Edit and add styluses.</p>
           </div>
           <div class={styles.cardFooter}>
             <button class={styles.button} on:click={handleManageStyluses}>
-              View Equipment
+              View Styluses
             </button>
           </div>
         </div>
