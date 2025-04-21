@@ -139,3 +139,33 @@ func fetchReleasesPage(user database.User, folderID, page, perPage int) (Discogs
 
 	return response, nil
 }
+
+func (c *Controller) DeleteRelease(releaseID int) (payload Payload, err error) {
+	err = c.DB.DeleteRelease(releaseID)
+	if err != nil {
+		slog.Error("Failed to delete release", "error", err)
+		return
+	}
+
+	err = payload.GetPayload(c)
+	if err != nil {
+		slog.Error("Failed to get payload for play history", "error", err)
+	}
+
+	return
+}
+
+func (c *Controller) ArchiveRelease(releaseID int) (payload Payload, err error) {
+	err = c.DB.ArchiveRelease(releaseID)
+	if err != nil {
+		slog.Error("Failed to archive release", "error", err)
+		return
+	}
+
+	err = payload.GetPayload(c)
+	if err != nil {
+		slog.Error("Failed to get payload for play history", "error", err)
+	}
+
+	return
+}

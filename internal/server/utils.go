@@ -3,6 +3,8 @@ package server
 import (
 	"encoding/json"
 	"net/http"
+	"strconv"
+	"strings"
 )
 
 func writeData(w http.ResponseWriter, data any) {
@@ -39,4 +41,13 @@ func (s *Server) corsMiddleware(next http.Handler) http.Handler {
 		// Proceed with the next handler
 		next.ServeHTTP(w, r)
 	})
+}
+
+func getIDFrom3_2Parts(path string) (int, error) {
+	parts := strings.Split(path, "/")
+	if len(parts) < 3 {
+		return 0, nil
+	}
+	idStr := parts[2]
+	return strconv.Atoi(idStr)
 }

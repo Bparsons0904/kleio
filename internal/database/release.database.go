@@ -541,6 +541,24 @@ func parseTime(timeStr string) time.Time {
 	return t
 }
 
+func (s *Database) DeleteRelease(id int) error {
+	_, err := s.DB.Exec("DELETE FROM releases WHERE id = ?", id)
+	if err != nil {
+		slog.Error("Failed to delete release", "error", err)
+	}
+
+	return err
+}
+
+func (s *Database) ArchiveRelease(id int) error {
+	_, err := s.DB.Exec("UPDATE releases SET is_archived = true WHERE id = ?", id)
+	if err != nil {
+		slog.Error("Failed to archive release", "error", err)
+	}
+
+	return err
+}
+
 func (s *Database) SaveReleases(response DiscogsResponse) error {
 	tx, err := dbInstance.DB.Begin()
 	if err != nil {
