@@ -21,10 +21,6 @@ func (s *Server) RegisterRoutes() http.Handler {
 	apiMux.HandleFunc("/collection/sync", s.checkSync)
 	apiMux.HandleFunc("/collection/resync", s.updateCollection)
 	apiMux.HandleFunc("/discogs/collection/refresh", s.updateCollection)
-
-	// Release paths to delete and archive
-	// /releases/{id}/delete
-	// /releases/{id}/archive
 	apiMux.HandleFunc("/releases/{id}/delete", s.deleteRelease)
 	apiMux.HandleFunc("/releases/{id}/archive", s.archiveRelease)
 
