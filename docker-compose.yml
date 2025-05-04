@@ -7,8 +7,5 @@ services:
       - APP_ENV=production
       - APP_PORT=38080
     volumes:
-      - kleio_data:/data/db
+      - ~/kleio_data:/data/db
     restart: unless-stopped
-volumes:
-  kleio_data:
-    driver: local

@@ -29,10 +29,16 @@ The easiest way to get started with Kleio is using Docker:
 
 ```bash
 # Pull the latest image
-docker pull deadstyle/kleio
+docker pull deadstyle/kleio:latest
+
+mkdir kleio_data
 
 # Run with automatic restart and persistent storage
-docker run -d --restart unless-stopped -p 38080:38080 -v kleio_data:/data/db --name kleio deadstyle/kleio
+docker run -d --restart unless-stopped \
+  -p 38080:38080 \
+  -v ~/kleio_data:/data/db \
+  --name kleio \
+  deadstyle/kleio:latest
 ```
 
 Then visit `http://localhost:38080` in your browser.
@@ -53,11 +59,8 @@ services:
       - APP_ENV=production
       - APP_PORT=38080
     volumes:
-      - kleio_data:/data/db
+      - ~/kleio_data:/data/db
     restart: unless-stopped
-volumes:
-  kleio_data:
-    driver: local
 ```
 
 2. Run with Docker Compose:
