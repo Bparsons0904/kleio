@@ -44,7 +44,7 @@ func (c *Controller) SyncReleases() error {
 
 			page++
 
-			if page >= response.Pagination.Pages {
+			if page > response.Pagination.Pages {
 				break
 			}
 
