@@ -5,6 +5,7 @@ import styles from "./StylusManager.module.scss";
 import { updateStylus } from "../../utils/mutations/put";
 import { createStylus } from "../../utils/mutations/post";
 import { deleteStylus } from "../../utils/mutations/delete";
+import { formatDateForInput, formatLocalDate } from "../../utils/dates";
 
 const StylusManager: Component = () => {
   const { styluses, setStyluses, playHistory } = useAppContext();
@@ -48,9 +49,7 @@ const StylusManager: Component = () => {
 
     if (stylus.purchaseDate) {
       // Convert to YYYY-MM-DD format for date input
-      setPurchaseDate(
-        new Date(stylus.purchaseDate).toISOString().split("T")[0],
-      );
+      setPurchaseDate(formatDateForInput(stylus.purchaseDate));
     } else {
       setPurchaseDate("");
     }
@@ -466,7 +465,7 @@ const StylusManager: Component = () => {
                     <Show when={stylus.purchaseDate}>
                       <p class={styles.stylusDetail}>
                         <strong>Purchased:</strong>{" "}
-                        {new Date(stylus.purchaseDate!).toLocaleDateString()}
+                        {formatLocalDate(stylus.purchaseDate!)}
                       </p>
                     </Show>
                     <Show when={stylusUsageData().has(stylus.id)}>
@@ -542,7 +541,7 @@ const StylusManager: Component = () => {
                     <Show when={stylus.purchaseDate}>
                       <p class={styles.stylusDetail}>
                         <strong>Purchased:</strong>{" "}
-                        {new Date(stylus.purchaseDate!).toLocaleDateString()}
+                        {formatLocalDate(stylus.purchaseDate!)}
                       </p>
                     </Show>
                   </div>
@@ -603,7 +602,7 @@ const StylusManager: Component = () => {
                     <Show when={stylus.purchaseDate}>
                       <p class={styles.stylusDetail}>
                         <strong>Purchased:</strong>{" "}
-                        {new Date(stylus.purchaseDate!).toLocaleDateString()}
+                        {formatLocalDate(stylus.purchaseDate!)}
                       </p>
                     </Show>
                   </div>

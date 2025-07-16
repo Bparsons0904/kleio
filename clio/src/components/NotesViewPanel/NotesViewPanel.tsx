@@ -4,6 +4,7 @@ import { AiOutlineClose } from "solid-icons/ai";
 import { AiTwotoneCalendar } from "solid-icons/ai";
 import { ImHeadphones } from "solid-icons/im";
 import { EditItem } from "../../types";
+import { formatLocalDate } from "../../utils/dates";
 
 export interface NotesViewPanelProps {
   isOpen: boolean;
@@ -13,14 +14,6 @@ export interface NotesViewPanelProps {
 }
 
 const NotesViewPanel: Component<NotesViewPanelProps> = (props) => {
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    });
-  };
 
   return (
     <div class={`${styles.panelWrapper} ${props.isOpen ? styles.open : ""}`}>
@@ -38,7 +31,7 @@ const NotesViewPanel: Component<NotesViewPanelProps> = (props) => {
           <div class={styles.metadata}>
             <div class={styles.metadataItem}>
               <AiTwotoneCalendar size={18} />
-              <span>{formatDate(props.item.date)}</span>
+              <span>{formatLocalDate(props.item.date)}</span>
             </div>
 
             <Show when={props.item.stylus}>

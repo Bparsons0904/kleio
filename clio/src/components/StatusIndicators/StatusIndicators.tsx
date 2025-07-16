@@ -10,6 +10,7 @@ import {
   getLastCleaningDate,
   getLastPlayDate,
 } from "../../utils/playStatus";
+import { formatLocalDate } from "../../utils/dates";
 import styles from "./StatusIndicators.module.scss";
 import { TbWashTemperature5 } from "solid-icons/tb";
 import { ImHeadphones } from "solid-icons/im";
@@ -36,14 +37,6 @@ export const RecordStatusIndicator: Component<StatusIndicatorProps> = (
 
   const playRecencyScore = () => getPlayRecencyScore(lastPlayDate());
 
-  const formatDate = (date: Date | null) => {
-    if (!date) return "Never";
-    return date.toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    });
-  };
 
   return (
     <div class={styles.container}>
@@ -69,12 +62,12 @@ export const RecordStatusIndicator: Component<StatusIndicatorProps> = (
         <div class={styles.detailsSection}>
           <div class={styles.detailRow}>
             <span class={styles.detailLabel}>Last played:</span>
-            <span class={styles.detailValue}>{formatDate(lastPlayDate())}</span>
+            <span class={styles.detailValue}>{formatLocalDate(lastPlayDate())}</span>
           </div>
           <div class={styles.detailRow}>
             <span class={styles.detailLabel}>Last cleaned:</span>
             <span class={styles.detailValue}>
-              {formatDate(lastCleanDate())}
+              {formatLocalDate(lastCleanDate())}
             </span>
           </div>
           <div class={styles.detailRow}>

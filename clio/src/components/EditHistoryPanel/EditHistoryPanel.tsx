@@ -7,6 +7,7 @@ import {
   updatePlayHistory,
   updateCleaningHistory,
 } from "../../utils/mutations/put";
+import { formatDateForInput } from "../../utils/dates";
 import { useAppContext } from "../../provider/Provider";
 
 export interface EditHistoryPanelProps {
@@ -20,7 +21,7 @@ const EditHistoryPanel: Component<EditHistoryPanelProps> = (props) => {
   const { showSuccess, showError, setKleioStore } = useAppContext();
 
   const [date, setDate] = createSignal(
-    props.editItem?.date.toISOString().split("T")[0] || "",
+    formatDateForInput(props.editItem?.date) || "",
   );
   const [notes, setNotes] = createSignal(props.editItem?.notes || "");
   const [stylusId, setStylusId] = createSignal(props.editItem?.stylusId);
@@ -28,7 +29,7 @@ const EditHistoryPanel: Component<EditHistoryPanelProps> = (props) => {
 
   createEffect(() => {
     if (props.editItem) {
-      setDate(props.editItem.date.toISOString().split("T")[0]);
+      setDate(formatDateForInput(props.editItem.date));
       setNotes(props.editItem.notes || "");
       setStylusId(props.editItem.stylusId);
     }

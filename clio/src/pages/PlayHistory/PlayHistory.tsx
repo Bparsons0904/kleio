@@ -1,7 +1,7 @@
 import { Component, createMemo, createSignal, For, Show } from "solid-js";
 import { useAppContext } from "../../provider/Provider";
 import styles from "./PlayHistory.module.scss";
-import { useFormattedShortDate } from "../../utils/dates";
+import { useFormattedShortDate, getLocalDateGroupKey, isSameLocalDay } from "../../utils/dates";
 import { VsNote } from "solid-icons/vs";
 import { TbWashTemperature5 } from "solid-icons/tb";
 import { PlayHistory, Release } from "../../types";
@@ -26,13 +26,8 @@ const PlayHistoryPage: Component = () => {
       return false;
     }
 
-    const playDateStr = new Date(playDate).toISOString().split("T")[0];
-
     return release.cleaningHistory.some((cleaning) => {
-      const cleaningDateStr = new Date(cleaning.cleanedAt)
-        .toISOString()
-        .split("T")[0];
-      return cleaningDateStr === playDateStr;
+      return isSameLocalDay(playDate, cleaning.cleanedAt);
     });
   };
 
@@ -80,9 +75,7 @@ const PlayHistoryPage: Component = () => {
       let key: string;
       if (groupBy() === "date") {
         // Group by day in LOCAL timezone, not UTC
-        const date = new Date(play.playedAt);
-        // Format as YYYY-MM-DD in local time instead of using ISO string (which is UTC-based)
-        key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+        key = getLocalDateGroupKey(play.playedAt);
       } else if (groupBy() === "artist") {
         // Group by first artist
         key = play.release.artists[0]?.artist?.name || "Unknown Artist";

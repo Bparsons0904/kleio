@@ -4,6 +4,7 @@ import {
   GroupFrequency,
   useDateRange,
 } from "../../provider/DateRangeContext";
+import { formatDateForInput } from "../../utils/dates";
 import styles from "./ChartControls.module.scss";
 import SearchableDropdown, {
   DropdownOption,
@@ -33,10 +34,6 @@ const ChartControls: Component<ChartControlsProps> = (props) => {
   const [showCustomDate, setShowCustomDate] = createSignal(false);
   const [internalSelectedFilter, setInternalSelectedFilter] = createSignal("");
 
-  // Format date to YYYY-MM-DD for input type date
-  const formatDateForInput = (date: Date) => {
-    return date.toISOString().split("T")[0];
-  };
 
   // Initialize custom date fields when the component mounts
   createEffect(() => {
