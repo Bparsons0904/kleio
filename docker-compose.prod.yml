@@ -1,0 +1,36 @@
+version: '3.8'
+
+networks:
+  traefik:
+    external: true
+  kleio-network:
+    external: true
+
+services:
+  kleio:
+    image: deadstyle/kleio:latest
+    container_name: kleio
+    restart: unless-stopped
+    networks:
+      - traefik
+      - kleio-network
+    volumes:
+      - "/mnt/nas-direct/kleio_data:/data/db"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=traefik"
+      - "traefik.http.routers.kleio.rule=Host(`kleio.local`)"
+      - "traefik.http.routers.kleio.entrypoints=http"
+      - "traefik.http.services.kleio.loadbalancer.server.port=38080"
+      - "traefik.http.routers.kleio.middlewares=security-headers,local-only,traefik-auth"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:38080/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+        reservations:
+          memory: 256M

@@ -1,0 +1,34 @@
+kind: pipeline
+type: docker
+name: kleio-deploy
+
+steps:
+  - name: build-frontend
+    image: node:18-alpine
+    commands:
+      - cd clio
+      - npm install
+      - npm run build
+
+  - name: build-backend
+    image: golang:1.21-alpine
+    commands:
+      - go mod download
+      - go build -o kleio cmd/api/main.go
+    depends_on:
+      - build-frontend
+
+  - name: deploy
+    image: docker:24-cli
+    commands:
+      - apk add --no-cache docker-compose
+      - docker-compose -f docker-compose.prod.yml down || true
+      - docker-compose -f docker-compose.prod.yml pull
+      - docker-compose -f docker-compose.prod.yml up -d
+    when:
+      branch:
+        - main
+      event:
+        - push
+    depends_on:
+      - build-backend
