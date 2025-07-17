@@ -6,7 +6,7 @@ steps:
   - name: build-frontend
     image: node:22-alpine
     environment:
-      VITE_API_URL: http://192.168.86.203:38080/api
+      NODE_ENV: production
     commands:
       - cd clio
       - npm install
