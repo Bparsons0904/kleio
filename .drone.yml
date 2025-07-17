@@ -10,7 +10,7 @@ steps:
     commands:
       - cd clio
       - npm ci
-      - npm run build
+      - ./node_modules/.bin/vite build
 
   - name: build-backend
     image: golang:1.24-alpine
