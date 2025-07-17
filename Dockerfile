@@ -1,7 +1,8 @@
 FROM node:22-alpine AS frontend-builder
 WORKDIR /app/frontend
+ENV NODE_ENV=production
 COPY clio/package.json clio/package-lock.json ./
-RUN npm ci
+RUN npm install --include=dev
 COPY clio/ ./
 RUN npm run build
 

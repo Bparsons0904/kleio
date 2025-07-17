@@ -3,30 +3,23 @@ type: docker
 name: kleio-deploy
 
 steps:
-  - name: build-frontend
-    image: node:22-alpine
-    environment:
-      NODE_ENV: production
+  - name: build-image
+    image: docker:24-dind
+    volumes:
+      - name: docker-socket
+        path: /var/run/docker.sock
     commands:
-      - cd clio
-      - npm install --include=dev
-      - npm run build
-
-  - name: build-backend
-    image: golang:1.24-alpine
-    commands:
-      - go mod download
-      - go build -o kleio cmd/api/main.go
-    depends_on:
-      - build-frontend
-
+      - docker build -t kleio:latest .
+      
   - name: deploy
     image: docker:24-cli
+    volumes:
+      - name: docker-socket
+        path: /var/run/docker.sock
     commands:
       - apk add --no-cache docker-compose
       - docker-compose -f docker-compose.prod.yml down || true
       - docker network create kleio-network || true
-      - docker-compose -f docker-compose.prod.yml pull
       - docker-compose -f docker-compose.prod.yml up -d
     when:
       branch:
@@ -34,4 +27,9 @@ steps:
       event:
         - push
     depends_on:
-      - build-backend
+      - build-image
+
+volumes:
+  - name: docker-socket
+    host:
+      path: /var/run/docker.sock

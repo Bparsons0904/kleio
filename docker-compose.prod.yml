@@ -8,7 +8,7 @@ networks:
 
 services:
   kleio:
-    image: deadstyle/kleio:latest
+    image: kleio:latest
     container_name: kleio
     restart: unless-stopped
     networks:
