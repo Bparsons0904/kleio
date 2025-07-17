@@ -4,14 +4,14 @@ name: kleio-deploy
 
 steps:
   - name: build-frontend
-    image: node:18-alpine
+    image: node:22-alpine
     commands:
       - cd clio
       - npm install
       - npm run build
 
   - name: build-backend
-    image: golang:1.21-alpine
+    image: golang:1.24-alpine
     commands:
       - go mod download
       - go build -o kleio cmd/api/main.go
