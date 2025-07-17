@@ -1,17 +1,39 @@
+---
 kind: pipeline
 type: docker
-name: kleio-deploy
+name: build
 
 steps:
-  - name: build-image
-    image: plugins/docker
-    settings:
-      repo: kleio
-      tags: latest
-      dockerfile: Dockerfile
-      context: .
-      storage_driver: vfs
-      
+  - name: build-frontend
+    image: node:22-alpine
+    environment:
+      NODE_ENV: production
+    commands:
+      - cd clio
+      - npm install --include=dev
+      - npm run build
+
+  - name: build-backend
+    image: golang:1.24-alpine
+    commands:
+      - go mod download
+      - go build -o kleio cmd/api/main.go
+    depends_on:
+      - build-frontend
+
+  - name: build-docker-image
+    image: docker:24-cli
+    commands:
+      - docker build -t kleio:latest .
+    depends_on:
+      - build-backend
+
+---
+kind: pipeline
+type: docker
+name: deploy
+
+steps:
   - name: deploy
     image: docker/compose:alpine-1.29.2
     commands:
@@ -23,5 +45,6 @@ steps:
         - main
       event:
         - push
-    depends_on:
-      - build-image
+
+depends_on:
+  - build
