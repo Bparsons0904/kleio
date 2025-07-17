@@ -1,4 +1,4 @@
-version: '3.8'
+version: "3.8"
 
 networks:
   traefik:
@@ -15,7 +15,7 @@ services:
       - traefik
       - kleio-network
     volumes:
-      - "/mnt/nas-direct/kleio_data:/data/db"
+      - "/mnt/server/kleio_data:/data/db"
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=traefik"
