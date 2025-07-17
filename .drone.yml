@@ -4,20 +4,17 @@ name: kleio-deploy
 
 steps:
   - name: build-image
-    image: docker:24-dind
-    volumes:
-      - name: docker-socket
-        path: /var/run/docker.sock
-    commands:
-      - docker build -t kleio:latest .
+    image: plugins/docker
+    settings:
+      repo: kleio
+      tags: latest
+      dockerfile: Dockerfile
+      context: .
+      storage_driver: vfs
       
   - name: deploy
-    image: docker:24-cli
-    volumes:
-      - name: docker-socket
-        path: /var/run/docker.sock
+    image: docker/compose:alpine-1.29.2
     commands:
-      - apk add --no-cache docker-compose
       - docker-compose -f docker-compose.prod.yml down || true
       - docker network create kleio-network || true
       - docker-compose -f docker-compose.prod.yml up -d
@@ -28,8 +25,3 @@ steps:
         - push
     depends_on:
       - build-image
-
-volumes:
-  - name: docker-socket
-    host:
-      path: /var/run/docker.sock
