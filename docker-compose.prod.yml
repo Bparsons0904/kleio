@@ -15,7 +15,7 @@ services:
       - traefik
       - kleio-network
     volumes:
-      - "/mnt/server/kleio_data:/data/db"
+      - "/home/server/kleio_data:/data/db"
     ports:
       - "38080:38080"
     healthcheck:
