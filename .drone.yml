@@ -23,6 +23,7 @@ steps:
     commands:
       - apk add --no-cache docker-compose
       - docker-compose -f docker-compose.prod.yml down || true
+      - docker network create kleio-network || true
       - docker-compose -f docker-compose.prod.yml pull
       - docker-compose -f docker-compose.prod.yml up -d
     when:
