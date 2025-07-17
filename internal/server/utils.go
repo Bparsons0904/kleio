@@ -29,8 +29,10 @@ func (s *Server) corsMiddleware(next http.Handler) http.Handler {
 		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS, PATCH")
 		w.Header().
 			Set("Access-Control-Allow-Headers", "Accept, Authorization, Content-Type, X-CSRF-Token")
+		// Allow credentials (e.g., cookies, authorization headers) to be sent with cross-origin requests.
+		// This is necessary for authentication to work correctly when the frontend is on a different origin.
 		w.Header().
-			Set("Access-Control-Allow-Credentials", "false")
+			Set("Access-Control-Allow-Credentials", "true")
 
 		// Handle preflight OPTIONS requests
 		if r.Method == http.MethodOptions {
