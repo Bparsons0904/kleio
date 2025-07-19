@@ -4,7 +4,7 @@ networks:
   traefik:
     external: true
   kleio-network:
-    external: true
+    driver: bridge
 
 services:
   kleio:
