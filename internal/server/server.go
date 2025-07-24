@@ -10,8 +10,24 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/adaptor"
+	"github.com/gofiber/fiber/v2/middleware/cors"
 	_ "github.com/joho/godotenv/autoload"
 )
+
+func (s *Server) setupApp() http.Handler {
+	app := fiber.New()
+
+	app.Use(cors.New())
+
+	prometheus := NewMetrics()
+	RegisterMetrics(app, prometheus)
+
+	s.RegisterRoutes(app)
+
+	return adaptor.FiberApp(app)
+}
 
 type Server struct {
 	port       int
@@ -31,7 +47,7 @@ func NewServer() *http.Server {
 	// Declare Server config
 	server := &http.Server{
 		Addr:         fmt.Sprintf(":%d", NewServer.port),
-		Handler:      NewServer.RegisterRoutes(),
+		Handler:      NewServer.setupApp(),
 		IdleTimeout:  time.Minute,
 		ReadTimeout:  10 * time.Second,
 		WriteTimeout: 30 * time.Second,
