@@ -160,3 +160,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - [Discogs API](https://www.discogs.com/developers) for providing access to collection data
 - [SolidJS](https://www.solidjs.com/) for the reactive UI framework
 - [Chart.js](https://www.chartjs.org/) for beautiful analytics visualizations
+  // Rebuild the README.md file
