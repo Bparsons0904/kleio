@@ -411,7 +411,17 @@ ORDER BY r.title`
 
 						// Parse purchase_date (which might be null)
 						if tempStylus.PurchaseDate != nil && *tempStylus.PurchaseDate != "" {
-							t, err := time.Parse("2006-01-02 15:04:05", *tempStylus.PurchaseDate)
+							// Try parsing with timezone first, then without
+							var t time.Time
+							var err error
+							
+							// Try format with timezone first
+							t, err = time.Parse("2006-01-02 15:04:05-07:00", *tempStylus.PurchaseDate)
+							if err != nil {
+								// Fallback to format without timezone
+								t, err = time.Parse("2006-01-02 15:04:05", *tempStylus.PurchaseDate)
+							}
+							
 							if err != nil {
 								slog.Error(
 									"Failed to parse purchase_date",
