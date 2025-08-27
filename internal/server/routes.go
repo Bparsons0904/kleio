@@ -11,6 +11,9 @@ import (
 func (s *Server) RegisterRoutes(app *fiber.App) {
 	api := app.Group("/api")
 
+	// Health check route
+	api.Get("/health", adaptor.HTTPHandlerFunc(s.healthCheck))
+
 	// Auth and Collection routes
 	api.Get("/auth", adaptor.HTTPHandlerFunc(s.getAuth))
 	api.Post("/auth/token", adaptor.HTTPHandlerFunc(s.SaveToken))
