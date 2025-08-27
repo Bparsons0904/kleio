@@ -1,27 +1,24 @@
 /**
- * Calculate the cleanliness score for a record
+ * Calculate the cleanliness score for a record based ONLY on plays since cleaning
  * @param lastCleanedDate The date the record was last cleaned
  * @param playsSinceCleaning Number of plays since last cleaning
- * @returns Cleanliness score (0-100)
+ * @returns Cleanliness score (0-100) based purely on play count
  */
 export function getCleanlinessScore(
   lastCleanedDate: Date | null,
   playsSinceCleaning: number,
 ): number {
-  // If never cleaned, return 100 (needs cleaning)
-  if (!lastCleanedDate) return 100;
-
-  // Time-based calculation (percentage of 6 months elapsed)
-  const sixMonthsInMs = 6 * 30 * 24 * 60 * 60 * 1000;
-  const timeElapsed = Date.now() - lastCleanedDate.getTime();
-  const timeScore = Math.min(100, (timeElapsed / sixMonthsInMs) * 100);
+  // If never cleaned, base score on total plays
+  if (!lastCleanedDate) {
+    return Math.min(100, (playsSinceCleaning / 5.01) * 100);
+  }
 
   // Play-based calculation (percentage of 5 plays)
   // Modified to ensure that exactly 4 plays is less than 80%
   const playScore = Math.min(100, (playsSinceCleaning / 5.01) * 100);
 
-  // Return the higher score (worse case)
-  return Math.max(timeScore, playScore);
+  // Return only the play-based score (independent of time)
+  return playScore;
 }
 
 /**
