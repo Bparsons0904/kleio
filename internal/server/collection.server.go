@@ -17,10 +17,40 @@ func (s *Server) getCollection(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) updateCollection(w http.ResponseWriter, r *http.Request) {
-	slog.Info("Updating collection, actually just syncing details")
-	go s.controller.AsyncCollection()
+	slog.Info("Collection sync requested by user")
 
-	response := map[string]any{"isSyncing": true}
+	// Check if there's already a sync in progress
+	latestSync, err := s.DB.GetLatestSync()
+	if err != nil {
+		slog.Error("Failed to check latest sync before starting new one", "error", err)
+		http.Error(w, "Failed to check sync status", http.StatusInternalServerError)
+		return
+	}
+
+	if latestSync.Status == "in_progress" {
+		slog.Warn("Sync already in progress, not starting new one", 
+			"syncID", latestSync.ID,
+			"syncStarted", latestSync.SyncStart)
+		response := map[string]any{
+			"isSyncing": true,
+			"message": "Sync already in progress",
+			"syncID": latestSync.ID,
+		}
+		writeData(w, response)
+		return
+	}
+
+	slog.Info("Starting new collection sync in background")
+	go func() {
+		err := s.controller.AsyncCollection()
+		if err != nil {
+			slog.Error("Background sync failed", "error", err)
+		} else {
+			slog.Info("Background sync completed successfully")
+		}
+	}()
+
+	response := map[string]any{"isSyncing": true, "message": "Sync started"}
 	writeData(w, response)
 }
 

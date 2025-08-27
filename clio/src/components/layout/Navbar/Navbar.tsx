@@ -26,12 +26,23 @@ const Navbar: Component = () => {
 
   const handleResync = async () => {
     try {
+      console.log("User clicked sync button");
+      setIsSyncing(true); // Set syncing state immediately for UI feedback
+      
       const response = await refreshCollection();
+      console.log("Sync response:", response.data);
+      
       if (response.status === 200) {
-        setIsSyncing(true);
+        console.log("Sync started successfully");
+        // Keep syncing state true - it will be cleared when sync completes
+      } else {
+        console.error("Unexpected response status:", response.status);
+        setIsSyncing(false);
       }
     } catch (error) {
-      console.error("Error resyncing:", error);
+      console.error("Error starting sync:", error);
+      setIsSyncing(false); // Clear syncing state on error
+      // You might want to show a toast notification here
     }
   };
 
@@ -90,9 +101,16 @@ const Navbar: Component = () => {
             <span>Syncing...</span>
           </div>
         )}
-        {!isSyncing() && lastSynced() && (
-          <div class={styles.lastSync} on:click={handleResync}>
-            Last sync: {useFormattedShortDate(lastSynced())}
+        {!isSyncing() && (
+          <div class={styles.syncControls}>
+            <button class={styles.syncButton} onclick={handleResync}>
+              Sync Now
+            </button>
+            {lastSynced() && (
+              <div class={styles.lastSyncInfo}>
+                Last: {useFormattedShortDate(lastSynced())}
+              </div>
+            )}
           </div>
         )}
       </div>

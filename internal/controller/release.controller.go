@@ -24,23 +24,67 @@ func (c *Controller) SyncReleases() error {
 		return err
 	}
 
-	for _, folder := range folders {
+	slog.Info("Starting release sync", 
+		"username", user.Username,
+		"folderCount", len(folders))
+
+	totalReleases := 0
+	totalPages := 0
+	failedFolders := 0
+
+	for folderIdx, folder := range folders {
+		slog.Info("Syncing folder", 
+			"folderID", folder.ID, 
+			"folderName", folder.Name,
+			"progress", fmt.Sprintf("%d/%d", folderIdx+1, len(folders)))
+
+		folderReleases := 0
 		page := 1
 		perPage := 100
+
 		for {
+			slog.Debug("Fetching releases page", 
+				"folderID", folder.ID,
+				"page", page,
+				"perPage", perPage)
+
 			response, err := fetchReleasesPage(user, folder.ID, page, perPage)
 			if err != nil {
-				return err
+				slog.Error("Failed to fetch releases page", 
+					"error", err,
+					"folderID", folder.ID,
+					"folderName", folder.Name,
+					"page", page)
+				failedFolders++
+				break // Move to next folder instead of failing completely
 			}
 
 			if len(response.Releases) == 0 {
+				slog.Debug("No releases found on page", 
+					"folderID", folder.ID,
+					"page", page)
 				break
 			}
 
 			err = c.DB.SaveReleases(response)
 			if err != nil {
-				return err
+				slog.Error("Failed to save releases", 
+					"error", err,
+					"folderID", folder.ID,
+					"page", page,
+					"releaseCount", len(response.Releases))
+				return err // Database save failure should stop sync
 			}
+
+			folderReleases += len(response.Releases)
+			totalReleases += len(response.Releases)
+			totalPages++
+
+			slog.Debug("Saved releases page", 
+				"folderID", folder.ID,
+				"page", page,
+				"releasesOnPage", len(response.Releases),
+				"totalPagesInFolder", response.Pagination.Pages)
 
 			page++
 
@@ -50,6 +94,21 @@ func (c *Controller) SyncReleases() error {
 
 			time.Sleep(1 * time.Second)
 		}
+
+		slog.Info("Completed folder sync", 
+			"folderID", folder.ID,
+			"folderName", folder.Name,
+			"releasesInFolder", folderReleases)
+	}
+
+	slog.Info("Release sync completed", 
+		"totalReleases", totalReleases,
+		"totalPages", totalPages,
+		"successfulFolders", len(folders)-failedFolders,
+		"failedFolders", failedFolders)
+
+	if failedFolders > 0 && totalReleases == 0 {
+		return fmt.Errorf("failed to sync any folders: %d failures", failedFolders)
 	}
 
 	return nil
@@ -69,7 +128,7 @@ func fetchReleasesPage(user database.User, folderID, page, perPage int) (Discogs
 		perPage,
 	)
 
-	slog.Info("Fetching releases page", "url", url)
+	slog.Debug("Making API request", "url", url)
 
 	// Create a new request
 	req, err := http.NewRequest("GET", url, nil)
@@ -98,7 +157,11 @@ func fetchReleasesPage(user database.User, folderID, page, perPage int) (Discogs
 	if resp.StatusCode == http.StatusTooManyRequests {
 		// Get retry after header if available
 		retryAfter := resp.Header.Get("Retry-After")
-		slog.Warn("Rate limited by Discogs API", "retryAfter", retryAfter)
+		slog.Warn("Rate limited by Discogs API", 
+			"retryAfter", retryAfter,
+			"folderID", folderID,
+			"page", page,
+			"url", url)
 
 		// Default to 60 seconds if no Retry-After header
 		waitTime := 60 * time.Second
@@ -109,7 +172,10 @@ func fetchReleasesPage(user database.User, folderID, page, perPage int) (Discogs
 		}
 
 		// Wait and retry once
-		slog.Info("Waiting before retry", "waitTime", waitTime)
+		slog.Info("Waiting before retry due to rate limit", 
+			"waitTime", waitTime,
+			"folderID", folderID,
+			"page", page)
 		time.Sleep(waitTime)
 		return fetchReleasesPage(user, folderID, page, perPage)
 	}
@@ -130,7 +196,7 @@ func fetchReleasesPage(user database.User, folderID, page, perPage int) (Discogs
 		return response, err
 	}
 
-	slog.Info("Successfully fetched releases page",
+	slog.Debug("Successfully fetched releases page",
 		"folderID", folderID,
 		"page", page,
 		"totalPages", response.Pagination.Pages,

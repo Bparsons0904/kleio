@@ -38,5 +38,8 @@ export const getRecentPlays = async (limit = 10) => {
 };
 
 export const refreshCollection = async () => {
-  return await fetchApi("collection/resync");
+  console.log("Starting collection sync...");
+  const response = await apiClient.post("collection/resync");
+  console.log("Collection sync response:", response.data);
+  return response;
 };

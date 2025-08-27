@@ -2,6 +2,7 @@ package controller
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"kleio/internal/database"
 	"log/slog"
@@ -43,15 +44,28 @@ func (c *Controller) GetReleaseDetails(
 
 	c.RateLimit.UpdateLimits(resp)
 
+	// Check for rate limiting first
+	if resp.StatusCode == http.StatusTooManyRequests {
+		retryAfter := resp.Header.Get("Retry-After")
+		slog.Warn("Rate limited while fetching release details", 
+			"url", resourceURL, 
+			"retryAfter", retryAfter,
+			"releaseID", release.ID)
+		// Return error to allow caller to handle retry
+		return nil, fmt.Errorf("rate limited: retry after %s seconds", retryAfter)
+	}
+
 	// Check response status
 	if resp.StatusCode != http.StatusOK {
 		body, _ := io.ReadAll(resp.Body)
-		slog.Error("API returned non-200 status",
+		slog.Error("API returned non-200 status for release details",
 			"status", resp.StatusCode,
 			"body", string(body),
 			"url", resourceURL,
+			"releaseID", release.ID,
+			"releaseTitle", release.Title,
 		)
-		return nil, err
+		return nil, fmt.Errorf("API returned status %d: %s", resp.StatusCode, string(body))
 	}
 
 	// Decode the response
@@ -61,14 +75,28 @@ func (c *Controller) GetReleaseDetails(
 	}
 
 	if err := json.NewDecoder(resp.Body).Decode(&releaseDetails); err != nil {
-		slog.Error("Error decoding response", "error", err)
+		slog.Error("Error decoding release details response", 
+			"error", err,
+			"url", resourceURL,
+			"releaseID", release.ID,
+			"releaseTitle", release.Title)
 		return nil, err
 	}
 
 	var tracks []database.Track
-	for _, discTrack := range releaseDetails.Tracklist {
+	slog.Info("Processing tracklist", 
+		"releaseID", release.ID,
+		"releaseTitle", release.Title,
+		"trackCount", len(releaseDetails.Tracklist))
+
+	for i, discTrack := range releaseDetails.Tracklist {
 		// Skip non-track items (headers, etc.)
 		if discTrack.Type != "track" && discTrack.Type != "" {
+			slog.Debug("Skipping non-track item", 
+				"releaseID", release.ID,
+				"position", i,
+				"type", discTrack.Type,
+				"title", discTrack.Title)
 			continue
 		}
 
@@ -83,6 +111,10 @@ func (c *Controller) GetReleaseDetails(
 
 		tracks = append(tracks, track)
 	}
+
+	slog.Info("Finished processing tracklist", 
+		"releaseID", release.ID,
+		"validTracks", len(tracks))
 
 	return tracks, nil
 }
