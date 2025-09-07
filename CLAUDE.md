@@ -8,80 +8,111 @@ Kleio is a self-hosted full-stack web application for managing vinyl record coll
 
 ## Technology Stack
 
-- **Backend**: Go 1.24.1 with SQLite database
-- **Frontend**: SolidJS with TypeScript, built with Vite
-- **Styling**: SCSS with CSS Modules
-- **Database**: SQLite with manual SQL migrations
-- **Deployment**: Docker with multi-stage builds
+- **Backend**: Go 1.25 with Fiber web framework, SQLite database
+- **Frontend**: SolidJS with TypeScript, Vite build system
+- **Styling**: SCSS with CSS Modules, comprehensive design system
+- **Database**: SQLite with numbered migration files (001-011)
+- **Development Tools**: Air for live reload, Docker for containerization
+- **Monitoring**: Prometheus metrics integration
 
 ## Common Development Commands
 
 ### Backend Development
 ```bash
-# Run backend server (localhost:8080)
+# Run backend server (localhost:8080) 
 make run
 
 # Build backend binary
 make build
 
-# Run with Docker
-make docker-run
+# Live reload development (requires air)
+make watch
+
+# Run tests
+make test
+
+# Clean built binary
+make clean
 
 # Database migrations run automatically on startup
 ```
 
-### Frontend Development
+### Frontend Development (in clio/ directory)
 ```bash
 # Install dependencies
 npm install
 
 # Run development server (localhost:3000)
 npm run dev
+# Alternative: npm start
 
 # Build for production
 npm run build
 
-# Type checking
-npm run typecheck
+# Preview production build
+npm run serve
 
-# Linting
-npm run lint
+# NOTE: No separate typecheck/lint commands in package.json - handled by editor/IDE
 ```
 
 ### Docker Development
 ```bash
-# Build and run full stack
+# Build and run full stack with Docker Compose
 make docker-run
 
-# Build Docker image
+# Stop Docker containers
+make docker-down
+
+# Build Docker image manually
 docker build -t kleio .
 
 # Production deployment with volumes
 docker run -p 8080:8080 -v ./data:/app/data kleio
 ```
 
+### Development Workflow
+```bash
+# Terminal 1: Backend with live reload
+make watch
+
+# Terminal 2: Frontend development server
+cd clio && npm run dev
+
+# Production build process
+cd clio && npm run build && cd .. && make build
+```
+
 ## Architecture
 
 ### Backend Structure (`internal/`)
-- **Layered architecture**: Controller → Database → SQLite
+- **Clean architecture**: Controller → Database → SQLite
 - **Key packages**:
-  - `api/`: HTTP handlers and routing
+  - `controller/`: Fiber HTTP handlers (auth, collection, playHistory, etc.)
   - `database/`: SQLite operations and models
-  - `discogs/`: Discogs API integration
-  - `migrations/`: SQL migration files (numbered 001-011)
+  - `server/`: Fiber app configuration and routing setup
+  - `database/migrations/`: SQL migration files (numbered 001-011, auto-applied on startup)
 
 ### Frontend Structure (`clio/`)
 - **SolidJS reactive architecture** with context providers
 - **Key directories**:
-  - `src/components/`: Reusable UI components
+  - `src/components/`: Reusable UI components (modals, dropdowns, panels)
   - `src/pages/`: Route-based page components
   - `src/lib/`: API client and utilities
   - `src/styles/`: Global SCSS and CSS modules
+- **Component Architecture**: Each component has own directory with `.tsx` and `.module.scss` files
+- **Styling System**: Comprehensive design system defined in `STYLE_GUIDELINES.md`
 
 ### Database Schema
 - **Core entities**: Albums, Artists, Plays, Styluses, MaintenanceRecords
 - **Complex relationships**: Many-to-many for album genres, artists, labels
 - **Discogs integration**: Stores Discogs IDs for synchronization
+- **Migration system**: Numbered files applied automatically on startup
+
+### Build System
+- **Backend**: Standard Go build with CGO enabled for SQLite
+- **Frontend**: Vite build system with SolidJS plugin
+- **Development**: Air for backend live reload, Vite dev server for frontend
+- **Production**: Multi-stage Docker build serving both frontend and backend from single Go binary
 
 ## Key Features
 
@@ -107,20 +138,30 @@ Authentication uses Discogs personal access tokens.
 ### Frontend
 - **Reactive data**: Use SolidJS resources for API calls
 - **State management**: Context providers for global state
-- **Styling**: CSS Modules with SCSS preprocessing
-- **Type safety**: Full TypeScript with strict checking
+- **Styling**: CSS Modules with SCSS preprocessing, follow `STYLE_GUIDELINES.md`
+- **Type safety**: Full TypeScript with JSX preserve mode
+- **Component structure**: Each component in own directory with `.tsx` and `.module.scss`
+- **Dependencies**: Axios for HTTP client, Chart.js for analytics, Fuse.js for search
 
 ### Backend
+- **Web framework**: Fiber (Express-like framework for Go)
 - **Error handling**: Consistent JSON error responses
-- **Database**: Direct SQL with prepared statements
-- **Migrations**: Numbered files in `internal/migrations/`
+- **Database**: Direct SQL with prepared statements, sqlite3 driver
+- **Migrations**: Numbered files in `internal/database/migrations/`
 - **Configuration**: Environment variables for Discogs integration
+- **Architecture**: Controller pattern with clean separation of concerns
+
+### Development Environment
+- **Live reload**: Air configured with `.air.toml` (excludes frontend dirs)
+- **Port separation**: Backend on :8080, Frontend dev server on :3000
+- **Database**: SQLite file in root directory (`sqlite.db`)
+- **Assets**: Stored in `assets/` directory
 
 ## Testing
 
 The project currently uses manual testing. When adding tests:
-- Backend: Use Go's standard testing package
-- Frontend: Consider Vitest for SolidJS testing
+- Backend: Use Go's standard testing package (`make test`)
+- Frontend: Consider Vitest for SolidJS testing (not currently configured)
 - Integration: Test API endpoints with real database
 
 ## Deployment
@@ -137,3 +178,37 @@ Production deployment uses Docker with:
 - Syncs collection data including release information
 - Handles rate limiting and API pagination
 - Stores Discogs IDs for data consistency
+
+## File Structure Summary
+
+```
+kleio/
+├── cmd/api/main.go           # Application entry point
+├── internal/                 # Private application code
+│   ├── controller/           # HTTP request handlers
+│   ├── database/             # Database models and operations
+│   │   └── migrations/       # SQL migration files (001-011)
+│   └── server/               # Fiber server setup
+├── clio/                     # Frontend SolidJS application
+│   ├── src/
+│   │   ├── components/       # Reusable UI components
+│   │   ├── pages/            # Route-based page components
+│   │   ├── lib/              # API client and utilities
+│   │   └── styles/           # Global SCSS and CSS modules
+│   ├── package.json          # Frontend dependencies
+│   └── tsconfig.json         # TypeScript configuration
+├── assets/                   # Static assets (images, etc.)
+├── Makefile                  # Build and development commands
+├── go.mod                    # Go module dependencies
+├── .air.toml                 # Live reload configuration
+├── docker-compose.yml        # Docker development setup
+└── Dockerfile                # Production Docker build
+```
+
+## Important Notes
+
+- **Monorepo structure**: Backend and frontend in same repository
+- **Production serving**: Single Go binary serves both API and static files
+- **Database location**: SQLite file in project root (`sqlite.db`)
+- **Migration system**: Automatic application on startup, numbered files
+- **Docker ports**: Production uses 38080, development uses 8080 for backend

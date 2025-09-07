@@ -8,9 +8,9 @@ export function getCleanlinessScore(
   lastCleanedDate: Date | null,
   playsSinceCleaning: number,
 ): number {
-  // If never cleaned, base score on total plays
+  // If never cleaned, assume the disc is dirty and needs cleaning
   if (!lastCleanedDate) {
-    return Math.min(100, (playsSinceCleaning / 5.01) * 100);
+    return 100; // Maximum "needs cleaning" score
   }
 
   // Play-based calculation (percentage of 5 plays)
