@@ -67,6 +67,21 @@ const LogPlay: Component = () => {
           return a.title.localeCompare(b.title);
         });
 
+      case "longestUnplayed":
+        // Sort by last played date (oldest first, never played at top)
+        return [...releases].sort((a, b) => {
+          const dateA = getLastPlayDate(a.playHistory);
+          const dateB = getLastPlayDate(b.playHistory);
+
+          // Never played records come first
+          if (!dateA && !dateB) return a.title.localeCompare(b.title);
+          if (!dateA && dateB) return -1;
+          if (dateA && !dateB) return 1;
+          // If both have play history, oldest played first
+          if (dateA && dateB) return dateA.getTime() - dateB.getTime();
+          return 0;
+        });
+
       case "recentlyPlayed":
         // Show only recently played records (last 30 days) sorted by date
         return [...releases]
@@ -219,7 +234,8 @@ const LogPlay: Component = () => {
               <option value="album">Album (A-Z)</option>
               <option value="artist">Artist (A-Z)</option>
               <option value="genre">Genre (A-Z)</option>
-              <option value="lastPlayed">Last Played</option>
+              <option value="lastPlayed">Last Played (newest first)</option>
+              <option value="longestUnplayed">Longest Unplayed (oldest first)</option>
               <option value="recentlyPlayed">Recently Played (30 days)</option>
               <option value="year">Release Year (newest first)</option>
               <option value="playCount">Most Played</option>
