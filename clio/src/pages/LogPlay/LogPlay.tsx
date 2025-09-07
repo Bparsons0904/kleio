@@ -4,7 +4,12 @@ import styles from "./LogPlay.module.scss";
 import { Release } from "../../types";
 import RecordActionModal from "../../components/RecordActionModal/RecordActionModal";
 import { RecordStatusIndicator } from "../../components/StatusIndicators/StatusIndicators";
-import { getLastPlayDate } from "../../utils/playStatus";
+import { 
+  getLastPlayDate, 
+  getCleanlinessScore, 
+  countPlaysSinceCleaning, 
+  getLastCleaningDate 
+} from "../../utils/playStatus";
 import {
   createPlayHistory,
   createCleaningHistory,
@@ -140,6 +145,20 @@ const LogPlay: Component = () => {
           return countB - countA;
         });
 
+      case "needsCleaning":
+        // Sort by cleanliness score (highest score = most needs cleaning first)
+        return [...releases].sort((a, b) => {
+          const lastCleanedA = getLastCleaningDate(a.cleaningHistory);
+          const playsA = countPlaysSinceCleaning(a.playHistory || [], lastCleanedA);
+          const scoreA = getCleanlinessScore(lastCleanedA, playsA);
+
+          const lastCleanedB = getLastCleaningDate(b.cleaningHistory);
+          const playsB = countPlaysSinceCleaning(b.playHistory || [], lastCleanedB);
+          const scoreB = getCleanlinessScore(lastCleanedB, playsB);
+
+          return scoreB - scoreA; // Higher score first (needs more cleaning)
+        });
+
       default:
         // Default sort by title
         return [...releases].sort((a, b) => a.title.localeCompare(b.title));
@@ -236,6 +255,7 @@ const LogPlay: Component = () => {
               <option value="genre">Genre (A-Z)</option>
               <option value="lastPlayed">Last Played (newest first)</option>
               <option value="longestUnplayed">Longest Unplayed (oldest first)</option>
+              <option value="needsCleaning">Needs Cleaning (most dirty first)</option>
               <option value="recentlyPlayed">Recently Played (30 days)</option>
               <option value="year">Release Year (newest first)</option>
               <option value="playCount">Most Played</option>
