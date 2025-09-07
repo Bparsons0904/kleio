@@ -50,9 +50,10 @@ export function getPlayRecencyScore(lastPlayedDate: Date | null): number {
   // Convert days to score (0-100)
   if (daysElapsed <= 7) return 100; // Very recent: Last 7 days
   if (daysElapsed <= 30) return 80; // Recent: Last 30 days
-  if (daysElapsed <= 60) return 60; // Moderately recent: Last 60 days
-  if (daysElapsed <= 90) return 40; // Not recent: Last 90 days
-  return 20; // Long ago: Over 90 days
+  if (daysElapsed <= 90) return 60; // Moderately recent: Last 90 days
+  if (daysElapsed <= 180) return 40; // Not recent: Last 180 days (6 months)
+  if (daysElapsed <= 365) return 20; // Long ago: Last 365 days (1 year)
+  return 0; // Very long ago: Over 1 year
 }
 
 /**
@@ -83,8 +84,9 @@ export function getPlayRecencyText(lastPlayedDate: Date | null): string {
 
   if (daysElapsed <= 7) return "Played this week";
   if (daysElapsed <= 30) return "Played this month";
-  if (daysElapsed <= 60) return "Played in the last 2 months";
   if (daysElapsed <= 90) return "Played in the last 3 months";
+  if (daysElapsed <= 180) return "Played in the last 6 months";
+  if (daysElapsed <= 365) return "Played in the last year";
   return "Not played recently";
 }
 
