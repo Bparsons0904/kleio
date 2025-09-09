@@ -27,6 +27,18 @@ func New() Database {
 		return *dbInstance
 	}
 
+	// Check if we should use PostgreSQL
+	if os.Getenv("DB_TYPE") == "postgres" {
+		if err := InitializeGORM(); err != nil {
+			log.Fatalf("Failed to initialize PostgreSQL with GORM: %v", err)
+		}
+		// Create wrapper for compatibility - GORM instance accessed via global DB variable
+		dbInstance = &Database{DB: nil} // GORM doesn't use sql.DB directly
+		slog.Info("Using PostgreSQL with GORM")
+		return *dbInstance
+	}
+
+	// Default SQLite behavior
 	if os.Getenv("APP_ENV") != "development" {
 		dburl = getDBPath()
 	}
@@ -46,6 +58,7 @@ func New() Database {
 	dbInstance = &Database{
 		DB: db,
 	}
+	slog.Info("Using SQLite")
 	return *dbInstance
 }
 
@@ -88,6 +101,13 @@ func Initialize(dbPath string) error {
 }
 
 func (s *Database) Close() error {
+	// Handle GORM PostgreSQL cleanup
+	if os.Getenv("DB_TYPE") == "postgres" {
+		log.Printf("Disconnecting from PostgreSQL with GORM")
+		return CloseGORM()
+	}
+	
+	// Handle SQLite cleanup
 	log.Printf("Disconnected from database: %s", dburl)
 	return s.DB.Close()
 }

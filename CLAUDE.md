@@ -212,3 +212,12 @@ kleio/
 - **Database location**: SQLite file in project root (`sqlite.db`)
 - **Migration system**: Automatic application on startup, numbered files
 - **Docker ports**: Production uses 38080, development uses 8080 for backend
+
+## Migration Documentation
+
+For database migration planning and implementation details, see the `agentsDocs/` directory:
+
+- **`agentsDocs/DB_MIGRATION.md`**: Original high-level migration plan for moving to production NAS storage
+- **`agentsDocs/step1-database-architecture-migration.md`**: Detailed technical specification for migrating from SQLite to PostgreSQL 18 with multi-user support, GORM integration, and UUID7 primary keys
+
+These documents contain comprehensive migration strategies, data models, and implementation plans for the database modernization effort.
