@@ -17,7 +17,7 @@ services:
     ports:
       - "38080:38080"
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:38080/api/health"]
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:38080/api/health"]
       interval: 30s
       timeout: 10s
       retries: 3
